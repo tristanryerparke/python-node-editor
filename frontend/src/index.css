@@ -1,0 +1,123 @@
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  min-height: 100vh;
+  min-width: 100vw;
+  height: 100vh;
+  width: 100vw;
+  overscroll-behavior: contain;
+  overflow: hidden;
+
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+#root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-width: 100vw;
+  height: 100vh;
+  width: 100vw;
+
+  overscroll-behavior: contain;
+  overflow: hidden;
+
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+:root {
+  
+  --xy-controls-button-color: var(--mantine-color-dark-2);
+  --mantine-color-body: var(--mantine-color-dark-7) !important;
+  --mantine-color-body-bg: var(--mantine-color-dark-7) !important;
+}
+
+.react-flow.dark {
+  --xy-background-color-default: var(--mantine-color-dark-9);
+  --xy-minimap-mask-background-color-default: var(--mantine-color-dark-7);
+  --xy-minimap-background-color-default: var(--mantine-color-dark-9);
+}
+
+
+.App {
+  width: 100vw;
+  height: 100vh;
+  flex-direction: column;
+}
+
+/* .ReactFlowWrapper {
+  flex-grow: 1;
+  height: 100%;
+} */
+
+.NodePicker {
+  display: flex;
+  flex-direction: column;
+  /* background-color: var(--mantine-color-gray-4); */
+  padding: 0.25rem;
+  gap: 0.5rem;
+  overflow-y: auto;
+  border-right: solid var(--mantine-color-gray-1);
+  min-width: 15rem;
+}
+
+.NodePickerCategory {
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem;
+  /* border: solid var(--mantine-color-gray-1); */
+  /* border-radius: 0.25rem; */
+  gap: 0.5rem;
+}
+
+.NodePickerCategoryName {
+  font-size: small;
+  color: var(--mantine-color-gray-1);
+}
+
+.NodePickerItem {
+  padding: 0.25rem;
+  cursor: pointer;
+  background-color: var(--mantine-color-gray-4);
+  border: solid var(--mantine-color-gray-1);
+  height: auto;  /* Changed from fixed height to auto */
+  min-height: 3rem;  /* Minimum height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.25rem;
+  cursor: grab;
+}
+
+.NodePickerItemText {
+  font-size: 14px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
+  max-width: 100%;
+  /* color: var(--mantine-color-gray-1); */
+}
+
+
+
+
+
+

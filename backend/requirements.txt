@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+devtools
+shortuuid
+docarray
