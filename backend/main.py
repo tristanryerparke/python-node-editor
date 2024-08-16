@@ -38,32 +38,18 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-@app.get("/all_nodes")
-def get_all_nodes():
-    """Finds and retrieves all nodes in the nodes directory"""
-    classes = find_and_load_classes("nodes")
-    nodes_dict = {}
-    for key, value in classes.items():
-        category_list = []
-        for node_class in value:
-            instance: BaseNode = node_class(id='')
-            category_list.append(instance.model_dump())
-    nodes_dict[key] = category_list
 
-    return nodes_dict
-
-
-@app.get("/status")
-def get_status():
-    new_items = None
-    if wrapper.current_stream:
-        new_items = wrapper.current_stream[wrapper.last_sent_index + 1:]
-        wrapper.last_sent_index = len(wrapper.current_stream) - 1
-    return {
-        "current_node": wrapper.current_node,
-        "stream": new_items,
-        "nodes": wrapper.node_instances
-    }
+# @app.get("/status")
+# def get_status():
+#     new_items = None
+#     if wrapper.current_stream:
+#         new_items = wrapper.current_stream[wrapper.last_sent_index + 1:]
+#         wrapper.last_sent_index = len(wrapper.current_stream) - 1
+#     return {
+#         "current_node": wrapper.current_node,
+#         "stream": new_items,
+#         "nodes": wrapper.node_instances
+#     }
 
 app = FastAPI()
 
@@ -78,6 +64,34 @@ app.add_middleware(
 app.include_router(execution_router)
 app.include_router(node_list_router)
 
+import sys
+
+def on_closed():
+    print("Window is closing. Shutting down...")
+    sys.exit(0)
+
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app)
+    import subprocess
+    import os
+    import sys
+    import webview
+    import time
+
+    # Start the frontend as a non-blocking subprocess
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend')
+    frontend_process = subprocess.Popen(['bun', 'run', 'dev'], cwd=frontend_path)
+
+    # Start the backend as a non-blocking subprocess
+    backend_process = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'])
+
+    # Give some time for the processes to start
+    time.sleep(0.5)
+
+    # Create and start the webview
+    window = webview.create_window('Python Node Editor', 'http://localhost:5173/', width=1920, height=1080)
+    window.events.closed += on_closed
+    webview.start()
+
+    # Clean up subprocesses
+    frontend_process.terminate()
+    backend_process.terminate()
