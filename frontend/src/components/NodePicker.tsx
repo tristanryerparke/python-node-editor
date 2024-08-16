@@ -1,30 +1,61 @@
-import { Flex, Text, Button } from '@mantine/core';
+import { Flex, Text, Divider } from '@mantine/core';
+import { useState, useEffect } from 'react';
+
+interface NodeData {
+  id: number;
+  name: string;
+  type: string;
+  position: { x: number; y: number };
+  description: string;
+  inputs: Record<string, { type: string; default: number }>;
+  outputs: Record<string, any>;
+  streaming: boolean;
+}
 
 function NodePicker() {
-    const generateNodeConfig = () => ({
-        label: `Custom Node ${Math.floor(Math.random() * 1000)}`,
-        width: Math.floor(Math.random() * 100) + 100,
-        height: Math.floor(Math.random() * 50) + 50,
-        color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-        handles: Math.floor(Math.random() * 3) + 2,
-    });
+    const [nodeCategories, setNodeCategories] = useState<Record<string, NodeData[]>>({});
 
-    const onDragStart = (event: React.DragEvent<HTMLDivElement>) => {
-        const nodeConfig = generateNodeConfig();
-        event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeConfig));
+    useEffect(() => {
+        fetch('http://127.0.0.1:8000/all_nodes')
+            .then((response) => response.json())
+            .then((data) => {
+                setNodeCategories(data);
+                console.log('Fetched node data:', data);
+            })
+            .catch((error) => console.error('Error fetching node data:', error));
+    }, []);
+
+    const onDragStart = (event: React.DragEvent<HTMLDivElement>, node: NodeData) => {
+        event.dataTransfer.setData('application/reactflow', JSON.stringify(node));
         event.dataTransfer.effectAllowed = 'move';
     };
 
     return (
         <>
-        <Flex align='center' justify='center' w='12rem' direction='column'>
-            <Text>NodePicker</Text>
-            <Button
-                onDragStart={onDragStart}
-                draggable
-            >
-                Drag Custom Node
-            </Button>
+        <Flex align='center' justify='center' w='15rem' direction='column'>
+            {Object.entries(nodeCategories).map(([category, nodes]) => (
+                <Flex key={category} direction='column' align='center' mt='sm' w='100%' p='0.5rem' gap='0'>
+                    <Text fw='bold'>{category}</Text>
+                    <Divider orientation='horizontal' color='dark.3' w='100%' mt='0.25rem' />
+                    
+                    {nodes.map((node, index) => (
+                        <Flex
+                            key={index}
+                            onDragStart={(event) => onDragStart(event, node)}
+                            draggable
+                            mt='xs'
+                            w='100%'
+                            h='3rem'
+                            justify='center'
+                            align='center'
+                            bg='dark.7'
+                            style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
+                        >
+                            {node.name || `${node.type.replace('Node', '')}`}
+                        </Flex>
+                    ))}
+                </Flex>
+            ))}
         </Flex>
         <div
             style={{ backgroundColor: 'var(--mantine-color-dark-2)', width: '0.075rem' }}

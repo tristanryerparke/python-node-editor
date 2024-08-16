@@ -11,21 +11,26 @@ import {
   Edge,
   Connection,
   useReactFlow,
+  NodeTypes,
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
-import CustomNode from './CustomNode';
+import CustomNode, { NodeData } from './CustomNode';
+
+type CustomNode = Node<NodeData>;
 
 const initialNodes: Node[] = [
 ];
 
-const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
+const initialEdges: Edge[] = [];
+
 
 let id = 0;
-const getId = () => `dndnode_${id++}`;
+const getId = () => id++;
 
-const nodeTypes = {
+const nodeTypes: NodeTypes = {
   customNode: CustomNode,
 };
+
 
 const NodeGraph: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -46,21 +51,28 @@ const NodeGraph: React.FC = () => {
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
 
-      const nodeData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
+      const nodeData: NodeData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
 
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
 
-      const newNode: Node = {
-        id: getId(),
+      const id = String(getId());
+
+      nodeData.id = id;
+
+      const newNode: Node<NodeData> = {
+        id: id,
         type: 'customNode',
         position: {
-          x: position.x - nodeData.width / 2,
-          y: position.y - nodeData.height / 2,
+          x: position.x - 75,
+          y: position.y - 37.5,
         },
-        data: nodeData,
+        data: {
+          ...nodeData,
+          name: nodeData.name || nodeData.type.replace('Node', ''),
+        },
       };
 
       setNodes((nds) => nds.concat(newNode));

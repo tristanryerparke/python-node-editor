@@ -6,7 +6,7 @@ import sys
 import time
 import base64
 sys.path.append('./')
-from base_node import BaseNode, StreamingNode
+from base_node import BaseNode, StreamingBaseNode
 
 
 MAXSIZE = 10

@@ -4,3 +4,4 @@ pydantic
 devtools
 shortuuid
 docarray
+requests

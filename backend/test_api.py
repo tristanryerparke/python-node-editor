@@ -4,7 +4,7 @@ import time
 url = "http://localhost:8000/"
 
 # Trigger the execution
-execution_response = requests.get(url + "execute")
+execution_response = requests.get(url + "execute_test")
 if execution_response.status_code == 200:
     print("Execution started.")
 else:

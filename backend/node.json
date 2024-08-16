@@ -1,0 +1,26 @@
+{
+  "id": "1",
+  "name": "AddNode",
+  "namespace": "test_nodes",
+  "position": {
+    "x": 0,
+    "y": 0
+  },
+  "description": "",
+  "inputs": {
+    "a": {
+      "type": "number",
+      "default": 0,
+      "value": 0
+    },
+    "b": {
+      "type": "number",
+      "default": 0,
+      "value": 5
+    }
+  },
+  "outputs": {
+    "addition_result": null
+  },
+  "streaming": false
+}

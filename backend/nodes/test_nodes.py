@@ -4,7 +4,7 @@ from functools import lru_cache
 import sys
 import time
 sys.path.append('./')
-from base_node import BaseNode, StreamingNode
+from base_node import BaseNode, StreamingBaseNode
 
 MAXSIZE = 10
     
@@ -16,10 +16,9 @@ class AddNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls, 
-        a: Union[float, int], 
-        b: Union[float, int],
+        a: Union[float, int] = 0, 
+        b: Union[float, int] = 0,
     ) -> Dict[str, Union[float, int]]:
-        time.sleep(1)
         return {'addition_result': a + b}
     
 
@@ -30,21 +29,21 @@ class SubtractNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls,
-        a: Union[float, int], 
-        b: Union[float, int]
+        a: Union[float, int] = 0, 
+        b: Union[float, int] = 0,
     ) -> Dict[str, Union[float, int]]:
         return {'subtraction_result': a - b}
     
 
 
 
-class TestStreamingAddNode(StreamingNode):
+class TestStreamingAddNode(StreamingBaseNode):
     outputs: dict = {'addition_result': None}
     @classmethod
     def exec_stream(
         cls,
-        a: Union[float, int], 
-        b: Union[float, int]
+        a: Union[float, int] = 0, 
+        b: Union[float, int] = 0,
     ) -> Generator[Dict[str, Union[str, Dict[str, Union[float, int]]]], None, None]:
         for i in range(5):
             yield {'status': 'progress', 'value': {'addition_result': f'progress: {i}'}}
@@ -58,21 +57,21 @@ class SplitNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls, 
-        number: Union[float, int], 
-        t: float,
+        number: Union[float, int] = 1, 
+        t: float = 0.5,
     ) -> Tuple[Dict[str, float], Dict[str, float]]:
         if not 0 <= t <= 1:
             raise ValueError("t must be between 0 and 1")
         return  {'split_t_result': number * t}, {'split_1_minus_t_result': number * (1 - t)}
 
-class TestStreamingSplitNode(StreamingNode):
+class TestStreamingSplitNode(StreamingBaseNode):
     outputs: dict = {'split_t_result': None, 'split_1_minus_t_result': None}
 
     @classmethod
     def exec_stream(
         cls,
-        number: Union[float, int], 
-        t: float
+        number: Union[float, int] = 1, 
+        t: float = 0.5,
     ) -> Generator[Tuple[Dict[str, Union[float, int]], Dict[str, Union[float, int]]], None, None]:
         if not 0 <= t <= 1:
             raise ValueError("t must be between 0 and 1")
