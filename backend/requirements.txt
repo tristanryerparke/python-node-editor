@@ -1,7 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 devtools
 shortuuid
 docarray
 requests
+git+https://github.com/tristanryerparke/pywebview.git
+annotated-types

@@ -46,9 +46,9 @@ class TestStreamingAddNode(StreamingBaseNode):
         b: Union[float, int] = 0,
     ) -> Generator[Dict[str, Union[str, Dict[str, Union[float, int]]]], None, None]:
         for i in range(5):
-            yield {'status': 'progress', 'value': {'addition_result': f'progress: {i}'}}
+            yield {'status': 'progress', 'addition_result': f'progress: {i}'}
             time.sleep(1)
-        yield {'status': 'complete', 'value': {'addition_result':  a + b}}
+        yield {'status': 'complete', 'addition_result':  a + b}
 
 class SplitNode(BaseNode):
     outputs: dict = {'split_t_result': None, 'split_1_minus_t_result': None}
@@ -72,18 +72,22 @@ class TestStreamingSplitNode(StreamingBaseNode):
         cls,
         number: Union[float, int] = 1, 
         t: float = 0.5,
-    ) -> Generator[Tuple[Dict[str, Union[float, int]], Dict[str, Union[float, int]]], None, None]:
+    ) -> Generator[Dict[str, Union[str, Dict[str, Union[float, int]]]], None, None]:
         if not 0 <= t <= 1:
             raise ValueError("t must be between 0 and 1")
 
         for i in range(5):
-            yield (
-                {'status': 'progress', 'value': {'split_t_result': i * t, }},
-                {'status': 'progress', 'value': {'split_1_minus_t_result': i * (1 - t)}}
-            )
+            yield {
+                'status': 'progress',
+                'split_t_result': i * t,
+                'split_1_minus_t_result': i * (1 - t)
+                
+            }
             time.sleep(1)
 
-        yield (
-            {'status': 'complete', 'value': {'split_t_result': number * t}},
-            {'status': 'complete', 'value': {'split_1_minus_t_result': number * (1 - t)}}
-        )
+        yield {
+            'status': 'complete',
+            'split_t_result': number * t,
+            'split_1_minus_t_result': number * (1 - t)
+            
+        }

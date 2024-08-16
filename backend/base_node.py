@@ -25,10 +25,15 @@ class NodeInput(BaseDoc):
     default: Any
     value: Any
 
+class NodeOutput(BaseDoc):
+    type: str
+    value: Any
+
 class BaseNode(BaseDoc):
     id: str
     name: str = ''
     namespace: str = ''
+    status: str = ['not evaluated', 'pending', 'executing', 'streaming','evaluated'][0]
     position: dict = {
         'x': 0,
         'y': 0
@@ -87,6 +92,8 @@ class BaseNode(BaseDoc):
             for key, value in result_dict.items():
                 self.outputs[key] = value
 
+        self.status = 'evaluated'
+
 
 class StreamingBaseNode(BaseNode):
     streaming: bool = True
@@ -103,7 +110,8 @@ class StreamingBaseNode(BaseNode):
         exec_inputs = {k: v.value for k, v in self.inputs.items()}
 
         for result in self.__class__.exec_stream(**exec_inputs):
-            print(result)
             for key, value in result.items():
                 self.outputs[key] = value
             yield result
+
+        self.status = 'evaluated'

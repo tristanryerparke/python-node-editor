@@ -1,33 +1,61 @@
-import React, { memo, useCallback } from 'react';
-import { Handle, Position, NodeProps, Node } from '@xyflow/react';
-import { Paper, Text, Box, Divider, Group, ActionIcon, Flex } from '@mantine/core';
+import { memo, useCallback, useContext } from 'react';
+import { Handle, Position, NodeProps, useReactFlow } from '@xyflow/react';
+import { Paper, Text, Box, Divider, Flex } from '@mantine/core';
 import NumberInput from './node-elements/NumberInput';
-import { IconInfoCircle, IconCode, IconCheck } from '@tabler/icons-react';
 import NodeTopBar from './node-elements/NodeTopBar';
+import { NodeSelectionContext } from '../GlobalContext';
 
 export interface NodeData {
-  id: number;
+  id: string;
   name: string;
   type: string;
   position: { x: number; y: number };
   description: string;
-  inputs: Record<string, { type: string; default: number; value: number }>;
+  inputs: Record<string, { type: string; default: any; value: any }>;
   outputs: Record<string, any>;
   streaming: boolean;
+  status: string;
 }
 
-interface InputType {
-  type: string;
-  default: number;
-  value: number;
-}
+const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
+  const reactFlow = useReactFlow();
 
-const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
   const updateNodeData = useCallback((inputKey: string, value: number) => {
-    data.inputs[inputKey].value = value;
-  }, [data]);
+    const newData = {
+      ...data,
+      inputs: {
+        ...data.inputs,
+        [inputKey]: {
+          ...data.inputs[inputKey],
+          value: value
+        }
+      }
+    };
 
-  const { name, inputs, outputs, description } = data as NodeData;
+    if (data.status === 'evaluated') {
+      newData.status = 'not evaluated';
+      newData.outputs = Object.fromEntries(
+        Object.entries(data.outputs).map(([key, _]) => [key, null])
+      );
+    }
+
+    reactFlow.updateNodeData(id, newData);
+  }, [data, id, reactFlow]);
+
+  const { name, inputs, outputs, description, status } = data as NodeData;
+
+  const { selectedNodeId } = useContext(NodeSelectionContext);
+
+  const getBorderStyle = () => {
+    if (status === 'executing' ) {
+      return '2px solid var(--mantine-color-green-5)';
+    } else if (status === 'streaming') {
+      return '2px solid var(--mantine-color-indigo-5)';
+    } else if (id === selectedNodeId) {
+      return '2px solid var(--mantine-color-blue-2)';
+    }
+    return 'none';
+  };
 
   return (
     <Paper
@@ -40,9 +68,11 @@ const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        outline: getBorderStyle(),
+        outlineOffset: '-2px',
       }}
     >
-      <NodeTopBar name={name} streaming={data.streaming}/>
+      <NodeTopBar id={id} />
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
       <Box p='0.5rem' w='100%'>
@@ -51,7 +81,7 @@ const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
             {description}
           </Text>
         )}
-        {Object.entries(data.inputs).map(([key, input], index) => (
+        {Object.entries(inputs).map(([key, input], index) => (
           <Flex
             key={`input-${id}-${key}`} 
             align='flex-start'
@@ -60,7 +90,7 @@ const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
             h='2rem'
           >
             <NumberInput 
-              handleId={`${data.id}-input-${key}`}
+              handleId={`${id}-input-${key}`}
               label={key}
               defaultValue={input.default}
               value={input.value}
@@ -76,7 +106,7 @@ const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
         <Text size="sm" fw={500}>Outputs:</Text>
         {Object.entries(outputs).map(([key, type], index) => (
           <Box key={`output-${id}-${key}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '8px', position: 'relative' }}>
-            <Text size="xs">{key}: {type}</Text>
+            <Text size="xs">{key}: {type === null ? 'none' : type}</Text>
             <Handle
               type="source"
               position={Position.Right}

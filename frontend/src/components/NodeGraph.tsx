@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -11,31 +11,27 @@ import {
   Edge,
   Connection,
   useReactFlow,
-  NodeTypes,
+  type NodeTypes,
+  useOnSelectionChange,
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
 import CustomNode, { NodeData } from './CustomNode';
+import { NodeSelectionContext } from '../GlobalContext';
+import { parseNodeForCreation, serializeNodeForBackend } from '../utils/nodeProcessing';
 
-type CustomNode = Node<NodeData>;
-
-const initialNodes: Node[] = [
-];
-
+const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
-
-
-let id = 0;
-const getId = () => id++;
 
 const nodeTypes: NodeTypes = {
   customNode: CustomNode,
 };
 
-
 const NodeGraph: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const { screenToFlowPosition } = useReactFlow();
+
+  const { selectedNodeId, setSelectedNodeId } = useContext(NodeSelectionContext);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -58,34 +54,43 @@ const NodeGraph: React.FC = () => {
         y: event.clientY,
       });
 
-      const id = String(getId());
-
-      nodeData.id = id;
-
-      const newNode: Node<NodeData> = {
-        id: id,
-        type: 'customNode',
+      const newNode = parseNodeForCreation({
+        ...nodeData,
         position: {
           x: position.x - 75,
           y: position.y - 37.5,
         },
-        data: {
-          ...nodeData,
-          name: nodeData.name || nodeData.type.replace('Node', ''),
-        },
-      };
+      });
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [screenToFlowPosition]
+    [screenToFlowPosition, setNodes]
   );
+
+  const onSelectionChange = useCallback(({ nodes, edges }) => {
+    if (nodes.length > 0) {
+      setSelectedNodeId(nodes[0].id);
+    } else {
+      console.log('No node selected');
+      setSelectedNodeId(null);
+    }
+  }, [setSelectedNodeId]);
+
+  useOnSelectionChange({
+    onChange: onSelectionChange,
+  });
 
   return (
     <Panel id="node-graph" order={1}>
       <ReactFlow
         proOptions={{ hideAttribution: true }}
         colorMode="dark"
-        nodes={nodes}
+        nodes={nodes.map(node => ({
+          ...node,
+          data: {
+            ...node.data,
+          },
+        }))}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}

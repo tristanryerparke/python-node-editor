@@ -3,7 +3,9 @@ import json
 from utils import topological_sort, find_and_load_classes
 from docarray import BaseDoc
 from base_node import BaseNode, NodeInput
-
+from fastapi import WebSocket
+import asyncio
+from devtools import debug as d
 
 class GraphDef(BaseDoc):
     nodes: list
@@ -18,10 +20,24 @@ class ExecutionWrapper:
         self.current_stream = []
         self.last_sent_index = -1
         self.node_instances = {}
+        self.websocket: WebSocket | None = None
 
-    def execute_graph(self, graph_def: GraphDef, classes_dict):
+    def set_websocket(self, websocket: WebSocket | None):
+        self.websocket = websocket
+
+    async def send_update(self, message: dict):
+        if self.websocket:
+            await self.websocket.send_json(message)
+        else:
+            print(f"Websocket not set, cannot send message: {message}")
+
+    async def execute_graph(self, graph_def: GraphDef, classes_dict):
         start_time = time.time()
         self.node_instances = {}
+
+        d(graph_def)
+
+        graph_def = GraphDef.model_validate(graph_def)
         
         print(f"Starting graph execution... {len(graph_def.nodes)} nodes, {len(graph_def.edges)} edges")
         
@@ -51,24 +67,38 @@ class ExecutionWrapper:
             self.current_node = node_id
             node_instance: BaseNode = self.node_instances[str(node_id)]
             print(f"Executing node {node_id} ({node_instance.name})...")
+            
+            node_instance.status = 'streaming' if node_instance.streaming else 'executing'
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+            
+            # Allow other tasks to run
+            await asyncio.sleep(0)
 
             if node_instance.streaming:
                 for item in node_instance.meta_exec():
                     self.current_stream.append(item)
+                    print(f"Server: Streaming item {item}")
                     if item['status'] == 'progress':
-                        print(f"Server: Streaming item {item['value']}")
+                        print(f"Server: Streaming item {item}")
+                        await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+                        await asyncio.sleep(0)
                     elif item['status'] == 'complete':
-                        print(f"Server: Node {node_id} completed with result {item['value']}")
-                        for key, value in item['value'].items():
-                            node_instance.outputs[key] = value
+                        print(f"Server: Node {node_id} completed with result {item}")
+                        node_instance.outputs = item
             else:
                 node_instance.meta_exec()
 
             node_end = time.time()
             print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
             print(f"Node {node_id} completed with result:\n{json.dumps(node_instance.outputs, indent=2)}")
+            
+            node_instance.status = 'evaluated'
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+            
+            # Allow other tasks to run
+            await asyncio.sleep(0)
 
-                    # Edge processing
+            # Edge processing
             for edge in graph_def.edges:
                 if edge['source'] in sorted_nodes:
                     to_node_id = edge['target']
@@ -81,7 +111,7 @@ class ExecutionWrapper:
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")
 
-
+        await self.send_update({"status": "finished"})
 
         self.current_node = None
         self.current_stream = []
@@ -89,3 +119,7 @@ class ExecutionWrapper:
         end_time = time.time()
         total_time = end_time - start_time
         print(f"Total graph execution took {total_time:.4f} seconds")
+
+        if self.websocket:
+            await self.websocket.close()
+            self.websocket = None

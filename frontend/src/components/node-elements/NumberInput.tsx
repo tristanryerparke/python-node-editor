@@ -24,7 +24,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, defaultValue
     }
   }, [edges, handleId]);
 
-  const handleChange = (newValue: number | '') => {
+  const handleChange = (newValue: string | number) => {
     if (typeof newValue === 'number') {
       onChange(newValue);
     }
@@ -42,7 +42,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, defaultValue
           borderRadius: '50%',
           backgroundColor: 'blue',
           position: 'absolute',
-          transform: 'translateX(-0.85rem) translateY(-50%)'
+          transform: 'translateX(-0.85rem) translateY(-30%)'
         }}
       />
       <Group pl="0.25rem" gap="0.2rem" w='100%'>

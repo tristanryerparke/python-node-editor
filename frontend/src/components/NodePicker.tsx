@@ -16,7 +16,7 @@ function NodePicker() {
     const [nodeCategories, setNodeCategories] = useState<Record<string, NodeData[]>>({});
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/all_nodes')
+        fetch('http://localhost:8000/all_nodes')
             .then((response) => response.json())
             .then((data) => {
                 setNodeCategories(data);

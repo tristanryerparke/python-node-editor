@@ -8,16 +8,14 @@ import { useState, useEffect } from 'react';
 import { PanelGroup } from 'react-resizable-panels';
 import NodeGraph from './components/NodeGraph';
 import Header from './components/Header';
-import InspectorPanel from './components/InspectorPanel';
+import Inspector from './components/Inspector';
 import NodePicker from './components/NodePicker';
 
-import { PanelsContext } from './GlobalContext';
+import { PanelsContext, NodeSelectionContext } from './GlobalContext';
 
 // Styles
 import '@mantine/core/styles.css';
 import '@xyflow/react/dist/style.css';
-
-
 
 function App() {
 
@@ -30,22 +28,28 @@ function App() {
     localStorage.setItem('panels', JSON.stringify(panels));
   }, [panels]);
 
+
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+
   return (
     <PanelsContext.Provider value={{ panels, setPanels }}>
-      <MantineProvider defaultColorScheme="dark">
-        <ReactFlowProvider>
-          <Flex className="App">
-            <Header />
-            <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
-            
-              {panels.showNodePicker && (<NodePicker />)}
-              <NodeGraph />
-              {panels.showInspector && (<InspectorPanel />)}
+      <NodeSelectionContext.Provider value={{ selectedNodeId, setSelectedNodeId }}>
+        <MantineProvider defaultColorScheme="dark">
+          <ReactFlowProvider>
+            <Flex className="App">
+              <Header  />
+              <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
+              
+                {panels.showNodePicker && (<NodePicker />)}
+                <NodeGraph />
+                {panels.showInspector && (<Inspector />)}
 
-            </PanelGroup>
-          </Flex>
-        </ReactFlowProvider>
-      </MantineProvider>
+              </PanelGroup>
+            </Flex>
+          </ReactFlowProvider>
+        </MantineProvider>
+      </NodeSelectionContext.Provider>
     </PanelsContext.Provider>
   );
 }
