@@ -32,7 +32,7 @@ function NodePicker() {
 
     return (
         <>
-        <Flex align='center' justify='center' w='15rem' direction='column'>
+        <Flex align='center' justify='flex-start' w='15rem' direction='column'>
             {Object.entries(nodeCategories).map(([category, nodes]) => (
                 <Flex key={category} direction='column' align='center' mt='sm' w='100%' p='0.5rem' gap='0'>
                     <Text fw='bold'>{category}</Text>
@@ -48,10 +48,10 @@ function NodePicker() {
                             h='3rem'
                             justify='center'
                             align='center'
-                            bg='dark.7'
+                            bg='dark.5'
                             style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
                         >
-                            {node.name || `${node.type.replace('Node', '')}`}
+                            {`${node.name.replace('Node', '')}`}
                         </Flex>
                     ))}
                 </Flex>

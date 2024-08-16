@@ -72,7 +72,7 @@ const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
         ))}
       </Box>
 
-      <Box>
+      <Box p='0.5rem' w='100%'>
         <Text size="sm" fw={500}>Outputs:</Text>
         {Object.entries(outputs).map(([key, type], index) => (
           <Box key={`output-${id}-${key}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '8px', position: 'relative' }}>
@@ -87,7 +87,7 @@ const CustomNode: React.FC<NodeProps<NodeData>> = memo(({ data, id }) => {
                 borderRadius: '50%',
                 backgroundColor: 'red',
                 position: 'absolute',
-                right: '-1.35rem'
+                right: '-0.5rem'
               }}
             />
           </Box>

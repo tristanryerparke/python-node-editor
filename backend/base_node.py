@@ -100,7 +100,7 @@ class StreamingBaseNode(BaseNode):
         yield {'default': True}  # exec_stream now yields a dictionary
     
     def meta_exec(self):
-        exec_inputs = {k: v['value'] for k, v in self.inputs.items()}
+        exec_inputs = {k: v.value for k, v in self.inputs.items()}
 
         for result in self.__class__.exec_stream(**exec_inputs):
             print(result)

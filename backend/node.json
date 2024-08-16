@@ -1,6 +1,6 @@
 {
-  "id": "1",
-  "name": "AddNode",
+  "id": "5",
+  "name": "TestStreamingAddNode",
   "namespace": "test_nodes",
   "position": {
     "x": 0,
@@ -22,5 +22,5 @@
   "outputs": {
     "addition_result": null
   },
-  "streaming": false
+  "streaming": true
 }
