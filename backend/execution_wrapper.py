@@ -33,11 +33,6 @@ class ExecutionWrapper:
             namespace = node['namespace']
             NodeClass = next((cls for cls in classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
             if NodeClass:
-                from base_node import NodeInput, BaseNode
-
-                with open('node.json', 'w') as f:
-                    json.dump(node, f, indent=2)
-
                 instance = NodeClass.model_validate(node)
                 self.node_instances[id] = instance
         node_instantiation_end = time.time()

@@ -1,6 +1,6 @@
 {
-  "id": "5",
-  "name": "TestStreamingAddNode",
+  "id": "1",
+  "name": "SplitNode",
   "namespace": "test_nodes",
   "position": {
     "x": 0,
@@ -8,19 +8,20 @@
   },
   "description": "",
   "inputs": {
-    "a": {
+    "number": {
       "type": "number",
-      "default": 0,
-      "value": 0
+      "default": 1,
+      "value": 1
     },
-    "b": {
-      "type": "number",
-      "default": 0,
-      "value": 5
+    "t": {
+      "type": "float",
+      "default": 0.5,
+      "value": 0.25
     }
   },
   "outputs": {
-    "addition_result": null
+    "split_t_result": null,
+    "split_1_minus_t_result": null
   },
-  "streaming": true
+  "streaming": false
 }
