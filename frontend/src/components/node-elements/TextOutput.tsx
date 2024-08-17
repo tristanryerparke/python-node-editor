@@ -17,7 +17,9 @@ const TextOutput: React.FC<TextOutputProps> = ({ handleId, label, value, type })
       <Group pr="0.25rem" gap="0.2rem" w='100%' align='center'>
         <Text px="0.3rem">{label}</Text>
         <TextInput
+
           size="xs"
+          disabled={true}
           value={value}
           readOnly
           style={{ flex: 1 }}

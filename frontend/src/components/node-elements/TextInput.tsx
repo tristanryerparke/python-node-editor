@@ -43,15 +43,13 @@ const TextInput: React.FC<TextInputProps> = ({ handleId, label, value, type, onC
       </Tooltip>
       <Group pl="0.25rem" gap="0.2rem" w='100%' align='center'>
         <Text px="0.3rem">{label}</Text>
-        {!isEdgeConnected && (
-          <MantineTextInput
-            size="xs"
-            value={value}
-            onChange={(event) => onChange(event.currentTarget.value)}
-            style={{ flex: 1 }}
-            disabled={isEdgeConnected}
-          />
-        )}
+        <MantineTextInput
+          size="xs"
+          value={value}
+          onChange={(event) => onChange(event.currentTarget.value)}
+          style={{ flex: 1 }}
+          disabled={isEdgeConnected}
+        />
       </Group>
     </Flex>
   );

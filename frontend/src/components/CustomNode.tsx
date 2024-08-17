@@ -32,6 +32,7 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
   const { debouncedExecute } = useExecutionManager();
 
   const updateNodeData = useCallback((inputKey: string, value: any) => {
+    const previousValue = data.inputs[inputKey].value;
     const newData = {
       ...data,
       inputs: {
@@ -43,7 +44,7 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
       }
     };
 
-    if (data.status === 'evaluated') {
+    if (data.status === 'evaluated' && !data.inputs[inputKey].isEdgeConnected && previousValue !== value) {
       newData.status = 'not evaluated';
       newData.outputs = Object.fromEntries(
         Object.entries(data.outputs).map(([key, output]) => [key, { ...output, value: null }])
@@ -62,7 +63,7 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
       })
     );
 
-    if (autoExecute) {
+    if (autoExecute && previousValue !== value) {
       debouncedExecute();
     }
   }, [data, id, reactFlow, autoExecute, debouncedExecute]);

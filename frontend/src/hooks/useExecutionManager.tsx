@@ -69,7 +69,7 @@ export function useExecutionManager() {
       if (nodesRef.current.length > 0) {
         execute();
       }
-    }, 100);
+    }, 500);
   }, [execute]);
 
   const sendExecuteMessage = useCallback(() => {

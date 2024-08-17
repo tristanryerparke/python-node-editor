@@ -48,16 +48,14 @@ const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, value, type,
       </Tooltip>
       <Group pl="0.25rem" gap="0.2rem" w='100%' align='center'>
         <Text px="0.3rem">{label}</Text>
-        {!isEdgeConnected && (
-          <MantineNumberInput
-            size="xs"
-            value={value}
-            onChange={handleChange}
-            style={{ flex: 1 }}
-            disabled={isEdgeConnected}
-            allowDecimal={type !== 'integer'}
-          />
-        )}
+        <MantineNumberInput
+          size="xs"
+          value={value}
+          onChange={handleChange}
+          style={{ flex: 1 }}
+          disabled={isEdgeConnected}
+          allowDecimal={type !== 'integer'}
+        />
       </Group>
     </Flex>
   );
