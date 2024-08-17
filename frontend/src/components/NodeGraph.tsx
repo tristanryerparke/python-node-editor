@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -16,8 +16,9 @@ import {
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
 import CustomNode, { NodeData } from './CustomNode';
-import { NodeSelectionContext } from '../GlobalContext';
-import { parseNodeForCreation, serializeNodeForBackend } from '../utils/nodeProcessing';
+import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
+import { parseNodeForCreation } from '../utils/nodeProcessing';
+import { useExecutionManager } from '../hooks/useExecutionManager';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -32,6 +33,8 @@ const NodeGraph: React.FC = () => {
   const { screenToFlowPosition } = useReactFlow();
 
   const { selectedNodeId, setSelectedNodeId } = useContext(NodeSelectionContext);
+  const { autoExecute } = useContext(AutoExecuteContext);
+  const { debouncedExecute } = useExecutionManager();
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -79,17 +82,18 @@ const NodeGraph: React.FC = () => {
     onChange: onSelectionChange,
   });
 
+  useEffect(() => {
+    if (autoExecute) {
+      debouncedExecute();
+    }
+  }, [nodes.length, edges.length, autoExecute]);
+
   return (
     <Panel id="node-graph" order={1}>
       <ReactFlow
         proOptions={{ hideAttribution: true }}
         colorMode="dark"
-        nodes={nodes.map(node => ({
-          ...node,
-          data: {
-            ...node.data,
-          },
-        }))}
+        nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}

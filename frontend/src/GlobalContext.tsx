@@ -34,3 +34,13 @@ export const InspectorContext = React.createContext<InspectorContextType>({
   lockedNodeId: null,
   setLockedNodeId: () => {},
 });
+
+interface AutoExecuteContextType {
+  autoExecute: boolean;
+  setAutoExecute: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const AutoExecuteContext = React.createContext<AutoExecuteContextType>({
+  autoExecute: false,
+  setAutoExecute: () => {},
+});

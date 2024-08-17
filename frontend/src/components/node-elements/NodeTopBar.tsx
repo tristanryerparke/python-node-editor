@@ -72,6 +72,7 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
           <IconRosetteDiscountCheck 
             color={statusColor}
             size={20} 
+            style={{ transition: 'color 0.25s ease-in-out' }}
           />
         </Tooltip>
       </Group>

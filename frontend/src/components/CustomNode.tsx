@@ -6,7 +6,8 @@ import TextInput from './node-elements/TextInput';
 import NumberOutput from './node-elements/NumberOutput';
 import TextOutput from './node-elements/TextOutput';
 import NodeTopBar from './node-elements/NodeTopBar';
-import { NodeSelectionContext } from '../GlobalContext';
+import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
+import { useExecutionManager } from '../hooks/useExecutionManager';
 
 export interface NodeData {
   id: string;
@@ -26,9 +27,9 @@ export interface OutputData {
 }
 
 const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
-  // console.log('Node data:', data);  // Add this line
-
   const reactFlow = useReactFlow();
+  const { autoExecute } = useContext(AutoExecuteContext);
+  const { debouncedExecute } = useExecutionManager();
 
   const updateNodeData = useCallback((inputKey: string, value: any) => {
     const newData = {
@@ -60,10 +61,14 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
         return node;
       })
     );
-  }, [data, id, reactFlow]);
+
+    if (autoExecute) {
+      debouncedExecute();
+    }
+  }, [data, id, reactFlow, autoExecute, debouncedExecute]);
 
   const renderInputComponent = (key: string, input: any) => {
-    if (!input) return null;  // Add this line to handle missing input data
+    if (!input) return null;
 
     const commonProps = {
       handleId: `${id}-input-${key}`,
@@ -92,8 +97,6 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
       value: output.value ?? '',
       type: output.type
     };
-
-    // console.log('Output data:', output);
 
     switch (output.type) {
       case 'number':
@@ -132,6 +135,7 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
         justifyContent: 'center',
         outline: getBorderStyle(),
         outlineOffset: '-2px',
+        transition: 'outline 0.25s ease-in-out',
       }}
     >
       <NodeTopBar id={id} />

@@ -4,14 +4,27 @@ import { serializeNodeForBackend, parseNodeForCreation } from '../utils/nodeProc
 
 export function useExecutionManager() {
   const websocketRef = useRef<WebSocket | null>(null);
+  const autoExecuteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const nodesRef = useRef<Node[]>([]);
+  const edgesRef = useRef<Edge[]>([]);
 
   const nodes = useNodes();
   const edges = useEdges();
   const reactFlow = useReactFlow();
 
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
+
   const execute = useCallback(() => {
+    if (nodesRef.current.length === 0) return;
+
     // Update all nodes to 'pending' status
-    nodes.forEach(node => {
+    nodesRef.current.forEach(node => {
       reactFlow.updateNodeData(node.id, { status: 'pending' });
     });
 
@@ -46,17 +59,28 @@ export function useExecutionManager() {
     } else {
       sendExecuteMessage();
     }
-  }, [nodes, reactFlow]);
+  }, [reactFlow]);
+
+  const debouncedExecute = useCallback(() => {
+    if (autoExecuteTimeoutRef.current) {
+      clearTimeout(autoExecuteTimeoutRef.current);
+    }
+    autoExecuteTimeoutRef.current = setTimeout(() => {
+      if (nodesRef.current.length > 0) {
+        execute();
+      }
+    }, 100);
+  }, [execute]);
 
   const sendExecuteMessage = useCallback(() => {
-    const serializedNodes = reactFlow.getNodes().map(serializeNodeForBackend);
-    const graph_def = { nodes: serializedNodes, edges };
+    const serializedNodes = nodesRef.current.map(serializeNodeForBackend);
+    const graph_def = { nodes: serializedNodes, edges: edgesRef.current };
     
     websocketRef.current?.send(JSON.stringify({
       action: 'execute',
       graph_def: graph_def
     }));
-  }, [reactFlow, edges]);
+  }, []);
 
   const resetPendingNodes = useCallback(() => {
     reactFlow.getNodes().forEach(node => {
@@ -71,8 +95,11 @@ export function useExecutionManager() {
       if (websocketRef.current) {
         websocketRef.current.close();
       }
+      if (autoExecuteTimeoutRef.current) {
+        clearTimeout(autoExecuteTimeoutRef.current);
+      }
     };
   }, []);
 
-  return { execute };
+  return { execute, debouncedExecute };
 }

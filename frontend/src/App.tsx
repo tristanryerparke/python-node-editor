@@ -1,7 +1,6 @@
 import {
   MantineProvider,
-  Flex,
-  ActionIcon
+  Flex
 } from '@mantine/core';
 import { ReactFlowProvider } from '@xyflow/react';
 
@@ -12,7 +11,7 @@ import Header from './components/Header';
 import Inspector from './components/Inspector';
 import NodePicker from './components/NodePicker';
 
-import { PanelsContext, NodeSelectionContext, InspectorContext } from './GlobalContext';
+import { PanelsContext, NodeSelectionContext, AutoExecuteContext, InspectorContext } from './GlobalContext';
 
 // Styles
 import '@mantine/core/styles.css';
@@ -31,40 +30,32 @@ function App() {
 
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-
+  const [autoExecute, setAutoExecute] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
   const [lockedNodeId, setLockedNodeId] = useState<string | null>(null);
+
 
   return (
     <PanelsContext.Provider value={{ panels, setPanels }}>
       <NodeSelectionContext.Provider value={{ selectedNodeId, setSelectedNodeId }}>
         <InspectorContext.Provider value={{ isLocked, setIsLocked, lockedNodeId, setLockedNodeId }}>
-          <MantineProvider defaultColorScheme="dark">
-            <ReactFlowProvider>
-              <Flex className="App">
-                <Header  />
-                <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
-                
-                  {panels.showNodePicker && (<NodePicker />)}
-                  <NodeGraph />
-                  {panels.showInspector && (
-                    <Inspector>
-                      <ActionIcon
-                        onClick={() => setIsLocked(!isLocked)}
-                        aria-label="Lock Inspector"
-                        size="lg"
-                        color={isLocked ? 'red' : 'green'}
-                        variant="outline"
-                      >
-                        {isLocked ? '🔒' : '🔓'}
-                      </ActionIcon>
-                    </Inspector>
-                  )}
+          <AutoExecuteContext.Provider value={{ autoExecute, setAutoExecute }}>
+            <MantineProvider defaultColorScheme="dark">
+              <ReactFlowProvider>
+                <Flex className="App">
+                  <Header  />
+                  <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
+                  
+                    {panels.showNodePicker && (<NodePicker />)}
+                    <NodeGraph />
+                    {panels.showInspector && (<Inspector />)}
 
-                </PanelGroup>
-              </Flex>
-            </ReactFlowProvider>
-          </MantineProvider>
+                  </PanelGroup>
+                </Flex>
+              </ReactFlowProvider>
+            </MantineProvider>
+          
+          </AutoExecuteContext.Provider>
         </InspectorContext.Provider>
       </NodeSelectionContext.Provider>
     </PanelsContext.Provider>

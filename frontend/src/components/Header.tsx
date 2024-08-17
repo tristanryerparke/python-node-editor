@@ -1,11 +1,12 @@
 import { useContext } from 'react';
-import { Flex, Group, ActionIcon, Button } from '@mantine/core';
+import { Flex, Group, ActionIcon, Button, Switch } from '@mantine/core';
 import { IconLayoutSidebarFilled } from '@tabler/icons-react';
-import { PanelsContext } from '../GlobalContext';
+import { PanelsContext, AutoExecuteContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
 
 function Header() {
   const { panels, setPanels } = useContext(PanelsContext);
+  const { autoExecute, setAutoExecute } = useContext(AutoExecuteContext);
   const { execute } = useExecutionManager();
 
   const toggleInspector = () => {
@@ -40,9 +41,18 @@ function Header() {
             variant='outline' 
             color='green.4' 
             onClick={execute}
+            disabled={autoExecute}
           >
             Execute
           </Button>
+          <Switch
+            size='md'
+            color='green.4'
+            onLabel="Auto"
+            offLabel="Auto"
+            checked={autoExecute}
+            onChange={(event) => setAutoExecute(event.currentTarget.checked)}
+          />
         </Flex>
         <ActionIcon color='dark.2' variant='subtle' onClick={toggleInspector}>
           <IconLayoutSidebarFilled rotate={180} />
