@@ -1,6 +1,7 @@
 import {
   MantineProvider,
-  Flex
+  Flex,
+  ActionIcon
 } from '@mantine/core';
 import { ReactFlowProvider } from '@xyflow/react';
 
@@ -11,7 +12,7 @@ import Header from './components/Header';
 import Inspector from './components/Inspector';
 import NodePicker from './components/NodePicker';
 
-import { PanelsContext, NodeSelectionContext } from './GlobalContext';
+import { PanelsContext, NodeSelectionContext, InspectorContext } from './GlobalContext';
 
 // Styles
 import '@mantine/core/styles.css';
@@ -31,24 +32,40 @@ function App() {
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockedNodeId, setLockedNodeId] = useState<string | null>(null);
 
   return (
     <PanelsContext.Provider value={{ panels, setPanels }}>
       <NodeSelectionContext.Provider value={{ selectedNodeId, setSelectedNodeId }}>
-        <MantineProvider defaultColorScheme="dark">
-          <ReactFlowProvider>
-            <Flex className="App">
-              <Header  />
-              <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
-              
-                {panels.showNodePicker && (<NodePicker />)}
-                <NodeGraph />
-                {panels.showInspector && (<Inspector />)}
+        <InspectorContext.Provider value={{ isLocked, setIsLocked, lockedNodeId, setLockedNodeId }}>
+          <MantineProvider defaultColorScheme="dark">
+            <ReactFlowProvider>
+              <Flex className="App">
+                <Header  />
+                <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
+                
+                  {panels.showNodePicker && (<NodePicker />)}
+                  <NodeGraph />
+                  {panels.showInspector && (
+                    <Inspector>
+                      <ActionIcon
+                        onClick={() => setIsLocked(!isLocked)}
+                        aria-label="Lock Inspector"
+                        size="lg"
+                        color={isLocked ? 'red' : 'green'}
+                        variant="outline"
+                      >
+                        {isLocked ? '🔒' : '🔓'}
+                      </ActionIcon>
+                    </Inspector>
+                  )}
 
-              </PanelGroup>
-            </Flex>
-          </ReactFlowProvider>
-        </MantineProvider>
+                </PanelGroup>
+              </Flex>
+            </ReactFlowProvider>
+          </MantineProvider>
+        </InspectorContext.Provider>
       </NodeSelectionContext.Provider>
     </PanelsContext.Provider>
   );

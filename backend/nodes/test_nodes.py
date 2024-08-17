@@ -19,6 +19,9 @@ class AddNode(BaseNode):
         a: Union[float, int] = 0, 
         b: Union[float, int] = 0,
     ) -> Dict[str, Union[float, int]]:
+        # print(f'Adding {a} and {b}')
+        # print('hi this is a test')
+        # print(mf)
         return {'addition_result': a + b}
     
 

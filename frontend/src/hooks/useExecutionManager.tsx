@@ -29,6 +29,12 @@ export function useExecutionManager() {
         if (data.status === 'node_update') {
           const updatedNode = parseNodeForCreation(data.node);
           reactFlow.updateNodeData(updatedNode.id, updatedNode.data);
+          
+          if (updatedNode.data.status === 'error') {
+            resetPendingNodes();
+          }
+        } else if (data.status === 'finished') {
+          resetPendingNodes();
         }
       };
 
@@ -53,6 +59,14 @@ export function useExecutionManager() {
       graph_def: graph_def
     }));
   }, [reactFlow, edges]);
+
+  const resetPendingNodes = useCallback(() => {
+    reactFlow.getNodes().forEach(node => {
+      if (node.data.status === 'pending') {
+        reactFlow.updateNodeData(node.id, { status: 'not evaluated' });
+      }
+    });
+  }, [reactFlow]);
 
   useEffect(() => {
     return () => {

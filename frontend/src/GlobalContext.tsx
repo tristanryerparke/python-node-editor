@@ -20,3 +20,17 @@ export const NodeSelectionContext = React.createContext<NodeSelectionContextType
   selectedNodeId: null,
   setSelectedNodeId: () => {},
 });
+
+interface InspectorContextType {
+  isLocked: boolean;
+  setIsLocked: React.Dispatch<React.SetStateAction<boolean>>;
+  lockedNodeId: string | null;
+  setLockedNodeId: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+export const InspectorContext = React.createContext<InspectorContextType>({
+  isLocked: false,
+  setIsLocked: () => {},
+  lockedNodeId: null,
+  setLockedNodeId: () => {},
+});

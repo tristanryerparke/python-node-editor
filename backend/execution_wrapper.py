@@ -1,5 +1,6 @@
 import time
 import json
+import traceback
 from utils import topological_sort, find_and_load_classes
 from docarray import BaseDoc
 from base_node import BaseNode, NodeInput
@@ -35,7 +36,6 @@ class ExecutionWrapper:
         start_time = time.time()
         self.node_instances = {}
 
-        d(graph_def)
 
         graph_def = GraphDef.model_validate(graph_def)
         
@@ -74,39 +74,50 @@ class ExecutionWrapper:
             # Allow other tasks to run
             await asyncio.sleep(0)
 
-            if node_instance.streaming:
-                for item in node_instance.meta_exec():
-                    self.current_stream.append(item)
-                    print(f"Server: Streaming item {item}")
-                    if item['status'] == 'progress':
+            try:
+                if node_instance.streaming:
+                    for item in node_instance.meta_exec():
+                        self.current_stream.append(item)
                         print(f"Server: Streaming item {item}")
-                        await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
-                        await asyncio.sleep(0)
-                    elif item['status'] == 'complete':
-                        print(f"Server: Node {node_id} completed with result {item}")
-                        node_instance.outputs = item
-            else:
-                node_instance.meta_exec()
+                        if item['status'] == 'progress':
+                            print(f"Server: Streaming item {item}")
+                            await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+                            await asyncio.sleep(0)
+                        elif item['status'] == 'complete':
+                            print(f"Server: Node {node_id} completed with result {item}")
+                            node_instance.outputs = item
+                else:
+                    node_instance.meta_exec()
 
-            node_end = time.time()
-            print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
-            print(f"Node {node_id} completed with result:\n{json.dumps(node_instance.outputs, indent=2)}")
-            
-            node_instance.status = 'evaluated'
+                node_end = time.time()
+                print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
+                print(f"Node {node_id} completed with result:\n{json.dumps(node_instance.outputs, indent=2)}")
+                
+                node_instance.status = 'evaluated'
+            except Exception as e:
+                node_instance.status = 'error'
+                node_instance.error_output = f"Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+                print(f"Error executing node {node_id}: {str(e)}")
+                print(f"Traceback:\n{traceback.format_exc()}")
+
+            d(node_instance)
             await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
 
+            if node_instance.status == 'error':
+                print(f"Stopping execution due to error in node {node_id}")
+                break
+
             # Edge processing
             for edge in graph_def.edges:
-                if edge['source'] in sorted_nodes:
+                if edge['source'] == node_id:
                     to_node_id = edge['target']
                     from_port = edge['sourceHandle'].split('-')[-1]
                     to_port = edge['targetHandle'].split('-')[-1]
                     self.node_instances[to_node_id].inputs[to_port].value = self.node_instances[edge['source']].outputs[from_port]
                     print(f"Edge processing: {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
-
 
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")

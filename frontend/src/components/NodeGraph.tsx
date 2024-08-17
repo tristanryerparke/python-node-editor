@@ -71,7 +71,6 @@ const NodeGraph: React.FC = () => {
     if (nodes.length > 0) {
       setSelectedNodeId(nodes[0].id);
     } else {
-      console.log('No node selected');
       setSelectedNodeId(null);
     }
   }, [setSelectedNodeId]);

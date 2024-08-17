@@ -4,6 +4,7 @@ import time
 from inspect import signature, Parameter
 from typing import get_origin, Union, get_args, Any, Dict
 import sys
+from io import StringIO
 
 from devtools import debug as d
     
@@ -29,19 +30,38 @@ class NodeOutput(BaseDoc):
     type: str
     value: Any
 
+class CaptureOutput:
+    def __init__(self):
+        self.stdout = StringIO()
+        self.stderr = StringIO()
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = self.stdout, self.stderr
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout, sys.stderr = self.old_stdout, self.old_stderr
+
+    def get_output(self):
+        return self.stdout.getvalue(), self.stderr.getvalue()
+
 class BaseNode(BaseDoc):
     id: str
     name: str = ''
     namespace: str = ''
-    status: str = ['not evaluated', 'pending', 'executing', 'streaming','evaluated'][0]
+    status: str = ['not evaluated', 'pending', 'executing', 'streaming', 'evaluated', 'error'][0]
     position: dict = {
         'x': 0,
         'y': 0
     }
+    terminal_output: str = ''
+    error_output: str = ''
     description: str = ''
     inputs: Dict[str, NodeInput] = {}
     outputs: dict = {}
     streaming: bool = False
+    definition_path: str = ''
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,6 +69,7 @@ class BaseNode(BaseDoc):
             self.name = self.__class__.__name__
         self.analyze_inputs()
         self.detect_namespace()
+        self.definition_path = self.__class__.definition_path
 
     def detect_namespace(self):
         module = sys.modules[self.__class__.__module__]
@@ -82,7 +103,13 @@ class BaseNode(BaseDoc):
     def meta_exec(self):
         # Extract only the 'value' from each input
         exec_inputs = {k: v.value for k, v in self.inputs.items()}
-        result = self.__class__.exec(**exec_inputs)
+        
+        with CaptureOutput() as output:
+            result = self.__class__.exec(**exec_inputs)
+
+        stdout, stderr = output.get_output()
+        self.terminal_output = stdout
+        self.error_output = stderr
 
         # detect if the result is a dictionary or a tuple of dictionaries (multiple outputs)
         if isinstance(result, dict):
@@ -109,9 +136,14 @@ class StreamingBaseNode(BaseNode):
     def meta_exec(self):
         exec_inputs = {k: v.value for k, v in self.inputs.items()}
 
-        for result in self.__class__.exec_stream(**exec_inputs):
-            for key, value in result.items():
-                self.outputs[key] = value
-            yield result
+        with CaptureOutput() as output:
+            for result in self.__class__.exec_stream(**exec_inputs):
+                for key, value in result.items():
+                    self.outputs[key] = value
+                yield result
+
+        stdout, stderr = output.get_output()
+        self.terminal_output = stdout
+        self.error_output = stderr
 
         self.status = 'evaluated'
