@@ -14,6 +14,7 @@ import { IconLockOpen, IconLockFilled } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
+import { getStatusColor } from '../utils/Colors';
 
 function InspectorPanel() {
   const { selectedNodeId } = useContext(NodeSelectionContext);
@@ -33,23 +34,6 @@ function InspectorPanel() {
   const nodeToDisplay = isLocked ? lockedNodeId : selectedNodeId;
   const selectedNode = nodes.find(node => node.id === nodeToDisplay);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return theme.colors.orange[5];
-      case 'executing':
-        return theme.colors.blue[5];
-      case 'streaming':
-        return theme.colors.indigo[5];
-      case 'evaluated':
-        return theme.colors.green[5];
-      case 'error':
-        return theme.colors.red[5];
-      default:
-        return theme.colors.gray[5];
-    }
-  };
-
   const renderInputs = (inputs) => (
     <Box>
       <Title order={4}>Inputs:</Title>
@@ -63,7 +47,7 @@ function InspectorPanel() {
     <Box mt="md">
       <Title order={4}>Outputs:</Title>
       {Object.entries(outputs).map(([key, value]) => (
-        <Text key={key}>{key}: {value === null ? 'none' : value}</Text>
+        <Text key={key}>{key}: {value.value === null ? 'none' : value.value} (Type: {value.type})</Text>
       ))}
     </Box>
   );
@@ -116,7 +100,7 @@ function InspectorPanel() {
               <Flex direction="row" w="100%" justify="space-between">
                 <Title order={3} mb="md">{`Node: ${selectedNode.data.name.replace('Node', '')}`}</Title>
                 <Flex direction="column" justify="flex-end" align="flex-end">
-                  <Badge color={getStatusColor(selectedNode.data.status)}>
+                  <Badge color={getStatusColor(selectedNode.data.status, theme)}>
                     {selectedNode.data.status}
                   </Badge>
                   <Text size="xs" mb="md">{`ID: ${selectedNode.id}`}</Text>

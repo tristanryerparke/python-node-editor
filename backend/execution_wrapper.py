@@ -3,7 +3,7 @@ import json
 import traceback
 from utils import topological_sort, find_and_load_classes
 from docarray import BaseDoc
-from base_node import BaseNode, NodeInput
+from base_node import BaseNode, NodeInput, NodeOutput
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
@@ -79,19 +79,24 @@ class ExecutionWrapper:
                     for item in node_instance.meta_exec():
                         self.current_stream.append(item)
                         print(f"Server: Streaming item {item}")
-                        if item['status'] == 'progress':
+                        if item.get('status') == 'progress':
                             print(f"Server: Streaming item {item}")
+                            for key, value in item.items():
+                                if key != 'status':
+                                    node_instance.outputs[key].value = value
                             await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
                             await asyncio.sleep(0)
-                        elif item['status'] == 'complete':
+                        elif item.get('status') == 'complete':
                             print(f"Server: Node {node_id} completed with result {item}")
-                            node_instance.outputs = item
+                            for key, value in item.items():
+                                if key != 'status':
+                                    node_instance.outputs[key].value = value
                 else:
                     node_instance.meta_exec()
 
                 node_end = time.time()
                 print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
-                print(f"Node {node_id} completed with result:\n{json.dumps(node_instance.outputs, indent=2)}")
+                print(f"Node {node_id} completed with result:\n{node_instance.outputs}")
                 
                 node_instance.status = 'evaluated'
             except Exception as e:
@@ -116,7 +121,7 @@ class ExecutionWrapper:
                     to_node_id = edge['target']
                     from_port = edge['sourceHandle'].split('-')[-1]
                     to_port = edge['targetHandle'].split('-')[-1]
-                    self.node_instances[to_node_id].inputs[to_port].value = self.node_instances[edge['source']].outputs[from_port]
+                    self.node_instances[to_node_id].inputs[to_port].value = self.node_instances[edge['source']].outputs[from_port].value
                     print(f"Edge processing: {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
 
         execution_end = time.time()

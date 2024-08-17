@@ -2,6 +2,9 @@ import { memo, useCallback, useContext } from 'react';
 import { Handle, Position, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Text, Box, Divider, Flex } from '@mantine/core';
 import NumberInput from './node-elements/NumberInput';
+import TextInput from './node-elements/TextInput';
+import NumberOutput from './node-elements/NumberOutput';
+import TextOutput from './node-elements/TextOutput';
 import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext } from '../GlobalContext';
 
@@ -12,15 +15,22 @@ export interface NodeData {
   position: { x: number; y: number };
   description: string;
   inputs: Record<string, { type: string; default: any; value: any }>;
-  outputs: Record<string, any>;
+  outputs: Record<string, { type: string; value: any }>;
   streaming: boolean;
   status: string;
 }
 
+export interface OutputData {
+  value: any;
+  type: string;
+}
+
 const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
+  // console.log('Node data:', data);  // Add this line
+
   const reactFlow = useReactFlow();
 
-  const updateNodeData = useCallback((inputKey: string, value: number) => {
+  const updateNodeData = useCallback((inputKey: string, value: any) => {
     const newData = {
       ...data,
       inputs: {
@@ -35,12 +45,64 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
     if (data.status === 'evaluated') {
       newData.status = 'not evaluated';
       newData.outputs = Object.fromEntries(
-        Object.entries(data.outputs).map(([key, _]) => [key, null])
+        Object.entries(data.outputs).map(([key, output]) => [key, { ...output, value: null }])
       );
     }
 
-    reactFlow.updateNodeData(id, newData);
+    reactFlow.setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === id) {
+          return {
+            ...node,
+            data: newData,
+          };
+        }
+        return node;
+      })
+    );
   }, [data, id, reactFlow]);
+
+  const renderInputComponent = (key: string, input: any) => {
+    if (!input) return null;  // Add this line to handle missing input data
+
+    const commonProps = {
+      handleId: `${id}-input-${key}`,
+      label: key,
+      value: input.value ?? input.default ?? '',
+      onChange: (value: any) => updateNodeData(key, value),
+      type: input.type
+    };
+
+    switch (input.type) {
+      case 'float':
+      case 'number':
+      case 'int':
+        return <NumberInput key={`${id}-input-${key}`} {...commonProps} />;
+      case 'str':
+        return <TextInput key={`${id}-input-${key}`} {...commonProps} />;
+      default:
+        return null;
+    }
+  };
+
+  const renderOutputComponent = (key: string, output: any) => {
+    const commonProps = {
+      handleId: `${id}-output-${key}`,
+      label: key,
+      value: output.value ?? '',
+      type: output.type
+    };
+
+    // console.log('Output data:', output);
+
+    switch (output.type) {
+      case 'number':
+      case 'int':
+        return <NumberOutput key={`${id}-output-${key}`} {...commonProps} />;
+      case 'str':
+        return <TextOutput key={`${id}-output-${key}`} {...commonProps} />;
+    }
+  };
 
   const { name, inputs, outputs, description, status } = data as NodeData;
 
@@ -75,54 +137,17 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
       <NodeTopBar id={id} />
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
-      <Box p='0.5rem' w='100%'>
-        {description && (
-          <Text size="xs" fw={500} mb="0.5rem">
-            {description}
-          </Text>
-        )}
-        {Object.entries(inputs).map(([key, input], index) => (
-          <Flex
-            key={`input-${id}-${key}`} 
-            align='flex-start'
-            mb='0.5rem'
-            w='100%'
-            h='2rem'
-          >
-            <NumberInput 
-              handleId={`${id}-input-${key}`}
-              label={key}
-              defaultValue={input.default}
-              value={input.value}
-              type={input.type}
-              onChange={(value) => updateNodeData(key, value)}
-              key={`${id}-input-${key}`}
-            />    
-          </Flex>
-        ))}
-      </Box>
+      <Flex direction='column' gap='0.5rem' p='0.5rem' w='100%'>
+        {Object.entries(data.inputs || {}).map(([key, input]) => renderInputComponent(key, input))}
+      </Flex>
 
-      <Box p='0.5rem' w='100%'>
-        <Text size="sm" fw={500}>Outputs:</Text>
-        {Object.entries(outputs).map(([key, type], index) => (
-          <Box key={`output-${id}-${key}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '8px', position: 'relative' }}>
-            <Text size="xs">{key}: {type === null ? 'none' : type}</Text>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={`output-${key}`}
-              style={{ 
-                width: '0.75rem',
-                height: '0.75rem',
-                borderRadius: '50%',
-                backgroundColor: 'red',
-                position: 'absolute',
-                right: '-0.5rem'
-              }}
-            />
-          </Box>
-        ))}
-      </Box>
+      <Divider orientation='horizontal' color='dark.3' w='100%'/>
+
+      <Flex direction='column' gap='0.5rem' p='0.5rem' w='100%'>
+        {Object.entries(outputs).map(([key, output]) => 
+          !(data.streaming && key === 'status') && renderOutputComponent(key, output)
+        )}
+      </Flex>
     </Paper>
   );
 });

@@ -1,4 +1,4 @@
-from nodes.test_nodes import AddNode
+from backend.nodes.math_nodes import AddNode
 
 
 node_json ='''

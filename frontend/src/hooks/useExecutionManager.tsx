@@ -15,8 +15,6 @@ export function useExecutionManager() {
       reactFlow.updateNodeData(node.id, { status: 'pending' });
     });
 
-    console.log('Nodes set to pending:', reactFlow.getNodes());
-
     if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
       websocketRef.current = new WebSocket('ws://localhost:8000/execute');
       websocketRef.current.onopen = () => {

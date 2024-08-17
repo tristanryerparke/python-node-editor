@@ -11,6 +11,7 @@ def find_and_load_classes(directory):
     
     # Iterate through the files in the directory
     for filename in os.listdir(directory):
+        print(filename)
         
         if filename.endswith('.py'):
             module_name = filename[:-3]
@@ -28,6 +29,8 @@ def find_and_load_classes(directory):
             
             # Add to the list of all classes
             all_classes[module_name] = classes
+
+    print(all_classes)
             
     return all_classes
 

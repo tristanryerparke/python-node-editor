@@ -4,13 +4,13 @@ from functools import lru_cache
 import sys
 import time
 sys.path.append('./')
-from base_node import BaseNode, StreamingBaseNode
+from base_node import BaseNode, StreamingBaseNode, NodeOutput
 
 MAXSIZE = 10
     
 
 class AddNode(BaseNode):
-    outputs: dict = {'addition_result': None}
+    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
     
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -22,11 +22,11 @@ class AddNode(BaseNode):
         # print(f'Adding {a} and {b}')
         # print('hi this is a test')
         # print(mf)
-        return {'addition_result': a + b}
+        return {'result': a + b}
     
 
 class SubtractNode(BaseNode):
-    outputs: dict = {'subtraction_result': None}
+    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -35,13 +35,38 @@ class SubtractNode(BaseNode):
         a: Union[float, int] = 0, 
         b: Union[float, int] = 0,
     ) -> Dict[str, Union[float, int]]:
-        return {'subtraction_result': a - b}
+        return {'result': a - b}
     
 
+class MultiplyNode(BaseNode):
+    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
 
+    @classmethod
+    @lru_cache(maxsize=MAXSIZE)
+    def exec(
+        cls,
+        a: Union[float, int] = 1, 
+        b: Union[float, int] = 1,
+    ) -> Dict[str, Union[float, int]]:
+        print(f'Multiplying {a} and {b} to get {a * b}')
+        return {'result': a * b}
+
+class DivideNode(BaseNode):
+    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
+
+    @classmethod
+    @lru_cache(maxsize=MAXSIZE)
+    def exec(
+        cls,
+        a: Union[float, int] = 1, 
+        b: Union[float, int] = 1,
+    ) -> Dict[str, Union[float, int]]:
+        if b == 0:
+            raise ValueError("Cannot divide by zero")
+        return {'result': a / b}
 
 class TestStreamingAddNode(StreamingBaseNode):
-    outputs: dict = {'addition_result': None}
+    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
     @classmethod
     def exec_stream(
         cls,
@@ -49,12 +74,12 @@ class TestStreamingAddNode(StreamingBaseNode):
         b: Union[float, int] = 0,
     ) -> Generator[Dict[str, Union[str, Dict[str, Union[float, int]]]], None, None]:
         for i in range(5):
-            yield {'status': 'progress', 'addition_result': f'progress: {i}'}
+            yield {'status': 'progress', 'result': f'progress: {i}'}
             time.sleep(1)
-        yield {'status': 'complete', 'addition_result':  a + b}
+        yield {'status': 'complete', 'result':  a + b}
 
 class SplitNode(BaseNode):
-    outputs: dict = {'split_t_result': None, 'split_1_minus_t_result': None}
+    outputs: Dict[str, NodeOutput] = {'split_t': NodeOutput(type='number'), 'split_1_minus_t': NodeOutput(type='number')}
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -65,10 +90,10 @@ class SplitNode(BaseNode):
     ) -> Tuple[Dict[str, float], Dict[str, float]]:
         if not 0 <= t <= 1:
             raise ValueError("t must be between 0 and 1")
-        return  {'split_t_result': number * t}, {'split_1_minus_t_result': number * (1 - t)}
+        return  {'split_t': number * t}, {'split_1_minus_t': number * (1 - t)}
 
 class TestStreamingSplitNode(StreamingBaseNode):
-    outputs: dict = {'split_t_result': None, 'split_1_minus_t_result': None}
+    outputs: Dict[str, NodeOutput] = {'split_t': NodeOutput(type='number'), 'split_1_minus_t': NodeOutput(type='number')}
 
     @classmethod
     def exec_stream(
@@ -82,15 +107,15 @@ class TestStreamingSplitNode(StreamingBaseNode):
         for i in range(5):
             yield {
                 'status': 'progress',
-                'split_t_result': i * t,
-                'split_1_minus_t_result': i * (1 - t)
+                'split_t': i * t,
+                'split_1_minus_t': i * (1 - t)
                 
             }
             time.sleep(1)
 
         yield {
             'status': 'complete',
-            'split_t_result': number * t,
-            'split_1_minus_t_result': number * (1 - t)
+            'split_t': number * t,
+            'split_1_minus_t': number * (1 - t)
             
         }

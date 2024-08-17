@@ -17,6 +17,8 @@ def types_for_send(t):
         return 'float'
     elif t is int:
         return 'int'
+    elif t is str:
+        return 'str'
     else:
         raise ValueError(f'Unsupported type: {t}')
 
@@ -28,7 +30,7 @@ class NodeInput(BaseDoc):
 
 class NodeOutput(BaseDoc):
     type: str
-    value: Any
+    value: Any = None
 
 class CaptureOutput:
     def __init__(self):
@@ -59,7 +61,7 @@ class BaseNode(BaseDoc):
     error_output: str = ''
     description: str = ''
     inputs: Dict[str, NodeInput] = {}
-    outputs: dict = {}
+    outputs: Dict[str, NodeOutput] = {}
     streaming: bool = False
     definition_path: str = ''
 
@@ -117,7 +119,7 @@ class BaseNode(BaseDoc):
         
         for result_dict in result:
             for key, value in result_dict.items():
-                self.outputs[key] = value
+                self.outputs[key].value = value
 
         self.status = 'evaluated'
 
@@ -139,7 +141,7 @@ class StreamingBaseNode(BaseNode):
         with CaptureOutput() as output:
             for result in self.__class__.exec_stream(**exec_inputs):
                 for key, value in result.items():
-                    self.outputs[key] = value
+                    self.outputs[key].value = value
                 yield result
 
         stdout, stderr = output.get_output()
