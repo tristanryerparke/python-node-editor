@@ -1,4 +1,4 @@
-import { Flex, Text, Divider, ActionIcon, TextInput, ScrollArea } from '@mantine/core';
+import { Flex, Text, Divider, ActionIcon, TextInput, ScrollArea, Tooltip } from '@mantine/core';
 import { IconReload, IconSearch } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 
@@ -46,38 +46,54 @@ function NodePicker() {
 
   return (
     <>
-      <Flex align='center' justify='flex-start' w='15rem' direction='column'>
+      <Flex align='center' justify='flex-start' w='15rem' direction='column' p={0} m={0}>
+        {/* Search / reload  bar */}
         <Flex direction='row' justify='flex-end' align='center' p='0.5rem' gap='0.25rem'>
           <TextInput
             leftSection={<IconSearch size={20} />}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.currentTarget.value)}
           />
-          <ActionIcon onClick={fetchNodes} size='lg' color='blue' variant='subtle' color='dark.3'>
+          <ActionIcon onClick={fetchNodes} size='lg' variant='subtle' color='dark.3'>
             <IconReload size={20} />
           </ActionIcon>
         </Flex>
-        <ScrollArea w='100%' h='100%'>
+        {/* Category list */}
+        <ScrollArea w='100%' h='100%' p={0} m={0}>
           {Object.entries(filteredCategories).map(([category, nodes]) => (
-            <Flex key={category} direction='column' align='center' w='100%' p='0.5rem' gap='0'>
+            
+            <Flex key={category} direction='column' align='center' w='100%' p={0} gap='0'>
+              <Divider orientation='horizontal' color='dark.3' w='100%' mb='0.25rem' />
               <Text fw='bold'>{category}</Text>
-              <Divider orientation='horizontal' color='dark.3' w='100%' mt='0.25rem' />
-              {nodes.map((node, index) => (
-                <Flex
-                  key={index}
-                  onDragStart={(event) => onDragStart(event, node)}
-                  draggable
-                  mt='xs'
-                  w='100%'
-                  h='4rem'
-                  justify='center'
-                  align='center'
-                  bg='dark.5'
-                  style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
-                >
-                  {`${node.name.replace('Node', '')}`}
-                </Flex>
-              ))}
+              
+              <Flex direction='column' align='center' w='100%' px='0.5rem' pb='0.5rem' pt='0.25rem' m={0} gap='0.25rem'>
+                {/* The node list */}
+                {nodes.map((node, index) => (
+                  <Tooltip
+                    key={index}
+                    label={node.description || 'No Description'}
+                    color='dark.3'
+                    withArrow
+                    arrowSize={8}
+                    multiline
+                    w={200}
+                    position="right"
+                  >
+                    <Flex
+                      onDragStart={(event) => onDragStart(event, node)}
+                      draggable
+                      w='100%'
+                      h='2rem'
+                      justify='center'
+                      align='center'
+                      bg='dark.5'
+                      style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
+                    >
+                      <Text size='sm' fw={700}>{`${node.name.replace('Node', '')}`}</Text>
+                    </Flex>
+                  </Tooltip>
+                ))}
+              </Flex>
             </Flex>
           ))}
         </ScrollArea>
