@@ -2,7 +2,6 @@ import asyncio
 import json
 from fastapi import APIRouter, BackgroundTasks, WebSocket
 from starlette.websockets import WebSocketState, WebSocketDisconnect
-from docarray import BaseDoc
 
 from base_node import BaseNode, NodeInput
 from execution_wrapper import ExecutionWrapper, ExecuteRequest

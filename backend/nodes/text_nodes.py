@@ -23,6 +23,7 @@ class ReplaceNode(BaseNode):
 
 class JoinNode(BaseNode):
     outputs: Dict[str, NodeOutput] = {'join_result': NodeOutput(type='str')}
+    description: str = "Join two strings with a separator"
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)

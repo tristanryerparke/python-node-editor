@@ -1,4 +1,4 @@
-from docarray import BaseDoc
+from pydantic import BaseModel
 import shortuuid
 import time
 from inspect import signature, Parameter
@@ -23,12 +23,12 @@ def types_for_send(t):
         raise ValueError(f'Unsupported type: {t}')
 
 
-class NodeInput(BaseDoc):
+class NodeInput(BaseModel):
     type: str
     default: Any
     value: Any
 
-class NodeOutput(BaseDoc):
+class NodeOutput(BaseModel):
     type: str
     value: Any = None
 
@@ -48,7 +48,7 @@ class CaptureOutput:
     def get_output(self):
         return self.stdout.getvalue(), self.stderr.getvalue()
 
-class BaseNode(BaseDoc):
+class BaseNode(BaseModel):
     id: str
     name: str = ''
     namespace: str = ''
@@ -75,7 +75,7 @@ class BaseNode(BaseDoc):
 
     def detect_namespace(self):
         module = sys.modules[self.__class__.__module__]
-        self.namespace = module.__name__.split('.')[-1]
+        self.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
 
     def analyze_inputs(self):
         # Find the exec method based on the streaming flag

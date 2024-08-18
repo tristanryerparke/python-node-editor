@@ -10,7 +10,6 @@ from typing import get_type_hints, get_origin, Union, Dict
 from utils import find_and_load_classes, topological_sort
 
 
-from docarray import BaseDoc
 from devtools import debug as d
 from typing import List, Dict, Any, get_args
 

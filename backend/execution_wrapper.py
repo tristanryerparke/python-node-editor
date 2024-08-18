@@ -2,17 +2,17 @@ import time
 import json
 import traceback
 from utils import topological_sort, find_and_load_classes
-from docarray import BaseDoc
+from pydantic import BaseModel
 from base_node import BaseNode, NodeInput, NodeOutput
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
 
-class GraphDef(BaseDoc):
+class GraphDef(BaseModel):
     nodes: list
     edges: list
 
-class ExecuteRequest(BaseDoc):
+class ExecuteRequest(BaseModel):
     graph_def: GraphDef
 
 class ExecutionWrapper:
@@ -36,7 +36,7 @@ class ExecutionWrapper:
         start_time = time.time()
         self.node_instances = {}
 
-
+        # d(graph_def)
         graph_def = GraphDef.model_validate(graph_def)
         
         print(f"Starting graph execution... {len(graph_def.nodes)} nodes, {len(graph_def.edges)} edges")
@@ -45,6 +45,7 @@ class ExecutionWrapper:
         node_instantiation_start = time.time()
         for node in graph_def.nodes:
             id = str(node['id'])
+            # print(f"Instantiating node {id}...")
             node_type = node['name']
             namespace = node['namespace']
             NodeClass = next((cls for cls in classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
@@ -53,6 +54,8 @@ class ExecutionWrapper:
                 self.node_instances[id] = instance
         node_instantiation_end = time.time()
         print(f"Node instantiation took {node_instantiation_end - node_instantiation_start:.4f} seconds")
+
+        # d(self.node_instances)
 
         # Topological sort
         sort_start = time.time()
