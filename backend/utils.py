@@ -27,8 +27,11 @@ def find_and_load_classes(directory):
                 definition_path = f"{source_file}:{start_line}"
                 obj.definition_path = definition_path
             
+            # Use the module's custom display name if available, otherwise use the module name
+            display_name = getattr(module, 'DISPLAY_NAME', module_name)
+            
             # Add to the list of all classes
-            all_classes[module_name] = classes
+            all_classes[display_name] = classes
 
     print(all_classes)
             

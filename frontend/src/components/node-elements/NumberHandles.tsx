@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Handle, Position, useEdges } from '@xyflow/react';
-import { NumberInput as MantineNumberInput, Group, Text, Flex, useMantineTheme, Tooltip } from '@mantine/core';
+import { NumberInput, Group, Text, Flex, useMantineTheme, Tooltip, TextInput } from '@mantine/core';
+
 
 interface NumberInputProps {
   handleId: string;
@@ -10,7 +11,7 @@ interface NumberInputProps {
   onChange: (value: number) => void;
 }
 
-const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, value, type, onChange }) => {
+export const NumberInputHandle: React.FC<NumberInputProps> = ({ handleId, label, value, type, onChange }) => {
   const theme = useMantineTheme();
   const edges = useEdges();
   const [isEdgeConnected, setIsEdgeConnected] = useState(false);
@@ -39,7 +40,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, value, type,
             borderRadius: '50%',
             border: '2px solid',
             borderColor: theme.colors.dark[2],
-            backgroundColor: theme.colors.teal[5],
+            backgroundColor: theme.colors.dark[5],
             position: 'absolute',
             top: '0.375rem',
             transform: 'translateX(-1rem)'
@@ -48,7 +49,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, value, type,
       </Tooltip>
       <Group pl="0.25rem" gap="0.2rem" w='100%' align='center'>
         <Text px="0.3rem">{label}</Text>
-        <MantineNumberInput
+        <NumberInput
           size="xs"
           value={value}
           onChange={handleChange}
@@ -61,4 +62,48 @@ const NumberInput: React.FC<NumberInputProps> = ({ handleId, label, value, type,
   );
 };
 
-export default NumberInput;
+
+interface NumberOutputProps {
+  handleId: string;
+  label: string;
+  value: number;
+  type: string;
+}
+
+export const NumberOutputHandle: React.FC<NumberOutputProps> = ({ handleId, label, value, type }) => {
+  const theme = useMantineTheme();
+
+  return (
+    <Flex style={{position: 'relative'}} my='auto' align='center' justify='space-between' w='100%'>
+      <Group pr="0.25rem" gap="0.2rem" w='100%' align='center'>
+        
+        <TextInput
+          size="xs"
+          disabled
+          value={value.toString()}
+          readOnly
+          
+        />
+        <Text px="0.3rem">{label}</Text>
+      </Group>
+      <Tooltip label={type} color='dark.3' position='right' withArrow arrowSize={8}>
+        <Handle
+          type="source"
+          position={Position.Right}
+          id={handleId}
+          style={{ 
+            width: '1rem',
+            height: '1rem',
+            borderRadius: '50%',
+            border: '2px solid',
+            borderColor: theme.colors.dark[2],
+            backgroundColor: theme.colors.dark[5],
+            position: 'absolute',
+            top: '0.375rem',
+            transform: 'translateX(1rem)'
+          }}
+        />
+      </Tooltip>
+    </Flex>
+  );
+};

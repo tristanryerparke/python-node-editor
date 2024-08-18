@@ -1,10 +1,9 @@
 import { memo, useCallback, useContext } from 'react';
 import { Handle, Position, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Text, Box, Divider, Flex } from '@mantine/core';
-import NumberInput from './node-elements/NumberInput';
-import TextInput from './node-elements/TextInput';
-import NumberOutput from './node-elements/NumberOutput';
-import TextOutput from './node-elements/TextOutput';
+import { TextInputHandle, TextOutputHandle } from './node-elements/TextHandles';
+import { NumberInputHandle, NumberOutputHandle } from './node-elements/NumberHandles';
+
 import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
@@ -83,9 +82,9 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
       case 'float':
       case 'number':
       case 'int':
-        return <NumberInput key={`${id}-input-${key}`} {...commonProps} />;
+        return <NumberInputHandle key={`${id}-input-${key}`} {...commonProps} />;
       case 'str':
-        return <TextInput key={`${id}-input-${key}`} {...commonProps} />;
+        return <TextInputHandle key={`${id}-input-${key}`} {...commonProps} />;
       default:
         return null;
     }
@@ -102,9 +101,9 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
     switch (output.type) {
       case 'number':
       case 'int':
-        return <NumberOutput key={`${id}-output-${key}`} {...commonProps} />;
+        return <NumberOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
       case 'str':
-        return <TextOutput key={`${id}-output-${key}`} {...commonProps} />;
+        return <TextOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
     }
   };
 

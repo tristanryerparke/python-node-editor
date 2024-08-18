@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from base_node import BaseNode
 from utils import find_and_load_classes
 
-from shared_globals import CLASSES_DICT
+from shared_globals import CLASSES_DICT, reload_nodes
 
 node_list_router = APIRouter()
 
@@ -11,6 +11,9 @@ node_list_router = APIRouter()
 def get_all_nodes():
     """Finds and retrieves all nodes in the nodes directory"""
     global CLASSES_DICT
+
+    reload_nodes()
+
     nodes_dict = {}
     for key, value in CLASSES_DICT.items():
         category_list = []

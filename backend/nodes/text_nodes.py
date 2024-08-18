@@ -5,6 +5,8 @@ from base_node import BaseNode, NodeOutput
 
 MAXSIZE = 10
 
+DISPLAY_NAME = "Text"
+
 class ReplaceNode(BaseNode):
     outputs: Dict[str, NodeOutput] = {'replace_result': NodeOutput(type='str')}
     description: str = "Replace a string with another string"

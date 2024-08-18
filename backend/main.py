@@ -18,7 +18,6 @@ from typing import List, Dict, Any, get_args
 from base_node import BaseNode, StreamingBaseNode
 from routes.execution import execution_router
 from routes.node_list import node_list_router
-from routes.node_info import node_info_router
 app = FastAPI()
 
 app.add_middleware(
@@ -41,7 +40,6 @@ app.add_middleware(
 
 app.include_router(execution_router)
 app.include_router(node_list_router)
-app.include_router(node_info_router)
 
         
 if __name__ == "__main__":
