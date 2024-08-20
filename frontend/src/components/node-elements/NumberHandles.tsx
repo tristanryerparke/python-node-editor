@@ -22,8 +22,9 @@ export const NumberInputHandle: React.FC<NumberInputProps> = ({ handleId, label,
   }, [edges, handleId]);
 
   const handleChange = (newValue: string | number) => {
-    if (typeof newValue === 'number') {
-      onChange(newValue);
+    const parsedValue = typeof newValue === 'string' ? parseFloat(newValue) : newValue;
+    if (!isNaN(parsedValue)) {
+      onChange(parsedValue);
     }
   };
 
