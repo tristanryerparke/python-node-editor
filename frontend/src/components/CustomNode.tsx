@@ -1,5 +1,5 @@
 import { memo, useCallback, useContext } from 'react';
-import { Node, NodeProps, useNodesData } from '@xyflow/react';
+import { Node, NodeProps, useNodesData, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
 import { TextInputHandle, TextOutputHandle } from './node-elements/TextHandles';
 import { NumberInputHandle, NumberOutputHandle } from './node-elements/NumberHandles';
@@ -13,25 +13,23 @@ import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
-  // const reactFlow = useReactFlow();
+  const reactFlow = useReactFlow();
   const { autoExecute } = useContext(AutoExecuteContext);
   const { debouncedExecute } = useExecutionManager();
-  // const edges = useEdges();
 
   const nodeData = useNodesData(id)?.data as unknown as BaseNodeData;
 
   const updateNodeData = useCallback((inputKey: string, value: any) => {
+    const newData = nodeData;
 
-    // console.log('got an update')
+    newData.inputs[inputKey].value = value;
 
-    nodeData.inputs[inputKey].value = value;
-
-    // console.log('nodeData after', nodeData);
+    reactFlow.updateNodeData(id, newData as unknown as Partial<Record<string, unknown>>);
 
     if (autoExecute) {
       debouncedExecute();
     }
-  }, [nodeData, debouncedExecute, autoExecute]);
+  }, [nodeData, autoExecute, reactFlow, debouncedExecute, id]);
 
   const renderInputComponent = (key: string, input: NodeInput) => {
     const commonProps = {
