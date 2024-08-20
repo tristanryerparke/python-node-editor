@@ -5,7 +5,7 @@ import { PanelsContext, AutoExecuteContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
 
 function Header() {
-  const { panels, setPanels } = useContext(PanelsContext);
+  const { setPanels } = useContext(PanelsContext);
   const { autoExecute, setAutoExecute } = useContext(AutoExecuteContext);
   const { execute } = useExecutionManager();
 

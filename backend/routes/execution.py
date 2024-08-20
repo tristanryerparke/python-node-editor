@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, BackgroundTasks, WebSocket
 from starlette.websockets import WebSocketState, WebSocketDisconnect
 
-from base_node import BaseNode, NodeInput
+from base_node import BaseNodeData, NodeInput
 from execution_wrapper import ExecutionWrapper, ExecuteRequest
 
 from shared_globals import CLASSES_DICT, EXECUTION_WRAPPER

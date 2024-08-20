@@ -4,6 +4,8 @@ import { useNodesData } from '@xyflow/react';
 import { IconInfoCircle, IconCode, IconLicense, IconRosetteDiscountCheck } from '@tabler/icons-react';
 import { InspectorContext, NodeSelectionContext, PanelsContext } from '../../GlobalContext';
 import { getStatusColor } from '../../utils/Colors';
+import type { BaseNodeData } from '../../types/DataTypes';
+
 
 interface NodeTopBarProps {
   id: string;
@@ -11,16 +13,17 @@ interface NodeTopBarProps {
 
 const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   const theme = useMantineTheme();
-  const nodeData = useNodesData(id);
+  const node = useNodesData(id)!;
+  const nodeData = node.data as unknown as BaseNodeData;
   const { setIsLocked, setLockedNodeId } = useContext(InspectorContext);
   const { setSelectedNodeId } = useContext(NodeSelectionContext);
   const { panels, setPanels } = useContext(PanelsContext);
 
-  const statusColor = getStatusColor(nodeData.data.status, theme);
+  const statusColor = getStatusColor(nodeData.status, theme);
 
   const handleCodeClick = () => {
-    if (nodeData.data.definition_path) {
-      const cursorUrl = `cursor://file${encodeURI(nodeData.data.definition_path)}`;
+    if (nodeData.definition_path) {
+      const cursorUrl = `cursor://file${encodeURI(nodeData.definition_path)}`;
       window.open(cursorUrl, '_blank');
     }
   };
@@ -41,19 +44,19 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   return (
     <Group w='100%' justify='space-between' pl='0.5rem'>
       <Tooltip
-        label={nodeData.data.description || 'No Description'}
+        label={nodeData.description || 'No Description'}
         color='dark.3'
         withArrow
         arrowSize={8}
         multiline
-        width={200}
+        w='200px'
       >
         <Text fw={700} p='0rem' m='0rem' style={{ cursor: 'help' }}>
-          {nodeData.data.name.replace('Node', '')}
+          {nodeData.name.replace('Node', '')}
         </Text>
       </Tooltip>
       <Group m='0.25rem' p={0} gap='0.2rem' justify='flex-end'>
-        {nodeData.data.streaming && (
+        {(nodeData.streaming) && (
           <Tooltip label="Streaming Node" color='dark.3' withArrow arrowSize={8}>
             <IconLicense color='var(--mantine-color-indigo-5)' size={20} />
           </Tooltip>
@@ -68,7 +71,7 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
             <IconInfoCircle />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={`Status: ${nodeData.data.status}`} color='dark.3' withArrow>
+        <Tooltip label={`Status: ${nodeData.status}`} color='dark.3' withArrow>
           <IconRosetteDiscountCheck 
             color={statusColor}
             size={20} 

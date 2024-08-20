@@ -18,7 +18,7 @@ def find_and_load_classes(directory):
             module = importlib.import_module(f"{directory}.{filename[:-3]}")
             
             # Get a list of classes defined in the module
-            classes = [obj for name, obj in inspect.getmembers(module) if inspect.isclass(obj) and issubclass(obj, BaseNode) if obj != BaseNode and obj != StreamingBaseNode]
+            classes = [obj for name, obj in inspect.getmembers(module) if inspect.isclass(obj) and issubclass(obj, BaseNode) and obj != BaseNode and obj != StreamingBaseNode]
             
             # Add the definition_path attribute to each class
             for obj in classes:

@@ -15,11 +15,11 @@ import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
+import type { BaseNodeData } from '../types/DataTypes';
 
 function InspectorPanel() {
   const { selectedNodeId } = useContext(NodeSelectionContext);
   const { isLocked, setIsLocked, lockedNodeId, setLockedNodeId } = useContext(InspectorContext);
-  const nodes = useNodes();
   const theme = useMantineTheme();
 
   const toggleLock = () => {
@@ -31,23 +31,27 @@ function InspectorPanel() {
     }
   };
 
+  const nodes = useNodes();
+
   const nodeToDisplay = isLocked ? lockedNodeId : selectedNodeId;
   const selectedNode = nodes.find(node => node.id === nodeToDisplay);
+  const selectedNodeData = selectedNode?.data as unknown as BaseNodeData;
 
-  const renderInputs = (inputs) => (
+
+  const renderInputs = (inputs: Record<string, { value: unknown, type: string }>) => (
     <Box>
       <Title order={4}>Inputs:</Title>
       {Object.entries(inputs).map(([key, value]) => (
-        <Text key={key}>{key}: {value.value} (Type: {value.type}, Default: {value.default})</Text>
+        <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
       ))}
     </Box>
   );
 
-  const renderOutputs = (outputs) => (
+  const renderOutputs = (outputs: Record<string, { value: unknown, type: string }>) => (
     <Box mt="md">
       <Title order={4}>Outputs:</Title>
       {Object.entries(outputs).map(([key, value]) => (
-        <Text key={key}>{key}: {value.value === null ? 'none' : value.value} (Type: {value.type})</Text>
+        <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
       ))}
     </Box>
   );
@@ -86,7 +90,7 @@ function InspectorPanel() {
       minSize={20}
       style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0', margin: '0' }}
     >
-      <Flex direction="row" justify="space-between" align="center" mb="md" w="100%" pl='0.5rem' pt='0.3rem' pr='0.35rem' m='0' mb='0.3rem' pb='0rem'>
+      <Flex direction="row" justify="space-between" align="center" w="100%" pl='0.5rem' pt='0.3rem' pr='0.35rem' m='0' mb='0.3rem' pb='0rem'>
         <Title order={3}>Inspector</Title>
         <ActionIcon variant="subtle" color={isLocked ? 'red.5': 'dark.3'} onClick={toggleLock}>
           {isLocked ? <IconLockFilled/> : <IconLockOpen />}
@@ -98,19 +102,19 @@ function InspectorPanel() {
           {selectedNode ? (
             <>
               <Flex direction="row" w="100%" justify="space-between">
-                <Title order={3} mb="md">{`Node: ${selectedNode.data.name.replace('Node', '')}`}</Title>
+                <Title order={3} mb="md">{`Node: ${selectedNodeData.name.replace('Node', '')}`}</Title>
                 <Flex direction="column" justify="flex-end" align="flex-end">
-                  <Badge color={getStatusColor(selectedNode.data.status, theme)}>
-                    {selectedNode.data.status}
+                  <Badge color={getStatusColor(selectedNodeData.status, theme)}>
+                    {selectedNodeData.status}
                   </Badge>
                   <Text size="xs" mb="md">{`ID: ${selectedNode.id}`}</Text>
                 </Flex>
               </Flex>
               
-              {renderInputs(selectedNode.data.inputs)}
-              {renderOutputs(selectedNode.data.outputs)}
-              {renderTerminalOutput(selectedNode.data.terminal_output)}
-              {renderErrorOutput(selectedNode.data.error_output)}
+              {renderInputs(selectedNodeData.inputs)}
+              {renderOutputs(selectedNodeData.outputs)}
+              {renderTerminalOutput(selectedNodeData.terminal_output)}
+              {renderErrorOutput(selectedNodeData.error_output)}
             </>
           ) : (
             <Text>No node selected</Text>

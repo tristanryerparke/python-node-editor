@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useNodes, useEdges, useReactFlow } from '@xyflow/react';
-import { serializeNodeForBackend, parseNodeForCreation } from '../utils/nodeProcessing';
+import type { Node, Edge } from '@xyflow/react';
 
 export function useExecutionManager() {
   const websocketRef = useRef<WebSocket | null>(null);
@@ -25,7 +25,9 @@ export function useExecutionManager() {
 
     // Update all nodes to 'pending' status
     nodesRef.current.forEach(node => {
-      reactFlow.updateNodeData(node.id, { status: 'pending' });
+      reactFlow.setNodes(nds => 
+        nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, status: 'pending' } } : n)
+      );
     });
 
     if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
@@ -38,8 +40,10 @@ export function useExecutionManager() {
       websocketRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.status === 'node_update') {
-          const updatedNode = parseNodeForCreation(data.node);
-          reactFlow.updateNodeData(updatedNode.id, updatedNode.data);
+          const updatedNode = data.node;
+          reactFlow.setNodes(nds => 
+            nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
+          );
           
           if (updatedNode.data.status === 'error') {
             resetPendingNodes();
@@ -73,8 +77,7 @@ export function useExecutionManager() {
   }, [execute]);
 
   const sendExecuteMessage = useCallback(() => {
-    const serializedNodes = nodesRef.current.map(serializeNodeForBackend);
-    const graph_def = { nodes: serializedNodes, edges: edgesRef.current };
+    const graph_def = { nodes: nodesRef.current, edges: edgesRef.current };
     
     websocketRef.current?.send(JSON.stringify({
       action: 'execute',
@@ -83,11 +86,13 @@ export function useExecutionManager() {
   }, []);
 
   const resetPendingNodes = useCallback(() => {
-    reactFlow.getNodes().forEach(node => {
-      if (node.data.status === 'pending') {
-        reactFlow.updateNodeData(node.id, { status: 'not evaluated' });
-      }
-    });
+    reactFlow.setNodes(nds => 
+      nds.map(node => 
+        node.data.status === 'pending' 
+          ? { ...node, data: { ...node.data, status: 'not evaluated' } } 
+          : node
+      )
+    );
   }, [reactFlow]);
 
   useEffect(() => {
