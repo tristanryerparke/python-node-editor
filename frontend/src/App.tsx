@@ -30,7 +30,7 @@ function App() {
 
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [autoExecute, setAutoExecute] = useState(true);
+  const [autoExecute, setAutoExecute] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockedNodeId, setLockedNodeId] = useState<string | null>(null);
 

@@ -6,12 +6,12 @@ import sys
 import time
 import base64
 sys.path.append('./')
-from base_node import BaseNode, StreamingBaseNode
+from base_node import BaseNodeData, StreamingBaseNodeData
 
 
 MAXSIZE = 10
 
-class LoadImageFile(BaseNode):
+class LoadImageFile(BaseNodeData):
     outputs: dict = {'image': None}
     
     @classmethod
@@ -29,7 +29,7 @@ class LoadImageFile(BaseNode):
         return super().model_dump(*args, **kwargs)
         
 
-class BlurImage(BaseNode):
+class BlurImage(BaseNodeData):
     outputs: dict = {'image': None}
     
     @classmethod
@@ -45,7 +45,7 @@ class BlurImage(BaseNode):
             self.outputs['image'] = base64.b64encode(self.outputs['image'].tobytes()).decode('utf-8')
         return super().model_dump(*args, **kwargs)
     
-class SaveImage(BaseNode):
+class SaveImage(BaseNodeData):
     outputs: dict = {'image_path': None}
     
     @classmethod

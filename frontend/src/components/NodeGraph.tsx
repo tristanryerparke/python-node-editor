@@ -7,18 +7,18 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  Node,
-  Edge,
   Connection,
   useReactFlow,
   type NodeTypes,
   useOnSelectionChange,
+  BackgroundVariant,
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
-import CustomNode, { NodeData } from './CustomNode';
+import CustomNode from './CustomNode';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
-import { parseNodeForCreation } from '../utils/nodeProcessing';
 import { useExecutionManager } from '../hooks/useExecutionManager';
+import { BaseNodeData } from '../types/DataTypes';
+import type { Node, Edge } from '@xyflow/react';
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
@@ -32,7 +32,7 @@ const NodeGraph: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const { screenToFlowPosition } = useReactFlow();
 
-  const { selectedNodeId, setSelectedNodeId } = useContext(NodeSelectionContext);
+  const { setSelectedNodeId } = useContext(NodeSelectionContext);
   const { autoExecute } = useContext(AutoExecuteContext);
   const { debouncedExecute } = useExecutionManager();
 
@@ -50,27 +50,33 @@ const NodeGraph: React.FC = () => {
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
 
-      const nodeData: NodeData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
+      const droppedNodeData: BaseNodeData = JSON.parse(event.dataTransfer.getData('application/reactflow')).data;
+
 
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
 
-      const newNode = parseNodeForCreation({
-        ...nodeData,
+      const newNode: Node = {
+        
+        id: crypto.randomUUID(),
         position: {
           x: position.x - 75,
           y: position.y - 37.5,
         },
-      });
+        type: 'customNode',
+        data: {...droppedNodeData},
+      };
+
+      // console.log(newNode);
 
       setNodes((nds) => nds.concat(newNode));
     },
     [screenToFlowPosition, setNodes]
   );
 
-  const onSelectionChange = useCallback(({ nodes, edges }) => {
+  const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
     if (nodes.length > 0) {
       setSelectedNodeId(nodes[0].id);
     } else {
@@ -104,7 +110,7 @@ const NodeGraph: React.FC = () => {
       >
         <Controls />
         <MiniMap />
-        <Background variant="dots" gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
     </Panel>
   );

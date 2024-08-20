@@ -4,7 +4,7 @@ from functools import lru_cache
 import sys
 import time
 sys.path.append('./')
-from base_node import BaseNode, StreamingBaseNode, NodeOutput
+from base_node import BaseNode, BaseNodeData, StreamingBaseNode, NodeOutput
 
 MAXSIZE = 10
 
@@ -13,8 +13,12 @@ DISPLAY_NAME = "Math"
     
 
 class AddNode(BaseNode):
-    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
-    
+    data: BaseNodeData = BaseNodeData(
+        outputs = {
+            'result': NodeOutput(type='number')
+        }
+    )
+
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
     def exec(
@@ -29,7 +33,11 @@ class AddNode(BaseNode):
     
 
 class AddNodeNoDefault(BaseNode):
-    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
+    data: BaseNodeData = BaseNodeData(
+        outputs = {
+            'result': NodeOutput(type='number')
+        }
+    )
     
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -45,7 +53,11 @@ class AddNodeNoDefault(BaseNode):
     
 
 class SubtractNode(BaseNode):
-    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
+    data: BaseNodeData = BaseNodeData(
+        outputs = {
+            'result': NodeOutput(type='number')
+        }
+    )
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -58,7 +70,11 @@ class SubtractNode(BaseNode):
     
 
 class MultiplyNode(BaseNode):
-    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
+    data: BaseNodeData = BaseNodeData(
+        outputs = {
+            'result': NodeOutput(type='number')
+        }
+    )
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -71,7 +87,11 @@ class MultiplyNode(BaseNode):
         return {'result': a * b}
 
 class DivideNode(BaseNode):
-    outputs: Dict[str, NodeOutput] = {'result': NodeOutput(type='number')}
+    data: BaseNodeData = BaseNodeData(
+        outputs = {
+            'result': NodeOutput(type='number')
+        }
+    )
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -86,7 +106,12 @@ class DivideNode(BaseNode):
 
 
 class SplitNode(BaseNode):
-    outputs: Dict[str, NodeOutput] = {'split_t': NodeOutput(type='number'), 'split_1_minus_t': NodeOutput(type='number')}
+    data: BaseNodeData = BaseNodeData(
+        outputs = {
+            'split_t': NodeOutput(type='number'),
+            'split_1_minus_t': NodeOutput(type='number')
+        }
+    )
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)

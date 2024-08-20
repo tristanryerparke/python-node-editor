@@ -1,6 +1,6 @@
 import { memo, useCallback, useContext } from 'react';
-import { Handle, Position, NodeProps, useReactFlow } from '@xyflow/react';
-import { Paper, Text, Box, Divider, Flex } from '@mantine/core';
+import { Node, NodeProps, useNodesData } from '@xyflow/react';
+import { Paper, Divider, Flex } from '@mantine/core';
 import { TextInputHandle, TextOutputHandle } from './node-elements/TextHandles';
 import { NumberInputHandle, NumberOutputHandle } from './node-elements/NumberHandles';
 
@@ -8,72 +8,36 @@ import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
 
-export interface NodeData {
-  id: string;
-  name: string;
-  type: string;
-  position: { x: number; y: number };
-  description: string;
-  inputs: Record<string, { type: string; default: any; value: any }>;
-  outputs: Record<string, { type: string; value: any }>;
-  streaming: boolean;
-  status: string;
-}
+import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 
-export interface OutputData {
-  value: any;
-  type: string;
-}
+type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
-const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
-  const reactFlow = useReactFlow();
+export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
+  // const reactFlow = useReactFlow();
   const { autoExecute } = useContext(AutoExecuteContext);
   const { debouncedExecute } = useExecutionManager();
+  // const edges = useEdges();
+
+  const nodeData = useNodesData(id)?.data as unknown as BaseNodeData;
 
   const updateNodeData = useCallback((inputKey: string, value: any) => {
-    const previousValue = data.inputs[inputKey].value;
-    const newData = {
-      ...data,
-      inputs: {
-        ...data.inputs,
-        [inputKey]: {
-          ...data.inputs[inputKey],
-          value: value
-        }
-      }
-    };
 
-    if (data.status === 'evaluated' && !data.inputs[inputKey].isEdgeConnected && previousValue !== value) {
-      newData.status = 'not evaluated';
-      newData.outputs = Object.fromEntries(
-        Object.entries(data.outputs).map(([key, output]) => [key, { ...output, value: null }])
-      );
-    }
+    // console.log('got an update')
 
-    reactFlow.setNodes((nds) =>
-      nds.map((node) => {
-        if (node.id === id) {
-          return {
-            ...node,
-            data: newData,
-          };
-        }
-        return node;
-      })
-    );
+    nodeData.inputs[inputKey].value = value;
 
-    if (autoExecute && previousValue !== value) {
+    // console.log('nodeData after', nodeData);
+
+    if (autoExecute) {
       debouncedExecute();
     }
-  }, [data, id, reactFlow, autoExecute, debouncedExecute]);
+  }, [nodeData, debouncedExecute, autoExecute]);
 
-  const renderInputComponent = (key: string, input: any) => {
-    if (!input) return null;
-
+  const renderInputComponent = (key: string, input: NodeInput) => {
     const commonProps = {
       handleId: `${id}-input-${key}`,
       label: key,
-      value: input.value ?? input.default ?? '',
+      value: input.value ?? '',
       onChange: (value: any) => updateNodeData(key, value),
       type: input.type
     };
@@ -90,7 +54,7 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
     }
   };
 
-  const renderOutputComponent = (key: string, output: any) => {
+  const renderOutputComponent = (key: string, output: NodeOutput) => {
     const commonProps = {
       handleId: `${id}-output-${key}`,
       label: key,
@@ -104,17 +68,17 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
         return <NumberOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
       case 'str':
         return <TextOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
+      default:
+        return null;
     }
   };
-
-  const { name, inputs, outputs, description, status } = data as NodeData;
 
   const { selectedNodeId } = useContext(NodeSelectionContext);
 
   const getBorderStyle = () => {
-    if (status === 'executing' ) {
+    if (data.status === 'executing' ) {
       return '2px solid var(--mantine-color-green-5)';
-    } else if (status === 'streaming') {
+    } else if (data.status === 'streaming') {
       return '2px solid var(--mantine-color-indigo-5)';
     } else if (id === selectedNodeId) {
       return '2px solid var(--mantine-color-blue-2)';
@@ -142,18 +106,16 @@ const CustomNode: React.FC<NodeProps> = memo(({ data, id }) => {
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
       <Flex direction='column' gap='0.5rem' p='0.5rem' w='100%'>
-        {Object.entries(data.inputs || {}).map(([key, input]) => renderInputComponent(key, input))}
+        {Object.entries(data.inputs).map(([key, input]) => renderInputComponent(key, input))}
       </Flex>
 
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
       <Flex direction='column' gap='0.5rem' p='0.5rem' w='100%'>
-        {Object.entries(outputs).map(([key, output]) => 
+        {Object.entries(data.outputs).map(([key, output]) => 
           !(data.streaming && key === 'status') && renderOutputComponent(key, output)
         )}
       </Flex>
     </Paper>
   );
 });
-
-export default CustomNode;

@@ -1,26 +1,16 @@
 import { Flex, Text, Divider, ActionIcon, TextInput, ScrollArea, Tooltip } from '@mantine/core';
 import { IconReload, IconSearch } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
-
-interface NodeData {
-  id: number;
-  name: string;
-  type: string;
-  position: { x: number; y: number };
-  description: string;
-  inputs: Record<string, { type: string; default: number }>;
-  outputs: Record<string, any>;
-  streaming: boolean;
-}
+import { BaseNode, NodeCategories } from '../types/DataTypes';
 
 function NodePicker() {
-  const [nodeCategories, setNodeCategories] = useState<Record<string, NodeData[]>>({});
+  const [nodeCategories, setNodeCategories] = useState<NodeCategories>({});
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchNodes = () => {
     fetch('http://localhost:8000/all_nodes')
       .then((response) => response.json())
-      .then((data) => {
+      .then((data: NodeCategories) => {
         setNodeCategories(data);
         console.log('Fetched node data:', data);
       })
@@ -31,23 +21,22 @@ function NodePicker() {
     fetchNodes();
   }, []);
 
-  const onDragStart = (event: React.DragEvent<HTMLDivElement>, node: NodeData) => {
+  const onDragStart = (event: React.DragEvent<HTMLDivElement>, node: BaseNode) => {
     event.dataTransfer.setData('application/reactflow', JSON.stringify(node));
     event.dataTransfer.effectAllowed = 'move';
   };
 
   const filteredCategories = Object.entries(nodeCategories).reduce((acc, [category, nodes]) => {
-    const filteredNodes = nodes.filter(node => node.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredNodes = nodes.filter(node => node.data.name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (category.toLowerCase().includes(searchTerm.toLowerCase()) || filteredNodes.length > 0) {
       acc[category] = filteredNodes;
     }
     return acc;
-  }, {} as Record<string, NodeData[]>);
+  }, {} as NodeCategories);
 
   return (
     <>
       <Flex align='center' justify='flex-start' w='15rem' direction='column' p={0} m={0}>
-        {/* Search / reload  bar */}
         <Flex direction='row' justify='flex-end' align='center' p='0.5rem' gap='0.25rem'>
           <TextInput
             leftSection={<IconSearch size={20} />}
@@ -58,20 +47,16 @@ function NodePicker() {
             <IconReload size={20} />
           </ActionIcon>
         </Flex>
-        {/* Category list */}
         <ScrollArea w='100%' h='100%' p={0} m={0}>
           {Object.entries(filteredCategories).map(([category, nodes]) => (
-            
             <Flex key={category} direction='column' align='center' w='100%' p={0} gap='0'>
               <Divider orientation='horizontal' color='dark.3' w='100%' mb='0.25rem' />
               <Text fw='bold'>{category}</Text>
-              
               <Flex direction='column' align='center' w='100%' px='0.5rem' pb='0.5rem' pt='0.25rem' m={0} gap='0.25rem'>
-                {/* The node list */}
                 {nodes.map((node, index) => (
                   <Tooltip
                     key={index}
-                    label={node.description || 'No Description'}
+                    label={node.data.description || 'No Description'}
                     color='dark.3'
                     withArrow
                     arrowSize={8}
@@ -89,7 +74,7 @@ function NodePicker() {
                       bg='dark.5'
                       style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
                     >
-                      <Text size='sm' fw={700}>{`${node.name.replace('Node', '')}`}</Text>
+                      <Text size='sm' fw={700}>{`${node.data.name.replace('Node', '')}`}</Text>
                     </Flex>
                   </Tooltip>
                 ))}
@@ -98,9 +83,7 @@ function NodePicker() {
           ))}
         </ScrollArea>
       </Flex>
-      <div
-        style={{ backgroundColor: 'var(--mantine-color-dark-2)', width: '0.075rem' }}
-      />
+      <div style={{ backgroundColor: 'var(--mantine-color-dark-2)', width: '0.075rem' }} />
     </>
   );
 }

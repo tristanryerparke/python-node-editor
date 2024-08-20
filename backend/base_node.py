@@ -25,7 +25,6 @@ def types_for_send(t):
 
 class NodeInput(BaseModel):
     type: str
-    default: Any
     value: Any
 
 class NodeOutput(BaseModel):
@@ -47,16 +46,15 @@ class CaptureOutput:
 
     def get_output(self):
         return self.stdout.getvalue(), self.stderr.getvalue()
+    
+class NodePosition(BaseModel):
+    x: float
+    y: float
 
-class BaseNode(BaseModel):
-    id: str
+class BaseNodeData(BaseModel):
     name: str = ''
     namespace: str = ''
     status: str = ['not evaluated', 'pending', 'executing', 'streaming', 'evaluated', 'error'][0]
-    position: dict = {
-        'x': 0,
-        'y': 0
-    }
     terminal_output: str = ''
     error_output: str = ''
     description: str = ''
@@ -65,21 +63,28 @@ class BaseNode(BaseModel):
     streaming: bool = False
     definition_path: str = ''
 
+
+class BaseNode(BaseModel):
+    id: str = ''
+    position: NodePosition = NodePosition(x=0, y=0)
+    data: BaseNodeData = BaseNodeData()
+
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.name:
-            self.name = self.__class__.__name__
+        if not self.data.name:
+            self.data.name = self.__class__.__name__
         self.analyze_inputs()
         self.detect_namespace()
-        self.definition_path = self.__class__.definition_path
+        self.data.definition_path = self.__class__.definition_path
 
     def detect_namespace(self):
         module = sys.modules[self.__class__.__module__]
-        self.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
+        self.data.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
 
     def analyze_inputs(self):
         # Find the exec method based on the streaming flag
-        if self.streaming:
+        if self.data.streaming:
             exec_method = getattr(self.__class__, 'exec_stream')
         else:
             exec_method = getattr(self.__class__, 'exec')
@@ -89,8 +94,8 @@ class BaseNode(BaseModel):
             if name != 'cls':
             # Preserve existing values if they exist, otherwise use default
             
-                if name not in self.inputs:
-                    self.inputs[name] = NodeInput(
+                if name not in self.data.inputs:
+                    self.data.inputs[name] = NodeInput(
                         type=types_for_send(param.annotation),
                         default=param.default if param.default != Parameter.empty else None,
                         value=param.default if param.default != Parameter.empty else None
@@ -99,19 +104,19 @@ class BaseNode(BaseModel):
 
     @classmethod
     def exec(cls, **kwargs):
-        print('you ran the dummy exec method of BaseNode')
+        print('you ran the dummy exec method of BaseNodeData')
         return ({'default': True},)
 
     def meta_exec(self):
         # Extract only the 'value' from each input
-        exec_inputs = {k: v.value for k, v in self.inputs.items()}
+        exec_inputs = {k: v.value for k, v in self.data.inputs.items()}
         
         with CaptureOutput() as output:
             result = self.__class__.exec(**exec_inputs)
 
         stdout, stderr = output.get_output()
-        self.terminal_output = stdout
-        self.error_output = stderr
+        self.data.terminal_output = stdout
+        self.data.error_output = stderr
 
         # detect if the result is a dictionary or a tuple of dictionaries (multiple outputs)
         if isinstance(result, dict):
@@ -119,33 +124,33 @@ class BaseNode(BaseModel):
         
         for result_dict in result:
             for key, value in result_dict.items():
-                self.outputs[key].value = value
+                self.data.outputs[key].value = value
 
-        self.status = 'evaluated'
+        self.data.status = 'evaluated'
 
 
 class StreamingBaseNode(BaseNode):
-    streaming: bool = True
+    data: BaseNodeData = BaseNodeData(streaming=True)
 
     @classmethod
     def exec_stream(cls, **kwargs):
-        print('you ran the dummy exec_stream method of StreamingBaseNode')
+        print('you ran the dummy exec_stream method of StreamingBaseNodeData')
         for i in range(10):
             yield {'status': 'progress', 'value': f'progress: {i}'}
             time.sleep(1)
         yield {'default': True}  # exec_stream now yields a dictionary
     
     def meta_exec(self):
-        exec_inputs = {k: v.value for k, v in self.inputs.items()}
+        exec_inputs = {k: v.value for k, v in self.data.inputs.items()}
 
         with CaptureOutput() as output:
             for result in self.__class__.exec_stream(**exec_inputs):
                 for key, value in result.items():
-                    self.outputs[key].value = value
+                    self.data.outputs[key].value = value
                 yield result
 
         stdout, stderr = output.get_output()
-        self.terminal_output = stdout
-        self.error_output = stderr
+        self.data.terminal_output = stdout
+        self.data.error_output = stderr
 
-        self.status = 'evaluated'
+        self.data.status = 'evaluated'

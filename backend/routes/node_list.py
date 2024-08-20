@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from base_node import BaseNode
+from base_node import BaseNodeData
 from utils import find_and_load_classes
 
 from shared_globals import CLASSES_DICT, reload_nodes
@@ -18,7 +18,7 @@ def get_all_nodes():
     for key, value in CLASSES_DICT.items():
         category_list = []
         for node_class in value:
-            instance: BaseNode = node_class(id='')
+            instance: BaseNodeData = node_class(id='')
             category_list.append(instance.model_dump())
         nodes_dict[key] = category_list
 
