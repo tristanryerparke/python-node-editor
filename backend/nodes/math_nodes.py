@@ -16,10 +16,10 @@ class AddNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls,
-        a: NodeInput(label='a', type='number', value=0),
-        b: NodeInput(label='b', type='number', value=0)
-    ) -> NodeOutput(label='result', type='number'):
-        return NodeOutput(label='result', type='number', value=a + b)
+        A: NodeInput(label='A', type='number', value=0),
+        B: NodeInput(label='B', type='number', value=0)
+    ) -> NodeOutput(label='Result', type='number'):
+        return NodeOutput(label='Result', type='number', value=A + B)
     
 
 class AddNodeNoDefault(BaseNode):
