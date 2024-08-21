@@ -12,36 +12,10 @@ from PIL import Image
 from io import BytesIO
 from devtools import debug as d
 
-from classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString
+from classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
 
 from devtools import debug as d
     
-
-# In the app, we have general number inputs, but it is represeted as a float under the hood
-def types_for_send(t):
-
-
-    if get_origin(t) is Union and set(get_args(t)) == {float, int}:
-        return 'number'
-    elif t is float:
-        return 'float'
-    elif t is int:
-        return 'int'
-    elif t is str:
-        return 'str'
-    else:
-        raise ValueError(f'Unsupported type: {t}')
-
-
-def get_output_type(t):
-    if t == 'image':
-        return NodeOutputImage
-    elif t == 'number':
-        return NodeOutputNumber
-    elif t == 'string':
-        return NodeOutputString
-    else:
-        raise ValueError(f'Unsupported type: {t}')
 
 class CaptureOutput:
     def __init__(self):
@@ -63,8 +37,8 @@ class NodePosition(BaseModel):
     x: float
     y: float
 
-
-T = TypeVar('T', bound=NodeOutput)
+TI = TypeVar('TI', bound=NodeInput)
+TO = TypeVar('TO', bound=NodeOutput)
 
 class BaseNodeData(BaseModel):
     name: str = ''
@@ -73,8 +47,8 @@ class BaseNodeData(BaseModel):
     terminal_output: str = ''
     error_output: str = ''
     description: str = ''
-    inputs: List[NodeInput] = []
-    outputs: List[NodeOutput] = []
+    inputs: List[TI] = []
+    outputs: List[TO] = []
     streaming: bool = False
     definition_path: str = ''
 
@@ -96,7 +70,6 @@ class BaseNode(BaseModel):
     position: NodePosition = NodePosition(x=0, y=0)
     data: BaseNodeData = BaseNodeData()
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.data.name:
@@ -111,18 +84,43 @@ class BaseNode(BaseModel):
         self.data.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
 
     def analyze_inputs(self):
-        # Find the exec method based on the streaming flag
-        if self.data.streaming:
-            exec_method = getattr(self.__class__, 'exec_stream')
-        else:
-            exec_method = getattr(self.__class__, 'exec')
+        
+        if len(self.data.inputs) == 0:
+            if self.data.streaming:
+                exec_method = getattr(self.__class__, 'exec_stream')
+            else:
+                exec_method = getattr(self.__class__, 'exec')
 
-        sig = signature(exec_method)
-        for name, param in sig.parameters.items():
-            if name != 'cls':
-                names = [i.label for i in self.data.inputs]
-                if name not in names:
-                    self.data.inputs.append(param.annotation)
+            print(f'{self.data.name.upper()} INPUTS:')
+
+            input_instances = []
+
+            sig = signature(exec_method)
+            for name, param in sig.parameters.items():
+                if name != 'cls':
+                    # d(param.annotation)
+                    names = [i.label for i in self.data.inputs]
+                    if name not in names:
+                        input_instances.append(param.annotation)
+
+        else:
+            input_instances = self.data.inputs
+
+        # d(input_instances)
+
+        new_input_instances = []
+        for input_inst in input_instances:
+            new_class = input_class_from_type_name(input_inst.type)
+            # print(f'changing input type of {input_inst} to {new_class}')
+            new_input_instances.append(new_class(
+                label=input_inst.label, 
+                type=input_inst.type,
+                value=input_inst.value
+            ))
+        
+        self.data.inputs = new_input_instances
+
+        # d(self.data.inputs)
 
     def analyze_outputs(self):
         if len(self.data.outputs) == 0:
@@ -132,17 +130,39 @@ class BaseNode(BaseModel):
             else:
                 exec_method = getattr(self.__class__, 'exec')
 
+            
+
             sig = signature(exec_method)
             # d(get_origin(sig.return_annotation))
             if isinstance(sig.return_annotation, NodeOutput):
-                self.data.outputs = [sig.return_annotation]
+                output_instances = [sig.return_annotation]
             elif get_origin(sig.return_annotation) is tuple:
-                self.data.outputs = list(get_args(sig.return_annotation))
+                output_instances = list(get_args(sig.return_annotation))
             else:
-                self.data.outputs = list(sig.return_annotation)
-
-            d(self.data.outputs)
+                output_instances = list(sig.return_annotation)
         
+        else:
+            output_instances = self.data.outputs
+
+        # d(output_instances)
+
+        # change the type of the output instances to the correct class
+        new_output_instances = []
+        for output_inst in output_instances:
+            new_class = output_class_from_type_name(output_inst.type)
+            # print(f'changing output type of {output_inst} to {new_class}')
+            
+            new_output_instances.append(new_class(
+                label=output_inst.label, 
+                type=output_inst.type,
+                value=output_inst.value
+            ))
+        
+        self.data.outputs = new_output_instances
+        
+        # d(self.data.outputs)
+
+
 
 
     @classmethod
@@ -163,7 +183,7 @@ class BaseNode(BaseModel):
                 if input.label == name:
                     kwargs[name] = input.value
         
-        d(kwargs)
+        # d(kwargs)
 
         
         with CaptureOutput() as output:
@@ -173,13 +193,14 @@ class BaseNode(BaseModel):
         self.data.terminal_output = stdout
         self.data.error_output = stderr
 
-        d(result)
+        # d(result)
 
-        if isinstance(result, NodeOutput):
-            print('result is a NodeOutput')
-            self.data.outputs = [result]
+        if isinstance(result, tuple):
+            result = list(result)
         else:
-            self.data.outputs = result
+            result = [result]
+
+        self.data.outputs = result
 
         self.data.status = 'evaluated'
 

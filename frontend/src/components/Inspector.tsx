@@ -16,7 +16,7 @@ import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
-import type { BaseNodeData } from '../types/DataTypes';
+import type { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 
 function InspectorPanel() {
   const { selectedNodeId } = useContext(NodeSelectionContext);
@@ -42,11 +42,22 @@ function InspectorPanel() {
   const renderInputs = (inputs: NodeInput[]) => (
     <Flex w="100%" direction="column">
       <Title order={4}>Inputs:</Title>
-      {inputs.map((input) => (
-        <Text key={input.label}>
-          <Text fw={700} span>{input.label}</Text>: {String(input.value)} (Type: {input.type})
-        </Text>
-      ))}
+      {inputs.map((input) => {
+        if (input.type === 'image' && input.value) {
+          const imageValue = input.value as { short_display: string, data: string };
+          return (
+            <Flex direction="column" key={input.label} w="100%" pb='0.5rem'>
+              <Text fw={700}>{input.label}: {imageValue.short_display}</Text>
+              <Image fit="contain" src={imageValue.data} alt={`${input.label} preview`} w="100%" h="100%" />
+            </Flex>
+          );
+        }
+        return (
+          <Text key={input.label}>
+            <Text fw={700} span>{input.label}</Text>: {String(input.value)} (Type: {input.type})
+          </Text>
+        );
+      })}
     </Flex>
   );
 
@@ -57,10 +68,10 @@ function InspectorPanel() {
         if (output.type === 'image' && output.value) {
           const imageValue = output.value as { short_display: string, data: string };
           return (
-            <Box key={output.label} mt="sm" w="100%">
+            <Flex direction="column" key={output.label} w="100%" pb='0.5rem'>
               <Text>{output.label}: {imageValue.short_display}</Text>
               <Image fit="contain" src={imageValue.data} alt={`${output.label} preview`} w="100%" h="100%" />
-            </Box>
+            </Flex>
           );
         }
         return (
@@ -131,7 +142,7 @@ function InspectorPanel() {
         </ActionIcon>
       </Flex>
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
-      <Flex direction="row" w="100%" h="100%" m={0} p='0.5rem'>
+      <Flex direction="row" w="100%" h="100%" m={0} p='0.5rem' gap='0.5rem' style={{ overflowY: 'auto' }}>
 
           <Flex direction="column" m={0} p={0} w="100%" >
             {selectedNode ? (

@@ -6,3 +6,4 @@ requests
 pywebview
 annotated-types
 Pillow
+opencv-python-headless

@@ -4,7 +4,7 @@
 
 export const mapStringToType = (input: string): string => {
   const typeMapping: { [key: string]: string } = {
-    'str': 'Text',
+    'string': 'Text',
     'number': 'Number',
   };
 

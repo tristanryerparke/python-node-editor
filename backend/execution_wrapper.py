@@ -59,7 +59,7 @@ class ExecutionWrapper:
 
         # Topological sort
         sort_start = time.time()
-        sorted_nodes = topological_sort(graph_def.dict())
+        sorted_nodes = topological_sort(graph_def.model_dump())
         sort_end = time.time()
         print(f"Topological sort took {sort_end - sort_start:.4f} seconds")
 
@@ -100,7 +100,8 @@ class ExecutionWrapper:
 
                 node_end = time.time()
                 print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
-                print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
+                print(f"Node {node_id} completed")
+                # print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
                 
                 node_instance.data.status = 'evaluated'
 
@@ -118,9 +119,11 @@ class ExecutionWrapper:
             await asyncio.sleep(0)
 
             # Stop execution if node has errored
-            if node_instance.data.status == 'error':
-                print(f"Stopping execution due to error in node {node_id}")
-                break
+            # if node_instance.data.status == 'error':
+            #     print(f"Stopping execution due to error in node {node_id}")
+            #     break
+
+            # d(graph_def.edges)
 
             # Edge processing
             for edge in graph_def.edges:
@@ -128,8 +131,15 @@ class ExecutionWrapper:
                     to_node_id = edge['target']
                     from_port = edge['sourceHandle'].split('-')[-1]
                     to_port = edge['targetHandle'].split('-')[-1]
-                    self.node_instances[to_node_id].data.inputs[to_port].value = self.node_instances[edge['source']].data.outputs[from_port].value
-                    print(f"Edge processing: {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
+                    
+                    source_output = next((output for output in self.node_instances[edge['source']].data.outputs if output.label == from_port), None)
+                    target_input = next((input for input in self.node_instances[to_node_id].data.inputs if input.label == to_port), None)
+                    
+                    if source_output and target_input:
+                        target_input.value = source_output.value
+                        print(f"Edge processing: {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
+                    else:
+                        print(f"Warning: Could not find matching ports for edge {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
 
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")

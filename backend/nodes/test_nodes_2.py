@@ -34,9 +34,6 @@ class AddNode(BaseNode):
     
 
 class AddSubtractNode(BaseNode):
-    # data: BaseNodeData = BaseNodeData(
-    #     outputs=[NodeOutput(label='result', type='number'), NodeOutput(label='result', type='str')]
-    # )
 
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
@@ -44,9 +41,9 @@ class AddSubtractNode(BaseNode):
         cls, 
         a: NodeInput(label='a', type='number', value=0),
         b: NodeInput(label='b', type='number')
-    ) -> Tuple[NodeOutput(label='result', type='number'), NodeOutput(label='result', type='str')]:
+    ) -> Tuple[NodeOutput(label='result', type='number'), NodeOutput(label='result', type='string')]:
         '''
         Adds two numbers together
         '''
         return (NodeOutput(label='result', type='number', value=a + b), 
-                NodeOutput(label='result', type='str', value=str(a - b)))
+                NodeOutput(label='result', type='string', value=str(a - b)))
