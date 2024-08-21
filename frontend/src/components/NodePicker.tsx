@@ -11,11 +11,8 @@ function NodePicker() {
     fetch('http://localhost:8000/all_nodes')
       .then((response) => response.json())
       .then((data: NodeCategories) => {
-        const parsedData = Object.fromEntries(
-          Object.entries(data).map(([key, value]) => [key, value.map(JSON.parse)])
-        );
-        setNodeCategories(parsedData);
-        console.log('Fetched node data:', parsedData);
+        setNodeCategories(data);
+        console.log('Fetched node data:', data);
       })
       .catch((error) => console.error('Error fetching node data:', error));
   };

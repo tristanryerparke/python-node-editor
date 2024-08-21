@@ -19,10 +19,14 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
 
   const nodeData = useNodesData(id)?.data as unknown as BaseNodeData;
 
-  const updateNodeData = useCallback((inputKey: string, value: any) => {
-    const newData = nodeData;
+  const updateNodeData = useCallback((label: string, value: any) => {
+    const newData = { ...nodeData };
 
-    newData.inputs[inputKey].value = value;
+    
+    
+    const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);    if (inputIndex !== -1) {
+      newData.inputs[inputIndex].value = value;
+    }
 
     reactFlow.updateNodeData(id, newData as unknown as Partial<Record<string, unknown>>);
 
@@ -31,12 +35,12 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
     }
   }, [nodeData, autoExecute, reactFlow, debouncedExecute, id]);
 
-  const renderInputComponent = (key: string, input: NodeInput) => {
+  const renderInputComponent = (input: NodeInput) => {
     const commonProps = {
-      handleId: `${id}-input-${key}`,
-      label: key,
+      handleId: `${id}-input-${input.label}`,
+      label: input.label,
       value: input.value ?? '',
-      onChange: (value: any) => updateNodeData(key, value),
+      onChange: (value: any) => updateNodeData(input.label, value),
       type: input.type
     };
 
@@ -47,31 +51,30 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       case 'float':
       case 'number':
       case 'int':
-        return <NumberInputHandle key={`${id}-input-${key}`} {...commonProps} />;
+        return <NumberInputHandle key={`${id}-input-${input.label}`} {...commonProps} />;
       case 'str':
-        return <TextInputHandle key={`${id}-input-${key}`} {...commonProps} />;
+        return <TextInputHandle key={`${id}-input-${input.label}`} {...commonProps} />;
       default:
         return null;
     }
   };
 
-  const renderOutputComponent = (key: string, output: NodeOutput) => {
+  const renderOutputComponent = (output: NodeOutput) => {
     const commonProps = {
-      handleId: `${id}-output-${key}`,
-      label: key,
+      handleId: `${id}-output-${output.label}`,
+      label: output.label,
       value: output.value ?? '',
       type: output.type
     };
 
     switch (output.type) {
       case 'image':
-        // console.log(output)
-        return <ImageOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
+        return <ImageOutputHandle key={`${id}-output-${output.label}`} {...commonProps} />;
       case 'number':
       case 'int':
-        return <NumberOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
+        return <NumberOutputHandle key={`${id}-output-${output.label}`} {...commonProps} />;
       case 'str':
-        return <TextOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
+        return <TextOutputHandle key={`${id}-output-${output.label}`} {...commonProps} />;
       default:
         return null;
     }
@@ -110,14 +113,14 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
       <Flex direction='column' gap='0.5rem' p='0.5rem' w='100%'>
-        {Object.entries(data.inputs).map(([key, input]) => renderInputComponent(key, input))}
+        {data.inputs.map((input) => renderInputComponent(input))}
       </Flex>
 
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
       <Flex direction='column' gap='0.5rem' p='0.5rem' w='100%'>
-        {Object.entries(data.outputs).map(([key, output]) => 
-          !(data.streaming && key === 'status') && renderOutputComponent(key, output)
+        {data.outputs.map((output) => 
+          !(data.streaming && output.label === 'status') && renderOutputComponent(output)
         )}
       </Flex>
     </Paper>

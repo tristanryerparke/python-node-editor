@@ -1,9 +1,11 @@
 export interface NodeInput {
+  label: string;
   type: string;
   value: any;
 }
 
 export interface NodeOutput {
+  label: string;
   type: string;
   value: any | null;
 }
@@ -15,8 +17,8 @@ export interface BaseNodeData {
   terminal_output: string;
   error_output: string;
   description: string;
-  inputs: Record<string, NodeInput>;
-  outputs: Record<string, NodeOutput>;
+  inputs: NodeInput[];
+  outputs: NodeOutput[];
   streaming: boolean;
   definition_path: string;
 }

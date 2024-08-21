@@ -39,30 +39,34 @@ function InspectorPanel() {
   const selectedNodeData = selectedNode?.data as unknown as BaseNodeData;
 
 
-  const renderInputs = (inputs: Record<string, { value: unknown, type: string }>) => (
-    <Flex w="100%">
+  const renderInputs = (inputs: NodeInput[]) => (
+    <Flex w="100%" direction="column">
       <Title order={4}>Inputs:</Title>
-      {Object.entries(inputs).map(([key, value]) => (
-        <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
+      {inputs.map((input) => (
+        <Text key={input.label}>
+          <Text fw={700} span>{input.label}</Text>: {String(input.value)} (Type: {input.type})
+        </Text>
       ))}
     </Flex>
   );
 
-  const renderOutputs = (outputs: Record<string, { value: unknown, type: string }>) => (
+  const renderOutputs = (outputs: NodeOutput[]) => (
     <Box mt="md" w="100%">
       <Title order={4}>Outputs:</Title>
-      {Object.entries(outputs).map(([key, value]) => {
-        if (value.type === 'image' && value.value) {
-          const imageValue = value.value as { short_display: string, data: string };
+      {outputs.map((output) => {
+        if (output.type === 'image' && output.value) {
+          const imageValue = output.value as { short_display: string, data: string };
           return (
-            <Box key={key} mt="sm" w="100%">
-              <Text>{key}: {imageValue.short_display}</Text>
-              <Image fit="contain" src={imageValue.data} alt={`${key} preview`} w="100%" h="100%" />
+            <Box key={output.label} mt="sm" w="100%">
+              <Text>{output.label}: {imageValue.short_display}</Text>
+              <Image fit="contain" src={imageValue.data} alt={`${output.label} preview`} w="100%" h="100%" />
             </Box>
           );
         }
         return (
-          <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
+          <Text key={output.label}>
+            <Text fw={700} span>{output.label}</Text>: {String(output.value)} (Type: {output.type})
+          </Text>
         );
       })}
     </Box>
@@ -89,7 +93,6 @@ function InspectorPanel() {
       </Box>
     )
   );
-
 
   return (
     <>

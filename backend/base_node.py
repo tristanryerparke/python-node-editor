@@ -1,16 +1,16 @@
-
 from pydantic import BaseModel
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, NamedTuple, Tuple
 import shortuuid
 import numpy as np
 import time
 from inspect import signature, Parameter
-from typing import get_origin, Union, get_args, Any, Dict, get_type_hints, List, NamedTuple, TypedDict
+from typing import get_origin, Union, get_args, Any, Dict, get_type_hints, List
 import sys
 from io import StringIO
 import base64
 from PIL import Image
 from io import BytesIO
+from devtools import debug as d
 
 from classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString
 
@@ -19,9 +19,10 @@ from devtools import debug as d
 
 # In the app, we have general number inputs, but it is represeted as a float under the hood
 def types_for_send(t):
+
+
     if get_origin(t) is Union and set(get_args(t)) == {float, int}:
         return 'number'
-    
     elif t is float:
         return 'float'
     elif t is int:
@@ -72,8 +73,8 @@ class BaseNodeData(BaseModel):
     terminal_output: str = ''
     error_output: str = ''
     description: str = ''
-    inputs: Dict[str, NodeInput] = {}
-    outputs: Dict[str, T] = {}
+    inputs: List[NodeInput] = []
+    outputs: List[NodeOutput] = []
     streaming: bool = False
     definition_path: str = ''
 
@@ -101,6 +102,7 @@ class BaseNode(BaseModel):
         if not self.data.name:
             self.data.name = self.__class__.__name__
         self.analyze_inputs()
+        self.analyze_outputs()
         self.detect_namespace()
         self.data.definition_path = self.__class__.definition_path
 
@@ -118,13 +120,29 @@ class BaseNode(BaseModel):
         sig = signature(exec_method)
         for name, param in sig.parameters.items():
             if name != 'cls':
-            # Preserve existing values if they exist, otherwise use default
-            
-                if name not in self.data.inputs:
-                    self.data.inputs[name] = NodeInput(
-                        type=types_for_send(param.annotation),
-                        value=param.default if param.default != Parameter.empty else None
-                    )
+                names = [i.label for i in self.data.inputs]
+                if name not in names:
+                    self.data.inputs.append(param.annotation)
+
+    def analyze_outputs(self):
+        if len(self.data.outputs) == 0:
+
+            if self.data.streaming:
+                exec_method = getattr(self.__class__, 'exec_stream')
+            else:
+                exec_method = getattr(self.__class__, 'exec')
+
+            sig = signature(exec_method)
+            # d(get_origin(sig.return_annotation))
+            if isinstance(sig.return_annotation, NodeOutput):
+                self.data.outputs = [sig.return_annotation]
+            elif get_origin(sig.return_annotation) is tuple:
+                self.data.outputs = list(get_args(sig.return_annotation))
+            else:
+                self.data.outputs = list(sig.return_annotation)
+
+            d(self.data.outputs)
+        
 
 
     @classmethod
@@ -134,17 +152,34 @@ class BaseNode(BaseModel):
 
     def meta_exec(self):
         # Extract only the 'value' from each input
-        exec_inputs = {k: v.value for k, v in self.data.inputs.items()}
+
+
+        exec_method = getattr(self.__class__, 'exec')
+        kwargs = {}
+        sig = signature(exec_method)
+
+        for name, param in sig.parameters.items():
+            for i, input in enumerate(self.data.inputs):
+                if input.label == name:
+                    kwargs[name] = input.value
+        
+        d(kwargs)
+
         
         with CaptureOutput() as output:
-            result: dict = self.__class__.exec(**exec_inputs)
+            result = self.__class__.exec(**kwargs)
 
         stdout, stderr = output.get_output()
         self.data.terminal_output = stdout
         self.data.error_output = stderr
-        
-        for key, value in result.items():
-            self.data.outputs[key] = get_output_type(self.data.outputs[key].type)(value=value)
+
+        d(result)
+
+        if isinstance(result, NodeOutput):
+            print('result is a NodeOutput')
+            self.data.outputs = [result]
+        else:
+            self.data.outputs = result
 
         self.data.status = 'evaluated'
 

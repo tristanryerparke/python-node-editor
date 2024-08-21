@@ -6,10 +6,12 @@ from io import BytesIO
 from typing import Any, Union
 
 class NodeInput(BaseModel):
+    label: str
     type: str
     value: Any = None
 
 class NodeOutput(BaseModel):
+    label: str
     type: str
     value: Any = None
 
