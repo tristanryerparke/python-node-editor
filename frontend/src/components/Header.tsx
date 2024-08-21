@@ -7,7 +7,7 @@ import { useExecutionManager } from '../hooks/useExecutionManager';
 function Header() {
   const { setPanels } = useContext(PanelsContext);
   const { autoExecute, setAutoExecute } = useContext(AutoExecuteContext);
-  const { execute } = useExecutionManager();
+  const { execute, isExecuting } = useExecutionManager();
 
   const toggleInspector = () => {
     setPanels(prevPanels => ({
@@ -42,6 +42,7 @@ function Header() {
             color='green.4' 
             onClick={execute}
             disabled={autoExecute}
+            loading={isExecuting}
           >
             Execute
           </Button>

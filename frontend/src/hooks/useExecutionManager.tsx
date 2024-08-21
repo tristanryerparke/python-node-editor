@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { useNodes, useEdges, useReactFlow } from '@xyflow/react';
 import type { Node, Edge } from '@xyflow/react';
 
@@ -7,6 +7,7 @@ export function useExecutionManager() {
   const autoExecuteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
+  const [isExecuting, setIsExecuting] = useState(false);
 
   const nodes = useNodes();
   const edges = useEdges();
@@ -22,6 +23,7 @@ export function useExecutionManager() {
 
   const execute = useCallback(() => {
     if (nodesRef.current.length === 0) return;
+    setIsExecuting(true);
 
     // Update all nodes to 'pending' status
     nodesRef.current.forEach(node => {
@@ -50,6 +52,7 @@ export function useExecutionManager() {
           }
         } else if (data.status === 'finished') {
           resetPendingNodes();
+          setIsExecuting(false);
         }
       };
 
@@ -106,5 +109,5 @@ export function useExecutionManager() {
     };
   }, []);
 
-  return { execute, debouncedExecute };
+  return { execute, debouncedExecute, isExecuting };
 }

@@ -36,7 +36,7 @@ class ExecutionWrapper:
         start_time = time.time()
         self.node_instances = {}
 
-        d(graph_def)
+        # d(graph_def)
         graph_def = GraphDef.model_validate(graph_def)
         
         print(f"Starting graph execution... {len(graph_def.nodes)} nodes, {len(graph_def.edges)} edges")
