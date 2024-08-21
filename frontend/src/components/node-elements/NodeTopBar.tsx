@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Group, Text, ActionIcon, useMantineTheme, Tooltip, Loader } from '@mantine/core';
 import { useNodesData } from '@xyflow/react';
-import { IconInfoCircle, IconCode, IconLicense, IconRosetteDiscountCheck } from '@tabler/icons-react';
+import { IconInfoCircle, IconCode, IconLicense, IconRosetteDiscountCheck, IconX } from '@tabler/icons-react';
 import { InspectorContext, NodeSelectionContext, PanelsContext } from '../../GlobalContext';
 import { getStatusColor } from '../../utils/Colors';
 import type { BaseNodeData } from '../../types/DataTypes';
@@ -73,11 +73,15 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
         </Tooltip>
         <Tooltip label={`Status: ${nodeData.status}`} color='dark.3' withArrow>
           <ActionIcon variant='subtle' size='sm' color={statusColor} radius='xl' loading={nodeData.status === 'executing' || nodeData.status === 'streaming'}>
-            <IconRosetteDiscountCheck 
-              color={statusColor}
-              size={20} 
-              style={{ transition: 'color 0.25s ease-in-out' }}
-            />
+            {nodeData.status === 'error' ? (
+              <IconX color={statusColor} size={20} />
+            ) : (
+              <IconRosetteDiscountCheck 
+                color={statusColor}
+                size={20} 
+                // style={{ transition: 'color 0.25s ease-in-out' }}
+              />
+            )}
           </ActionIcon>
         </Tooltip>
       </Group>
