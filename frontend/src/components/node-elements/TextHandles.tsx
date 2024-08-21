@@ -68,7 +68,7 @@ export const TextOutputHandle: React.FC<TextOutputProps> = ({ handleId, label, v
   return (
     <Flex style={{position: 'relative'}} my='auto' align='center' justify='space-between' w='100%'>
       <Group pr="0.25rem" gap="0.2rem" w='100%' align='center'>
-        <Text px="0.3rem">{label}</Text>
+        
         <TextInput
 
           size="xs"
@@ -77,6 +77,7 @@ export const TextOutputHandle: React.FC<TextOutputProps> = ({ handleId, label, v
           readOnly
           style={{ flex: 1 }}
         />
+        <Text px="0.3rem">{label}</Text>
       </Group>
       <Tooltip label={type} color='dark.3' position='right' withArrow arrowSize={8}>
         <Handle

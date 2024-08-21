@@ -40,7 +40,7 @@ export function useExecutionManager() {
       websocketRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.status === 'node_update') {
-          const updatedNode = data.node;
+          const updatedNode = JSON.parse(data.node);
           reactFlow.setNodes(nds => 
             nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
           );

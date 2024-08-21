@@ -7,7 +7,7 @@ import { NumberInputHandle, NumberOutputHandle } from './node-elements/NumberHan
 import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
-
+import { ImageOutputHandle } from './node-elements/ImageHandles';
 import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
@@ -41,6 +41,9 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
     };
 
     switch (input.type) {
+      case 'image':
+        console.log('image input')
+        return null;
       case 'float':
       case 'number':
       case 'int':
@@ -61,6 +64,9 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
     };
 
     switch (output.type) {
+      case 'image':
+        // console.log(output)
+        return <ImageOutputHandle key={`${id}-output-${key}`} {...commonProps} />;
       case 'number':
       case 'int':
         return <NumberOutputHandle key={`${id}-output-${key}`} {...commonProps} />;

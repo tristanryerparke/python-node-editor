@@ -1,0 +1,64 @@
+Fetched node data: Object
+useExecutionManager.tsx:36 WebSocket connection established
+4useExecutionManager.tsx:48 Uncaught TypeError: Cannot read properties of undefined (reading 'status')
+    at websocketRef.current.onmessage (useExecutionManager.tsx:48:32)Understand this error
+useExecutionManager.tsx:60 WebSocket connection closed
+useExecutionManager.tsx:36 WebSocket connection established
+useExecutionManager.tsx:60 WebSocket connection closed
+useExecutionManager.tsx:36 WebSocket connection established
+useExecutionManager.tsx:60 WebSocket connection closed
+useExecutionManager.tsx:36 WebSocket connection established
+useExecutionManager.tsx:60 WebSocket connection closed
+chunk-W75SSKBY.js?v=7f44fe23:16689 Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+    at checkForNestedUpdates (chunk-W75SSKBY.js?v=7f44fe23:19685:19)
+    at scheduleUpdateOnFiber (chunk-W75SSKBY.js?v=7f44fe23:18559:11)
+    at forceStoreRerender (chunk-W75SSKBY.js?v=7f44fe23:12017:13)
+    at handleStoreChange (chunk-W75SSKBY.js?v=7f44fe23:11999:15)
+    at @xyflow_react.js?v=7f44fe23:6170:39
+    at Set.forEach (<anonymous>)
+    at setState (@xyflow_react.js?v=7f44fe23:6170:17)
+    at setNodes (@xyflow_react.js?v=7f44fe23:8561:5)
+    at @xyflow_react.js?v=7f44fe23:6456:11
+    at commitHookEffectListMount (chunk-W75SSKBY.js?v=7f44fe23:16934:34)Understand this error
+@mantine_core.js?v=7f44fe23:3552 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+console.error @ @mantine_core.js?v=7f44fe23:3552
+Show 1 more frame
+Show lessUnderstand this error
+@mantine_core.js?v=7f44fe23:3552 The above error occurred in the <StoreUpdater> component:
+
+    at StoreUpdater (http://localhost:5173/node_modules/.vite/deps/@xyflow_react.js?v=7f44fe23:6436:147)
+    at Wrapper (http://localhost:5173/node_modules/.vite/deps/@xyflow_react.js?v=7f44fe23:8797:30)
+    at div
+    at ReactFlow (http://localhost:5173/node_modules/.vite/deps/@xyflow_react.js?v=7f44fe23:8811:22)
+    at div
+    at PanelWithForwardedRef (http://localhost:5173/node_modules/.vite/deps/react-resizable-panels.js?v=7f44fe23:38:3)
+    at forwardRef(Panel)
+    at NodeGraph (http://localhost:5173/src/components/NodeGraph.tsx:24:46)
+    at div
+    at PanelGroupWithForwardedRef (http://localhost:5173/node_modules/.vite/deps/react-resizable-panels.js?v=7f44fe23:1415:3)
+    at forwardRef(PanelGroup)
+    at div
+    at http://localhost:5173/node_modules/.vite/deps/@mantine_core.js?v=7f44fe23:4772:5
+    at http://localhost:5173/node_modules/.vite/deps/@mantine_core.js?v=7f44fe23:12559:17
+    at BatchProvider (http://localhost:5173/node_modules/.vite/deps/@xyflow_react.js?v=7f44fe23:6836:36)
+    at ReactFlowProvider (http://localhost:5173/node_modules/.vite/deps/@xyflow_react.js?v=7f44fe23:8784:44)
+    at MantineThemeProvider (http://localhost:5173/node_modules/.vite/deps/@mantine_core.js?v=7f44fe23:3136:3)
+    at MantineProvider (http://localhost:5173/node_modules/.vite/deps/@mantine_core.js?v=7f44fe23:3636:3)
+    at App (http://localhost:5173/src/App.tsx:25:33)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+console.error @ @mantine_core.js?v=7f44fe23:3552
+Show 1 more frame
+Show lessUnderstand this error
+chunk-W75SSKBY.js?v=7f44fe23:9143 Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+    at checkForNestedUpdates (chunk-W75SSKBY.js?v=7f44fe23:19685:19)
+    at scheduleUpdateOnFiber (chunk-W75SSKBY.js?v=7f44fe23:18559:11)
+    at forceStoreRerender (chunk-W75SSKBY.js?v=7f44fe23:12017:13)
+    at handleStoreChange (chunk-W75SSKBY.js?v=7f44fe23:11999:15)
+    at @xyflow_react.js?v=7f44fe23:6170:39
+    at Set.forEach (<anonymous>)
+    at setState (@xyflow_react.js?v=7f44fe23:6170:17)
+    at setNodes (@xyflow_react.js?v=7f44fe23:8561:5)
+    at @xyflow_react.js?v=7f44fe23:6456:11
+    at commitHookEffectListMount (chunk-W75SSKBY.js?v=7f44fe23:16934:34)

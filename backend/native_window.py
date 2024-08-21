@@ -30,7 +30,7 @@ if __name__ == "__main__":
         background_color='#000000',
         transparent=True,
         resizable=True,
-        frameless=True,
+        # frameless=True,
         vibrancy=True,
         easy_drag=False
     )

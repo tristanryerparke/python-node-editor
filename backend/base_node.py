@@ -1,10 +1,18 @@
+
 from pydantic import BaseModel
+from typing import TypeVar, Generic
 import shortuuid
+import numpy as np
 import time
 from inspect import signature, Parameter
-from typing import get_origin, Union, get_args, Any, Dict
+from typing import get_origin, Union, get_args, Any, Dict, get_type_hints, List, NamedTuple, TypedDict
 import sys
 from io import StringIO
+import base64
+from PIL import Image
+from io import BytesIO
+
+from classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString
 
 from devtools import debug as d
     
@@ -13,6 +21,7 @@ from devtools import debug as d
 def types_for_send(t):
     if get_origin(t) is Union and set(get_args(t)) == {float, int}:
         return 'number'
+    
     elif t is float:
         return 'float'
     elif t is int:
@@ -23,13 +32,15 @@ def types_for_send(t):
         raise ValueError(f'Unsupported type: {t}')
 
 
-class NodeInput(BaseModel):
-    type: str
-    value: Any
-
-class NodeOutput(BaseModel):
-    type: str
-    value: Any = None
+def get_output_type(t):
+    if t == 'image':
+        return NodeOutputImage
+    elif t == 'number':
+        return NodeOutputNumber
+    elif t == 'string':
+        return NodeOutputString
+    else:
+        raise ValueError(f'Unsupported type: {t}')
 
 class CaptureOutput:
     def __init__(self):
@@ -51,6 +62,9 @@ class NodePosition(BaseModel):
     x: float
     y: float
 
+
+T = TypeVar('T', bound=NodeOutput)
+
 class BaseNodeData(BaseModel):
     name: str = ''
     namespace: str = ''
@@ -59,12 +73,24 @@ class BaseNodeData(BaseModel):
     error_output: str = ''
     description: str = ''
     inputs: Dict[str, NodeInput] = {}
-    outputs: Dict[str, NodeOutput] = {}
+    outputs: Dict[str, T] = {}
     streaming: bool = False
     definition_path: str = ''
 
 
+def image_to_base64(im: np.ndarray) -> str:
+    buffered = BytesIO()
+    img = Image.fromarray(im)
+    img.save(buffered, format="PNG")
+    return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
+
 class BaseNode(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            np.ndarray: image_to_base64
+        }
+
     id: str = ''
     position: NodePosition = NodePosition(x=0, y=0)
     data: BaseNodeData = BaseNodeData()
@@ -97,7 +123,6 @@ class BaseNode(BaseModel):
                 if name not in self.data.inputs:
                     self.data.inputs[name] = NodeInput(
                         type=types_for_send(param.annotation),
-                        default=param.default if param.default != Parameter.empty else None,
                         value=param.default if param.default != Parameter.empty else None
                     )
 
@@ -112,21 +137,17 @@ class BaseNode(BaseModel):
         exec_inputs = {k: v.value for k, v in self.data.inputs.items()}
         
         with CaptureOutput() as output:
-            result = self.__class__.exec(**exec_inputs)
+            result: dict = self.__class__.exec(**exec_inputs)
 
         stdout, stderr = output.get_output()
         self.data.terminal_output = stdout
         self.data.error_output = stderr
-
-        # detect if the result is a dictionary or a tuple of dictionaries (multiple outputs)
-        if isinstance(result, dict):
-            result = [result]
         
-        for result_dict in result:
-            for key, value in result_dict.items():
-                self.data.outputs[key].value = value
+        for key, value in result.items():
+            self.data.outputs[key] = get_output_type(self.data.outputs[key].type)(value=value)
 
         self.data.status = 'evaluated'
+
 
 
 class StreamingBaseNode(BaseNode):

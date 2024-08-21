@@ -9,6 +9,7 @@ import {
   ScrollArea, 
   Divider, 
   ActionIcon,
+  Image
 } from '@mantine/core'  
 import { IconLockOpen, IconLockFilled } from '@tabler/icons-react';
 import { useContext } from 'react';
@@ -39,26 +40,37 @@ function InspectorPanel() {
 
 
   const renderInputs = (inputs: Record<string, { value: unknown, type: string }>) => (
-    <Box>
+    <Flex w="100%">
       <Title order={4}>Inputs:</Title>
       {Object.entries(inputs).map(([key, value]) => (
         <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
       ))}
-    </Box>
+    </Flex>
   );
 
   const renderOutputs = (outputs: Record<string, { value: unknown, type: string }>) => (
-    <Box mt="md">
+    <Box mt="md" w="100%">
       <Title order={4}>Outputs:</Title>
-      {Object.entries(outputs).map(([key, value]) => (
-        <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
-      ))}
+      {Object.entries(outputs).map(([key, value]) => {
+        if (value.type === 'image' && value.value) {
+          const imageValue = value.value as { short_display: string, data: string };
+          return (
+            <Box key={key} mt="sm" w="100%">
+              <Text>{key}: {imageValue.short_display}</Text>
+              <Image fit="contain" src={imageValue.data} alt={`${key} preview`} w="100%" h="100%" />
+            </Box>
+          );
+        }
+        return (
+          <Text key={key}>{key}: {String(value.value)} (Type: {value.type})</Text>
+        );
+      })}
     </Box>
   );
 
   const renderTerminalOutput = (stdout: string) => (
     stdout && (
-      <Box mt="md">
+      <Box mt="md" w="100%">
         <Title order={4}>Terminal Output:</Title>
         <ScrollArea h={150} mt="xs">
           <Text style={{ whiteSpace: 'pre-wrap' }}>{stdout}</Text>
@@ -69,7 +81,7 @@ function InspectorPanel() {
 
   const renderErrorOutput = (error: string) => (
     error && (
-      <Box mt="md">
+      <Box mt="md" w="100%">
         <Title order={4}>Error:</Title>
         <ScrollArea h={150} mt="xs">
           <Text style={{ whiteSpace: 'pre-wrap', color: theme.colors.red[6] }}>{error}</Text>
@@ -88,39 +100,58 @@ function InspectorPanel() {
       defaultSize={25}
       maxSize={75}
       minSize={20}
-      style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0', margin: '0' }}
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        padding: '0px', 
+        margin: '0px', 
+        overflow: 'hidden'
+      }}
     >
-      <Flex direction="row" justify="space-between" align="center" w="100%" pl='0.5rem' pt='0.3rem' pr='0.35rem' m='0' mb='0.3rem' pb='0rem'>
+      <Flex 
+        direction="row" 
+        justify="space-between" 
+        align="center" 
+        w="100%" 
+        pl='0.5rem' 
+        pt='0.3rem' 
+        pr='0.35rem' 
+        m={0}
+        mb='0.3rem' 
+        pb={0}
+      >
         <Title order={3}>Inspector</Title>
         <ActionIcon variant="subtle" color={isLocked ? 'red.5': 'dark.3'} onClick={toggleLock}>
           {isLocked ? <IconLockFilled/> : <IconLockOpen />}
         </ActionIcon>
       </Flex>
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
-      <ScrollArea h="100%" w="100%" p='0.5rem' m='0'>
-        <Flex direction="column" m='0' p={0}>
-          {selectedNode ? (
-            <>
-              <Flex direction="row" w="100%" justify="space-between">
-                <Title order={3} mb="md">{`Node: ${selectedNodeData.name.replace('Node', '')}`}</Title>
-                <Flex direction="column" justify="flex-end" align="flex-end">
+      <Flex direction="row" w="100%" h="100%" m={0} p='0.5rem'>
+
+          <Flex direction="column" m={0} p={0} w="100%" >
+            {selectedNode ? (
+              <>
+                <Flex direction="row" align="center" justify="space-between">
+                  <Title order={3}>{`Node: ${selectedNodeData.name.replace('Node', '')}`}</Title>
                   <Badge color={getStatusColor(selectedNodeData.status, theme)}>
                     {selectedNodeData.status}
                   </Badge>
-                  <Text size="xs" mb="md">{`ID: ${selectedNode.id}`}</Text>
                 </Flex>
-              </Flex>
-              
-              {renderInputs(selectedNodeData.inputs)}
-              {renderOutputs(selectedNodeData.outputs)}
-              {renderTerminalOutput(selectedNodeData.terminal_output)}
-              {renderErrorOutput(selectedNodeData.error_output)}
-            </>
-          ) : (
-            <Text>No node selected</Text>
-          )}
-        </Flex>
-      </ScrollArea>
+                <Text size="xs" mb="md">{`ID: ${selectedNode.id}`}</Text>
+                <Flex direction="column" w="100%">
+                {renderInputs(selectedNodeData.inputs)}
+                {renderOutputs(selectedNodeData.outputs)}
+                {renderTerminalOutput(selectedNodeData.terminal_output)}
+                {renderErrorOutput(selectedNodeData.error_output)}
+                </Flex>
+              </>
+            ) : (
+              <Text>No node selected</Text>
+            )}
+          </Flex>
+      </Flex>
     </Panel>
     </>
   );

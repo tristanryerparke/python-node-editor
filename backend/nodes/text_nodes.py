@@ -1,6 +1,6 @@
 from functools import lru_cache
 from typing import Dict, List, Union
-from base_node import BaseNode, BaseNodeData, NodeOutput
+from base_node import BaseNode, BaseNodeData, NodeOutputString
 
 MAXSIZE = 10
 
@@ -9,7 +9,7 @@ DISPLAY_NAME = "Text"
 class ReplaceNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'replace_result': NodeOutput(type='str')
+            'replace_result': NodeOutputString(type='str')
         },
         description = "Replace a string with another string"
     )
@@ -27,7 +27,7 @@ class ReplaceNode(BaseNode):
 class JoinNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'join_result': NodeOutput(type='str')
+            'join_result': NodeOutputString(type='str')
         },
         description = "Join two strings with a separator"
     )
@@ -45,7 +45,7 @@ class JoinNode(BaseNode):
 class SplitTextNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'split_result': NodeOutput(type='list')
+            'split_result': NodeOutputString(type='list')
         }
     )
 

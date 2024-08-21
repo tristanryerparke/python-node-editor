@@ -1,10 +1,9 @@
 from typing import Tuple, Union, Dict, Generator
-# add base_node file to path
 from functools import lru_cache
 import sys
 import time
-sys.path.append('./')
-from base_node import BaseNode, BaseNodeData, StreamingBaseNode, NodeOutput
+
+from base_node import BaseNode, BaseNodeData, StreamingBaseNode, NodeOutputNumber
 
 MAXSIZE = 10
 
@@ -15,7 +14,7 @@ DISPLAY_NAME = "Math"
 class AddNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'result': NodeOutput(type='number')
+            'result': NodeOutputNumber(type='number')
         }
     )
 
@@ -35,7 +34,7 @@ class AddNode(BaseNode):
 class AddNodeNoDefault(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'result': NodeOutput(type='number')
+            'result': NodeOutputNumber(type='number')
         }
     )
     
@@ -55,7 +54,7 @@ class AddNodeNoDefault(BaseNode):
 class SubtractNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'result': NodeOutput(type='number')
+            'result': NodeOutputNumber(type='number')
         }
     )
 
@@ -72,7 +71,7 @@ class SubtractNode(BaseNode):
 class MultiplyNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'result': NodeOutput(type='number')
+            'result': NodeOutputNumber(type='number')
         }
     )
 
@@ -89,7 +88,7 @@ class MultiplyNode(BaseNode):
 class DivideNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'result': NodeOutput(type='number')
+            'result': NodeOutputNumber(type='number')
         }
     )
 
@@ -108,8 +107,8 @@ class DivideNode(BaseNode):
 class SplitNode(BaseNode):
     data: BaseNodeData = BaseNodeData(
         outputs = {
-            'split_t': NodeOutput(type='number'),
-            'split_1_minus_t': NodeOutput(type='number')
+            'split_t': NodeOutputNumber(type='number'),
+            'split_1_minus_t': NodeOutputNumber(type='number')
         }
     )
 

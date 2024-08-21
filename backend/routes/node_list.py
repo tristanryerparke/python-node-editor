@@ -19,7 +19,9 @@ def get_all_nodes():
         category_list = []
         for node_class in value:
             instance: BaseNodeData = node_class(id='')
-            category_list.append(instance.model_dump())
+            category_list.append(instance.model_dump_json())
         nodes_dict[key] = category_list
 
     return nodes_dict
+
+

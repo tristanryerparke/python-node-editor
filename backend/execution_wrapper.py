@@ -1,8 +1,8 @@
 import time
 import json
 import traceback
-from utils import topological_sort, find_and_load_classes
 from pydantic import BaseModel
+from utils import topological_sort, find_and_load_classes
 from base_node import BaseNode, NodeInput, NodeOutput
 from fastapi import WebSocket
 import asyncio
@@ -71,8 +71,9 @@ class ExecutionWrapper:
             node_instance: BaseNode = self.node_instances[str(node_id)]
             print(f"Executing node {node_id} ({node_instance.data.name})...")
             
+
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
@@ -87,7 +88,7 @@ class ExecutionWrapper:
                             for key, value in item.items():
                                 if key != 'status':
                                     node_instance.data.outputs[key].value = value
-                            await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
                             await asyncio.sleep(0)
                         elif item.get('status') == 'complete':
                             print(f"Server: Node {node_id} completed with result {item}")
@@ -110,7 +111,8 @@ class ExecutionWrapper:
                 print(f"Error executing node {node_id}: {str(e)}")
                 print(f"Traceback:\n{traceback.format_exc()}")
 
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump()})
+
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
