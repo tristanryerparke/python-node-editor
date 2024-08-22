@@ -1,10 +1,6 @@
 import { memo, useCallback, useContext } from 'react';
-import { Handle, Node, NodeProps, useNodesData, useReactFlow } from '@xyflow/react';
+import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
-import { TextInputHandle, TextOutputHandle } from './node-elements/TextHandles';
-import { NumberInputHandle, NumberOutputHandle } from './node-elements/NumberHandles';
-import { ImageInputHandle, ImageOutputHandle } from './node-elements/ImageHandles';
-
 import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
@@ -20,73 +16,42 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
   const { autoExecute } = useContext(AutoExecuteContext);
   const { debouncedExecute } = useExecutionManager();
 
-  const nodeData = useNodesData(id)?.data as unknown as BaseNodeData;
-
   const updateNodeData = useCallback((label: string, value: any) => {
-    const newData = { ...nodeData };
+    const newData = { ...data };
 
-    // set the value of the input
-    const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);    if (inputIndex !== -1) {
+    const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);
+    if (inputIndex !== -1) {
       newData.inputs[inputIndex].value = value;
     }
 
-    // set all outputs to null
     newData.outputs = newData.outputs.map(output => ({ ...output, value: null }));
-
-    // set status to not evaluated
     newData.status = 'not evaluated';
 
-    reactFlow.updateNodeData(id, newData as unknown as Partial<Record<string, unknown>>);
+    reactFlow.setNodes((nds) =>
+      nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
+    );
 
     if (autoExecute) {
       debouncedExecute();
     }
-  }, [nodeData, autoExecute, reactFlow, debouncedExecute, id]);
+  }, [data, autoExecute, reactFlow, debouncedExecute, id]);
 
-  const renderInputComponent = (input: NodeInput) => {
-
-    return <InputField 
+  const renderInputComponent = (input: NodeInput) => (
+    <InputField 
       key={`${id}-input-${input.label}`}
       nodeId={id} 
       input={input} 
       onChange={updateNodeData}
     />
+  );
 
-    // switch (input.type) {
-    //   case 'image':
-    //     return <ImageInputHandle key={`${id}-input-${input.label}`} {...commonProps} />;
-    //   case 'float':
-    //   case 'number':
-    //   case 'int':
-    //     return <NumberInputHandle key={`${id}-input-${input.label}`} {...commonProps} />;
-    //   case 'string':
-    //     return <TextInputHandle key={`${id}-input-${input.label}`} {...commonProps} />;
-    //   default:
-    //     return null;
-    // }
-  };
-
-  const renderOutputComponent = (output: NodeOutput) => {
-
-    return <OutputField
+  const renderOutputComponent = (output: NodeOutput) => (
+    <OutputField
       key={`${id}-output-${output.label}`}
       nodeId={id} 
       output={output} 
-      onChange={updateNodeData}
     />
-
-    // switch (output.type) {
-    //   case 'image':
-    //     return <ImageOutputHandle key={`${id}-output-${output.label}`} {...commonProps} />;
-    //   case 'number':
-    //   case 'int':
-    //     return <NumberOutputHandle key={`${id}-output-${output.label}`} {...commonProps} />;
-    //   case 'string':
-    //     return <TextOutputHandle key={`${id}-output-${output.label}`} {...commonProps} />;
-    //   default:
-    //     return null;
-    // }
-  };
+  );
 
   const { selectedNodeId } = useContext(NodeSelectionContext);
 

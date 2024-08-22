@@ -91,7 +91,7 @@ class BaseNode(BaseModel):
             else:
                 exec_method = getattr(self.__class__, 'exec')
 
-            print(f'{self.data.name.upper()} INPUTS:')
+            # print(f'{self.data.name.upper()} INPUTS:')
 
             input_instances = []
 
@@ -119,8 +119,6 @@ class BaseNode(BaseModel):
             ))
         
         self.data.inputs = new_input_instances
-
-        # d(self.data.inputs)
 
     def analyze_outputs(self):
         if len(self.data.outputs) == 0:
@@ -177,14 +175,9 @@ class BaseNode(BaseModel):
         exec_method = getattr(self.__class__, 'exec')
         kwargs = {}
         sig = signature(exec_method)
-
-        for name, param in sig.parameters.items():
-            for i, input in enumerate(self.data.inputs):
-                if input.label == name:
-                    kwargs[name] = input.value
         
-        # d(kwargs)
-
+        for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
+            kwargs[name] = inpt.value
         
         with CaptureOutput() as output:
             result = self.__class__.exec(**kwargs)
@@ -192,8 +185,6 @@ class BaseNode(BaseModel):
         stdout, stderr = output.get_output()
         self.data.terminal_output = stdout
         self.data.error_output = stderr
-
-        # d(result)
 
         if isinstance(result, tuple):
             result = list(result)

@@ -7,3 +7,4 @@ pywebview
 annotated-types
 Pillow
 opencv-python-headless
+cachetools

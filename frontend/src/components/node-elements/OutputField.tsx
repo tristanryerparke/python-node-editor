@@ -1,19 +1,21 @@
 import { NodeOutput } from '../../types/DataTypes';
-import { NumberInput, TextInput, Flex, Group, Tooltip, Text } from '@mantine/core';
-import { Handle, Position, useEdges } from '@xyflow/react';
+import { TextInput, Flex, Tooltip, Text } from '@mantine/core';
+import { Handle, Position } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
+import { Image } from '../../types/DataTypes';
 
 export interface OutputFieldProps {
   nodeId: string;
   output: NodeOutput;
-  onChange: (label: string, value: any) => void;
 }
 
-export default function OutputField({ nodeId, output, onChange }: OutputFieldProps) {
+export default function OutputField({ nodeId, output }: OutputFieldProps) {
 
   const handleId = `${nodeId}-output-${output.label}`
 
   const theme = useMantineTheme();
+
+  
 
   const renderOutput = () => {
     switch (output.type) {
@@ -25,10 +27,11 @@ export default function OutputField({ nodeId, output, onChange }: OutputFieldPro
           value={output.value ?? ''}
         />;
       case 'image':
+        const image = output.value as Image | null;
         return <TextInput
           disabled
           w='100%'
-          value={output.value?.short_display ?? output.value ?? ''}
+          value={image?.description ?? 'No image data'}
         />;
       default:
         return null;

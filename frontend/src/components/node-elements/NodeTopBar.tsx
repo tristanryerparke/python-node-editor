@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Group, Text, ActionIcon, useMantineTheme, Tooltip, Loader } from '@mantine/core';
+import { Group, Text, ActionIcon, useMantineTheme, Tooltip } from '@mantine/core';
 import { useNodesData } from '@xyflow/react';
 import { IconInfoCircle, IconCode, IconLicense, IconRosetteDiscountCheck, IconX } from '@tabler/icons-react';
 import { InspectorContext, NodeSelectionContext, PanelsContext } from '../../GlobalContext';
@@ -15,7 +15,7 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   const theme = useMantineTheme();
   const node = useNodesData(id)!;
   const nodeData = node.data as unknown as BaseNodeData;
-  const { setIsLocked, setLockedNodeId } = useContext(InspectorContext);
+  const { isLocked, lockedNodeId, setIsLocked, setLockedNodeId } = useContext(InspectorContext);
   const { setSelectedNodeId } = useContext(NodeSelectionContext);
   const { panels, setPanels } = useContext(PanelsContext);
 
@@ -29,17 +29,24 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   };
 
   const handleInfoClick = () => {
-    setIsLocked(true);
-    setLockedNodeId(id);
-    setSelectedNodeId(id);
-    
-    if (!panels.showInspector) {
-      setPanels(prevPanels => ({
-        ...prevPanels,
-        showInspector: true
-      }));
+    if (isLocked && lockedNodeId === id) {
+      setIsLocked(false);
+      setLockedNodeId(null);
+    } else {
+      setIsLocked(true);
+      setLockedNodeId(id);
+      setSelectedNodeId(id);
+      
+      if (!panels.showInspector) {
+        setPanels(prevPanels => ({
+          ...prevPanels,
+          showInspector: true
+        }));
+      }
     }
   };
+
+  const isNodeLocked = isLocked && lockedNodeId === id;
 
   return (
     <Group w='100%' justify='space-between' pl='0.5rem'>
@@ -66,8 +73,14 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
             <IconCode />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label="Lock Inspector to Node" color='dark.3' withArrow arrowSize={8}>
-          <ActionIcon variant='subtle' size='sm' color='dark.2' radius='xl' onClick={handleInfoClick}>
+        <Tooltip label={isNodeLocked ? "Unlock Inspector" : "Lock Inspector to Node"} color='dark.3' withArrow arrowSize={8}>
+          <ActionIcon 
+            variant='subtle' 
+            size='sm' 
+            color={isNodeLocked ? 'red.5' : 'dark.2'} 
+            radius='xl' 
+            onClick={handleInfoClick}
+          >
             <IconInfoCircle />
           </ActionIcon>
         </Tooltip>
@@ -79,7 +92,6 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
               <IconRosetteDiscountCheck 
                 color={statusColor}
                 size={20} 
-                // style={{ transition: 'color 0.25s ease-in-out' }}
               />
             )}
           </ActionIcon>

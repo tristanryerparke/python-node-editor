@@ -9,14 +9,14 @@ import {
   ScrollArea, 
   Divider, 
   ActionIcon,
-  Image
+  Image as MantineImage 
 } from '@mantine/core'  
 import { IconLockOpen, IconLockFilled } from '@tabler/icons-react';
 import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
-import type { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
+import type { BaseNodeData, NodeInput, NodeOutput, Image } from '../types/DataTypes';
 
 function InspectorPanel() {
   const { selectedNodeId } = useContext(NodeSelectionContext);
@@ -44,17 +44,19 @@ function InspectorPanel() {
       <Title order={4}>Inputs:</Title>
       {inputs.map((input) => {
         if (input.type === 'image' && input.value) {
-          const imageValue = input.value as { short_display: string, data: string };
+          const imageValue = input.value as Image;
           return (
             <Flex direction="column" key={input.label} w="100%" pb='0.5rem'>
-              <Text fw={700}>{input.label}: {imageValue.short_display}</Text>
-              <Image fit="contain" src={imageValue.data} alt={`${input.label} preview`} w="100%" h="100%" />
+              <Text fw={700} span>{input.label}:</Text> <Text span>{imageValue.description}</Text>
+              {imageValue.thumbnail && (
+                <MantineImage fit="contain" src={imageValue.thumbnail} alt={`${input.label} preview`} w="100%" h="100%" />
+              )}
             </Flex>
           );
         }
         return (
           <Text key={input.label}>
-            <Text fw={700} span>{input.label}</Text>: {String(input.value)} (Type: {input.type})
+            <Text fw={700} span>{input.label}:</Text> <Text span>{String(input.value)} (Type: {input.type}) </Text>
           </Text>
         );
       })}
@@ -66,11 +68,13 @@ function InspectorPanel() {
       <Title order={4}>Outputs:</Title>
       {outputs.map((output) => {
         if (output.type === 'image' && output.value) {
-          const imageValue = output.value as { short_display: string, data: string };
+          const imageValue = output.value as Image;
           return (
             <Flex direction="column" key={output.label} w="100%" pb='0.5rem'>
-              <Text>{output.label}: {imageValue.short_display}</Text>
-              <Image fit="contain" src={imageValue.data} alt={`${output.label} preview`} w="100%" h="100%" />
+              <Text fw={700} span>{output.label}:</Text> <Text span>{imageValue.description}</Text>
+              {imageValue.thumbnail && (
+                <MantineImage fit="contain" src={imageValue.thumbnail} alt={`${output.label} preview`} w="100%" h="100%" />
+              )}
             </Flex>
           );
         }

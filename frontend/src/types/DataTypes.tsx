@@ -23,6 +23,15 @@ export interface BaseNodeData {
   definition_path: string;
 }
 
+export interface Image {
+  thumbnail: string | null;
+  description: string | null;
+}
+
+export interface NodeOutputImage extends NodeOutput {
+  value: Image;
+}
+
 export interface BaseNode {
   id: string;
   position: { x: number; y: number };
