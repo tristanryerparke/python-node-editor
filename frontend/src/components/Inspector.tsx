@@ -18,8 +18,8 @@ import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
-import type { BaseNodeData, NodeInput, NodeOutput, Image } from '../types/DataTypes';
-import { useState, useEffect } from 'react';
+import type { BaseNode, BaseNodeData, NodeInput, NodeOutput, Image } from '../types/DataTypes';
+import { useState } from 'react';
 import axios from 'axios';
 
 function InspectorPanel() {
@@ -44,11 +44,11 @@ function InspectorPanel() {
 
   const [opened, { open, close }] = useDisclosure(false);
 
-  const [fullNodeData, setFullNodeData] = useState(null);
+  const [, setFullNodeData] = useState<BaseNode | null>(null);
   const [modalImage, setModalImage] = useState('');
   const [modalTitle, setModalTitle] = useState('');
 
-  const fetchFullNodeData = async (nodeId) => {
+  const fetchFullNodeData = async (nodeId: string) => {
     try {
       const response = await axios.get(`http://localhost:8000/full_data/${nodeId}`);
       return JSON.parse(response.data);
@@ -58,15 +58,15 @@ function InspectorPanel() {
     }
   };
 
-  const openModal = async (nodeId, inputOrOutput, label) => {
+  const openModal = async (nodeId: string, inputOrOutput: 'input' | 'output', label: string) => {
     const data = await fetchFullNodeData(nodeId);
     if (!data) return;
 
     setFullNodeData(data);
     
     const imageArray = inputOrOutput === 'input' 
-      ? data.data.inputs.find(i => i.label === label)?.input_data?.image_array
-      : data.data.outputs.find(o => o.label === label)?.output_data?.image_array;
+      ? data.data.inputs.find((i: NodeInput) => i.label === label)?.input_data?.image_array
+      : data.data.outputs.find((o: NodeOutput) => o.label === label)?.output_data?.image_array;
 
     if (imageArray) {
       const base64Image = imageArray;
@@ -92,7 +92,7 @@ function InspectorPanel() {
                 style={{ position: 'relative', top: -30, right: -2 }} 
                 variant="subtle" 
                 color="dark.3"
-                onClick={() => openModal(selectedNode.id, 'input', input.label)}
+                onClick={() => selectedNode && openModal(selectedNode.id, 'input', input.label)}
               >
                 <IconEye />
               </ActionIcon>
@@ -124,7 +124,7 @@ function InspectorPanel() {
                 style={{ position: 'relative', top: -30, right: -2 }} 
                 variant="subtle" 
                 color="dark.3"
-                onClick={() => openModal(selectedNode.id, 'output', output.label)}
+                onClick={() => selectedNode && openModal(selectedNode.id, 'output', output.label)}
               >
                 <IconEye />
               </ActionIcon>

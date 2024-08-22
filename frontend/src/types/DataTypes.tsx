@@ -1,13 +1,13 @@
 export interface NodeInput {
   label: string;
   type: string;
-  value: any;
+  input_data: any;
 }
 
 export interface NodeOutput {
   label: string;
   type: string;
-  value: any | null;
+  output_data: any | null;
 }
 
 export interface BaseNodeData {
