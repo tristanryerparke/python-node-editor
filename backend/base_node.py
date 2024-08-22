@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+
 from typing import TypeVar, Generic, NamedTuple, Tuple
 import shortuuid
 import numpy as np
@@ -12,7 +12,9 @@ from PIL import Image
 from io import BytesIO
 from devtools import debug as d
 
-from classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
+from pydantic import BaseModel
+
+from .classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
 
 from devtools import debug as d
     
@@ -91,7 +93,7 @@ class BaseNode(BaseModel):
             else:
                 exec_method = getattr(self.__class__, 'exec')
 
-            print(f'{self.data.name.upper()} INPUTS:')
+            # print(f'{self.data.name.upper()} INPUTS:')
 
             input_instances = []
 
@@ -115,12 +117,10 @@ class BaseNode(BaseModel):
             new_input_instances.append(new_class(
                 label=input_inst.label, 
                 type=input_inst.type,
-                value=input_inst.value
+                input_data=input_inst.input_data
             ))
         
         self.data.inputs = new_input_instances
-
-        # d(self.data.inputs)
 
     def analyze_outputs(self):
         if len(self.data.outputs) == 0:
@@ -155,7 +155,7 @@ class BaseNode(BaseModel):
             new_output_instances.append(new_class(
                 label=output_inst.label, 
                 type=output_inst.type,
-                value=output_inst.value
+                output_data=output_inst.output_data
             ))
         
         self.data.outputs = new_output_instances
@@ -177,14 +177,9 @@ class BaseNode(BaseModel):
         exec_method = getattr(self.__class__, 'exec')
         kwargs = {}
         sig = signature(exec_method)
-
-        for name, param in sig.parameters.items():
-            for i, input in enumerate(self.data.inputs):
-                if input.label == name:
-                    kwargs[name] = input.value
         
-        # d(kwargs)
-
+        for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
+            kwargs[name] = inpt.input_data   
         
         with CaptureOutput() as output:
             result = self.__class__.exec(**kwargs)
@@ -192,8 +187,6 @@ class BaseNode(BaseModel):
         stdout, stderr = output.get_output()
         self.data.terminal_output = stdout
         self.data.error_output = stderr
-
-        # d(result)
 
         if isinstance(result, tuple):
             result = list(result)
@@ -218,12 +211,12 @@ class StreamingBaseNode(BaseNode):
         yield {'default': True}  # exec_stream now yields a dictionary
     
     def meta_exec(self):
-        exec_inputs = {k: v.value for k, v in self.data.inputs.items()}
+        exec_inputs = {k: v.input_data for k, v in self.data.inputs.items()}
 
         with CaptureOutput() as output:
             for result in self.__class__.exec_stream(**exec_inputs):
                 for key, value in result.items():
-                    self.data.outputs[key].value = value
+                    self.data.outputs[key].output_data = value
                 yield result
 
         stdout, stderr = output.get_output()

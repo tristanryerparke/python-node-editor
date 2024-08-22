@@ -13,15 +13,15 @@
         "name": "Backend",
         "type": "python",
         "request": "launch",
-        "cwd": "${workspaceFolder}/backend",
-        "program": "${workspaceFolder}/backend/main.py",
-        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "module": "backend.main",
+        "console": "integratedTerminal"
       },
       {
         "name": "Native Window",
         "type": "python",
         "request": "launch",
-        "cwd": "${workspaceFolder}/backend",
+        "cwd": "${workspaceFolder}",
         "program": "${workspaceFolder}/backend/native_window.py",
         "console": "integratedTerminal"
       }

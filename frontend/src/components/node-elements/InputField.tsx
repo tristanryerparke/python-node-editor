@@ -4,6 +4,7 @@ import { NumberInput, TextInput, Flex, Tooltip, Text, ActionIcon } from '@mantin
 import { Handle, Position, useEdges } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
+import { Image } from '../../types/DataTypes';
 
 export interface InputFieldProps {
   nodeId: string;
@@ -42,7 +43,7 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
       case 'number':
         return <NumberInput
           w='100%'
-          value={input.value ?? ''}
+          value={input.input_data ?? ''}
           disabled={isEdgeConnected}
           onChange={(value) => onChange(input.label, value)}
         />;
@@ -51,15 +52,16 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
       case 'string':
         return <TextInput
           w='100%'
-          value={input.value ?? ''}
+          value={input.input_data ?? ''}
           disabled={isEdgeConnected}
           onChange={(e) => {onChange(input.label, e.currentTarget.value)}}
         />;
 
       case 'image':
+        const image = input.input_data as Image | null;
         return <TextInput
           w='100%'
-          value={input.value?.short_display ?? ''}
+          value={image?.description ?? ''}
           disabled
           rightSection={
             <ActionIcon variant='subtle' color='dark.2' disabled={isEdgeConnected}>

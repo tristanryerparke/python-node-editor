@@ -4,8 +4,8 @@ import sys
 import time
 from typing import List
 from collections import namedtuple
-from classes import NodeInput, NodeOutput, NodeOutputNumber
-from base_node import BaseNode, BaseNodeData, StreamingBaseNode
+from ..classes import NodeInput, NodeOutput, NodeOutputNumber
+from ..base_node import BaseNode, BaseNodeData, StreamingBaseNode
 
 MAXSIZE = 10
 
@@ -41,9 +41,9 @@ class AddSubtractNode(BaseNode):
         cls, 
         a: NodeInput(label='a', type='number', value=0),
         b: NodeInput(label='b', type='number')
-    ) -> Tuple[NodeOutput(label='result', type='number'), NodeOutput(label='result', type='string')]:
+    ) -> Tuple[NodeOutput(label='result A', type='number'), NodeOutput(label='result B', type='string')]:
         '''
         Adds two numbers together
         '''
-        return (NodeOutput(label='result', type='number', value=a + b), 
-                NodeOutput(label='result', type='string', value=str(a - b)))
+        return (NodeOutput(label='result A', type='number', value=a + b), 
+                NodeOutput(label='result B', type='string', value=str(a - b)))
