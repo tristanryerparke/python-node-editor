@@ -38,8 +38,8 @@ class BlurImageNode(BaseNode):
     # @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image, radius: hashkey(image.image_array.tobytes(), radius))
     def exec(
         cls,
-        image: NodeInputImage(label='Image', type='image'),
-        radius: NodeInput(label='Radius', type='number', input_data=5)
+        image: NodeInputImage(label='A', type='image'),
+        radius: NodeInput(label='B', type='number', input_data=5)
     ) -> NodeOutputImage(label='Blurred Image', type='image'):
         img = Image.fromarray(image.image_array)
         img = img.filter(ImageFilter.GaussianBlur(radius=radius))

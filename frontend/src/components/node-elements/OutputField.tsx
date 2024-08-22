@@ -22,6 +22,7 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
       case 'number':
       case 'string':
         return <TextInput
+          className='input-as-text-display'
           disabled
           w='100%'
           value={output.output_data ?? ''}
@@ -30,6 +31,7 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
         // console.log(output)
         const image = output.output_data as Image | null;
         return <TextInput
+          className='input-as-text-display'
           disabled
           w='100%'
           value={image?.description ?? ''}

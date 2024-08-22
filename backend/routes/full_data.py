@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-
+from fastapi import APIRouter, File, UploadFile
 from ..base_node import BaseNode
 from ..config import EXECUTION_WRAPPER
 
@@ -13,5 +12,12 @@ def get_full_node_data(id: str):
 
 
     return node.model_dump_json()
+
+
+# @full_data_list_router.post("/image_upload")
+# def image_upload(file: UploadFile = File(...)):
+
+
+#     return {"filename": file.filename}
 
 

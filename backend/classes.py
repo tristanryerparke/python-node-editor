@@ -1,7 +1,7 @@
 import base64
 import numpy as np
 from PIL import Image
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, SerializeAsAny
 from io import BytesIO
 from typing import Any, Union
 import cv2
@@ -42,7 +42,7 @@ class NodeInputImage(NodeInput):
         arbitrary_types_allowed = True
 
     type: str = 'image'
-    input_data: Union[ImageData, None] = None
+    input_data: SerializeAsAny[Union[ImageData, ThumbnailData, None]] = None
 
     # creates a full ImageData object if reconstructing from data that contains an image_array
     @field_validator('input_data', mode='before')
@@ -51,6 +51,8 @@ class NodeInputImage(NodeInput):
         if isinstance(input_data, dict):
             if 'image_array' in input_data:
                 return ImageData.from_base64(input_data['image_array'])
+            else:
+                return ThumbnailData(**input_data)
         return input_data
     
 
@@ -59,7 +61,7 @@ class NodeOutputImage(NodeOutput):
         arbitrary_types_allowed = True
 
     type: str = 'image'
-    output_data: Union[ImageData, None] = None
+    output_data: SerializeAsAny[Union[ImageData, ThumbnailData, None]] = None
 
     # creates a full ImageData object if reconstructing from data that contains an image_array
     @field_validator('output_data', mode='before')
@@ -68,6 +70,8 @@ class NodeOutputImage(NodeOutput):
         if isinstance(output_data, dict):
             if 'image_array' in output_data:
                 return ImageData.from_base64(output_data['image_array'])
+            else:
+                return ThumbnailData(**output_data)
         return output_data
 
 

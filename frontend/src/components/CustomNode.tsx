@@ -17,6 +17,9 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
   const { debouncedExecute } = useExecutionManager();
 
   const updateNodeData = useCallback((label: string, value: any) => {
+    console.log('updating node data', label, value);
+
+
     const newData = { ...data };
 
     const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);

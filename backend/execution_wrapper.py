@@ -92,7 +92,11 @@ class ExecutionWrapper:
 
             print('BEFORE EXECUTION:')
             print('INPUTS:')
-            # d(node_instance.data.inputs)
+            d(node_instance.data.inputs)
+            print('OUTPUTS:')
+            d(node_instance.data.outputs)
+
+            print('pause')
             # for i in node_instance.data.inputs:
             #     d(i)
             # print('OUTPUTS:')
@@ -102,6 +106,8 @@ class ExecutionWrapper:
             # clear the node's outputs
             for o in node_instance.data.outputs:
                 o.output_data = None
+
+            
 
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
             await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
@@ -148,14 +154,13 @@ class ExecutionWrapper:
 
             # print('hi')
 
-            print('AFTER EXECUTION:')
+            print('BEFORE EXECUTION:')
             print('INPUTS:')
-            # d(node_instance.data.inputs)
-            for i in node_instance.data.inputs:
-                d(i)
+            d(node_instance.data.inputs)
             print('OUTPUTS:')
-            for o in node_instance.data.outputs:
-                d(o)
+            d(node_instance.data.outputs)
+
+            print('pause')
 
             await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
             
