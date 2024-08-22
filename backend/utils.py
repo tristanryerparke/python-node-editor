@@ -1,7 +1,7 @@
 import os
 import importlib
 import inspect
-from base_node import BaseNode, StreamingBaseNode
+from .base_node import BaseNode, StreamingBaseNode
 from collections import deque
 
 
@@ -15,7 +15,7 @@ def find_and_load_classes(directory):
         
         if filename.endswith('.py'):
             module_name = filename[:-3]
-            module = importlib.import_module(f"{directory}.{filename[:-3]}")
+            module = importlib.import_module(f"backend.nodes.{module_name}")
             
             # Get a list of classes defined in the module
             classes = [obj for name, obj in inspect.getmembers(module) if inspect.isclass(obj) and issubclass(obj, BaseNode) and obj != BaseNode and obj != StreamingBaseNode]

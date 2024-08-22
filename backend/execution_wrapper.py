@@ -2,11 +2,21 @@ import time
 import json
 import traceback
 from pydantic import BaseModel
-from utils import topological_sort, find_and_load_classes
-from base_node import BaseNode, NodeInput, NodeOutput
+from .utils import topological_sort
+from .base_node import BaseNode, NodeInput, NodeOutput
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
+
+def json_analyze_outputs(json_string: str):
+    output_0 = json.loads(json_string)['data']['outputs'][0]['output_data']
+    if output_0:
+        output_components = output_0.items()
+        print(f"output_0 components:")
+        for value, component in output_components:
+            print(f'{value}: {len(component)}')
+    else:
+        print(f'output_0 had type {type(output_0)}')
 
 class GraphDef(BaseModel):
     nodes: list
@@ -22,9 +32,13 @@ class ExecutionWrapper:
         self.last_sent_index = -1
         self.node_instances = {}
         self.websocket: WebSocket | None = None
+        self.classes_dict = None
 
     def set_websocket(self, websocket: WebSocket | None):
         self.websocket = websocket
+
+    def set_classes_dict(self, classes_dict):
+        self.classes_dict = classes_dict
 
     async def send_update(self, message: dict):
         if self.websocket:
@@ -32,7 +46,7 @@ class ExecutionWrapper:
         else:
             print(f"Websocket not set, cannot send message: {message}")
 
-    async def execute_graph(self, graph_def: GraphDef, classes_dict):
+    async def execute_graph(self, graph_def: GraphDef):
         start_time = time.time()
         self.node_instances = {}
 
@@ -48,7 +62,7 @@ class ExecutionWrapper:
             # print(f"Instantiating node {id}...")
             node_type = node['data']['name']
             namespace = node['data']['namespace']
-            NodeClass = next((cls for cls in classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
+            NodeClass = next((cls for cls in self.classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
             if NodeClass:
                 instance = NodeClass.model_validate(node)
                 self.node_instances[id] = instance
@@ -71,12 +85,30 @@ class ExecutionWrapper:
             node_instance: BaseNode = self.node_instances[str(node_id)]
             print(f"Executing node {node_id} ({node_instance.data.name})...")
             
+            exclude_object = {'data': {
+                'inputs': {'__all__': {'input_data': {'image_array'}}},
+                'outputs': {'__all__': {'output_data': {'image_array'}}}
+            }}
+
+            print('BEFORE EXECUTION:')
+            print('INPUTS:')
+            # d(node_instance.data.inputs)
+            # for i in node_instance.data.inputs:
+            #     d(i)
+            # print('OUTPUTS:')
+            # for o in node_instance.data.outputs:
+            #     d(o)
+
+            # clear the node's outputs
+            for o in node_instance.data.outputs:
+                o.output_data = None
 
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
+
 
             try:
                 if node_instance.data.streaming:
@@ -87,21 +119,21 @@ class ExecutionWrapper:
                             print(f"Server: Streaming item {item}")
                             for key, value in item.items():
                                 if key != 'status':
-                                    node_instance.data.outputs[key].value = value
-                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
+                                    node_instance.data.outputs[key].output_data = value
+                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
                             await asyncio.sleep(0)
                         elif item.get('status') == 'complete':
                             print(f"Server: Node {node_id} completed with result {item}")
                             for key, value in item.items():
                                 if key != 'status':
-                                    node_instance.data.outputs[key].value = value
+                                    node_instance.data.outputs[key].output_data = value
                 else:
                     node_instance.meta_exec()
 
                 node_end = time.time()
                 print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
                 print(f"Node {node_id} completed")
-                # print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
+                print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
                 
                 node_instance.data.status = 'evaluated'
 
@@ -112,8 +144,20 @@ class ExecutionWrapper:
                 print(f"Error executing node {node_id}: {str(e)}")
                 print(f"Traceback:\n{traceback.format_exc()}")
 
+            # print(json_analyze_outputs(node_instance.model_dump_json(exclude=exclude_object)))
 
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
+            # print('hi')
+
+            print('AFTER EXECUTION:')
+            print('INPUTS:')
+            # d(node_instance.data.inputs)
+            for i in node_instance.data.inputs:
+                d(i)
+            print('OUTPUTS:')
+            for o in node_instance.data.outputs:
+                d(o)
+
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
@@ -136,8 +180,8 @@ class ExecutionWrapper:
                     target_input = next((input for input in self.node_instances[to_node_id].data.inputs if input.label == to_port), None)
                     
                     if source_output and target_input:
-                        target_input.value = source_output.value
-                        print(f"Edge processing: {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
+                        target_input.input_data = source_output.output_data
+                        print(f"Edge processing: {edge['source']}({self.node_instances[edge['source']].data.name}):{from_port} -> {edge['target']}({self.node_instances[edge['target']].data.name}):{to_port}")
                     else:
                         print(f"Warning: Could not find matching ports for edge {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
 

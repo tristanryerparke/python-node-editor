@@ -1,12 +1,7 @@
 import asyncio
-import json
-from fastapi import APIRouter, BackgroundTasks, WebSocket
+from fastapi import APIRouter, WebSocket
 from starlette.websockets import WebSocketState, WebSocketDisconnect
-
-from base_node import BaseNodeData, NodeInput
-from execution_wrapper import ExecutionWrapper, ExecuteRequest
-
-from shared_globals import CLASSES_DICT, EXECUTION_WRAPPER
+from ..config import EXECUTION_WRAPPER
 
 execution_router = APIRouter()
 
@@ -19,7 +14,7 @@ async def websocket_endpoint(websocket: WebSocket):
             if websocket.client_state == WebSocketState.CONNECTED:
                 data = await websocket.receive_json()
                 if data.get("action") == "execute":
-                    asyncio.create_task(EXECUTION_WRAPPER.execute_graph(data["graph_def"], CLASSES_DICT))
+                    asyncio.create_task(EXECUTION_WRAPPER.execute_graph(data["graph_def"]))
                     await websocket.send_json({"message": "Execution started"})
     except WebSocketDisconnect:
         pass

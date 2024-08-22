@@ -43,7 +43,7 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
       case 'number':
         return <NumberInput
           w='100%'
-          value={input.value ?? ''}
+          value={input.input_data ?? ''}
           disabled={isEdgeConnected}
           onChange={(value) => onChange(input.label, value)}
         />;
@@ -52,13 +52,13 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
       case 'string':
         return <TextInput
           w='100%'
-          value={input.value ?? ''}
+          value={input.input_data ?? ''}
           disabled={isEdgeConnected}
           onChange={(e) => {onChange(input.label, e.currentTarget.value)}}
         />;
 
       case 'image':
-        const image = input.value as Image | null;
+        const image = input.input_data as Image | null;
         return <TextInput
           w='100%'
           value={image?.description ?? ''}

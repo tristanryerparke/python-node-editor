@@ -24,14 +24,15 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
         return <TextInput
           disabled
           w='100%'
-          value={output.value ?? ''}
+          value={output.output_data ?? ''}
         />;
       case 'image':
-        const image = output.value as Image | null;
+        // console.log(output)
+        const image = output.output_data as Image | null;
         return <TextInput
           disabled
           w='100%'
-          value={image?.description ?? 'No image data'}
+          value={image?.description ?? ''}
         />;
       default:
         return null;

@@ -21,10 +21,10 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
 
     const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);
     if (inputIndex !== -1) {
-      newData.inputs[inputIndex].value = value;
+      newData.inputs[inputIndex].input_data = value;
     }
 
-    newData.outputs = newData.outputs.map(output => ({ ...output, value: null }));
+    newData.outputs = newData.outputs.map(output => ({ ...output, output_data: null }));
     newData.status = 'not evaluated';
 
     reactFlow.setNodes((nds) =>
