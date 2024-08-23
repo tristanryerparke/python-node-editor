@@ -30,11 +30,11 @@ export interface ImageData {
 }
 
 export interface NodeOutputImage extends NodeOutput {
-  value: ImageData;
+  output_data: ImageData;
 }
 
 export interface NodeInputImage extends NodeInput {
-  value: ImageData;
+  input_data: ImageData;
 }
 
 export interface BaseNode {

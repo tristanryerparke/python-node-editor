@@ -11,6 +11,7 @@ import {
   ActionIcon,
   Image as MantineImage ,
   Modal,
+  Loader,
 } from '@mantine/core'  
 import { useDisclosure } from '@mantine/hooks';
 import { IconLockOpen, IconLockFilled, IconEye } from '@tabler/icons-react';
@@ -19,7 +20,7 @@ import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
 import type { BaseNode, BaseNodeData, NodeInput, NodeOutput, Image } from '../types/DataTypes';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import axios from 'axios';
 
 function InspectorPanel() {
@@ -43,37 +44,43 @@ function InspectorPanel() {
   const selectedNodeData = selectedNode?.data as unknown as BaseNodeData;
 
   const [opened, { open, close }] = useDisclosure(false);
-
-  const [, setFullNodeData] = useState<BaseNode | null>(null);
   const [modalImage, setModalImage] = useState('');
   const [modalTitle, setModalTitle] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchFullNodeData = async (nodeId: string) => {
+  const openModal = useCallback(async (nodeId: string, inputOrOutput: 'input' | 'output', label: string) => {
+    setIsLoading(true);
+    open();
+    setModalTitle(label);
     try {
-      const response = await axios.get(`http://localhost:8000/full_data/${nodeId}`);
-      return JSON.parse(response.data);
+      const response = await axios.get(`http://localhost:8000/image/${nodeId}/${inputOrOutput}/${label}`);
+      setModalImage(response.data.image);
     } catch (error) {
-      console.error('Error fetching full node data:', error);
-      return null;
+      console.error('Error fetching image:', error);
+      setModalImage(''); // Clear the image in case of error
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [open]);
 
-  const openModal = async (nodeId: string, inputOrOutput: 'input' | 'output', label: string) => {
-    const data = await fetchFullNodeData(nodeId);
-    if (!data) return;
-
-    setFullNodeData(data);
-    
-    const imageArray = inputOrOutput === 'input' 
-      ? data.data.inputs.find((i: NodeInput) => i.label === label)?.input_data?.image_array
-      : data.data.outputs.find((o: NodeOutput) => o.label === label)?.output_data?.image_array;
-
-    if (imageArray) {
-      const base64Image = imageArray;
-      setModalImage(base64Image);
-      setModalTitle(label);
-      open();
-    }
+  const renderImageItem = (item: NodeInput | NodeOutput, inputOrOutput: 'input' | 'output') => {
+    const imageValue = (inputOrOutput === 'input' ? item.input_data : item.output_data) as Image;
+    return (
+      <Flex direction="column" key={item.label} w="100%" pb='0.5rem'>
+        <Text fw={700} span>{item.label}:</Text> <Text span>{imageValue.description}</Text>
+        {imageValue.thumbnail && (
+          <MantineImage fit="contain" src={imageValue.thumbnail} alt={`${item.label} preview`} w="100%" h="100%" />
+        )}
+        <ActionIcon 
+          style={{ position: 'relative', top: -30, right: -2 }} 
+          variant="subtle" 
+          color="dark.3"
+          onClick={() => selectedNode && openModal(selectedNode.id, inputOrOutput, item.label)}
+        >
+          <IconEye />
+        </ActionIcon>
+      </Flex>
+    );
   };
 
   const renderInputs = (inputs: NodeInput[]) => (
@@ -81,23 +88,7 @@ function InspectorPanel() {
       <Title order={4}>Inputs:</Title>
       {inputs.map((input) => {
         if (input.type === 'image' && input.input_data) {
-          const imageValue = input.input_data as Image;
-          return (
-            <Flex direction="column" key={input.label} w="100%" pb='0.5rem'>
-              <Text fw={700} span>{input.label}:</Text> <Text span>{imageValue.description}</Text>
-              {imageValue.thumbnail && (
-                <MantineImage fit="contain" src={imageValue.thumbnail} alt={`${input.label} preview`} w="100%" h="100%" />
-              )}
-              <ActionIcon 
-                style={{ position: 'relative', top: -30, right: -2 }} 
-                variant="subtle" 
-                color="dark.3"
-                onClick={() => selectedNode && openModal(selectedNode.id, 'input', input.label)}
-              >
-                <IconEye />
-              </ActionIcon>
-            </Flex>
-          );
+          return renderImageItem(input, 'input');
         }
         return (
           <Text key={input.label}>
@@ -113,23 +104,7 @@ function InspectorPanel() {
       <Title order={4}>Outputs:</Title>
       {outputs.map((output) => {
         if (output.type === 'image' && output.output_data) {
-          const imageValue = output.output_data as Image;
-          return (
-            <Flex direction="column" key={output.label} w="100%" pb='0.5rem'>
-              <Text fw={700} span>{output.label}:</Text> <Text span>{imageValue.description}</Text>
-              {imageValue.thumbnail && (
-                <MantineImage fit="contain" src={imageValue.thumbnail} alt={`${output.label} preview`} w="100%" h="100%" />
-              )}
-              <ActionIcon 
-                style={{ position: 'relative', top: -30, right: -2 }} 
-                variant="subtle" 
-                color="dark.3"
-                onClick={() => selectedNode && openModal(selectedNode.id, 'output', output.label)}
-              >
-                <IconEye />
-              </ActionIcon>
-            </Flex>
-          );
+          return renderImageItem(output, 'output');
         }
         return (
           <Text key={output.label}>
@@ -232,7 +207,13 @@ function InspectorPanel() {
       title={modalTitle}
       withinPortal={false}
     >
-      <MantineImage src={modalImage} alt={modalTitle} fit="contain" />
+      {isLoading ? (
+        <Flex justify="center" align="center" style={{ width: '300px', height: '300px' }}>
+          <Loader size="xl" />
+        </Flex>
+      ) : (
+        <MantineImage src={modalImage} alt={modalTitle} fit="contain" />
+      )}
     </Modal>
     </>
   );

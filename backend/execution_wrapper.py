@@ -90,13 +90,13 @@ class ExecutionWrapper:
                 'outputs': {'__all__': {'output_data': {'image_array'}}}
             }}
 
-            print('BEFORE EXECUTION:')
-            print('INPUTS:')
-            d(node_instance.data.inputs)
-            print('OUTPUTS:')
-            d(node_instance.data.outputs)
+            # print('BEFORE EXECUTION:')
+            # print('INPUTS:')
+            # d(node_instance.data.inputs)
+            # print('OUTPUTS:')
+            # d(node_instance.data.outputs)
 
-            print('pause')
+            # print('pause')
             # for i in node_instance.data.inputs:
             #     d(i)
             # print('OUTPUTS:')
@@ -137,9 +137,8 @@ class ExecutionWrapper:
                     node_instance.meta_exec()
 
                 node_end = time.time()
-                print(f"Node {node_id} execution took {node_end - node_start:.4f} seconds")
-                print(f"Node {node_id} completed")
-                print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
+                print(f"Node {node_id} completed. Execution took {node_end - node_start:.4f} seconds")
+                # print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
                 
                 node_instance.data.status = 'evaluated'
 
@@ -154,13 +153,13 @@ class ExecutionWrapper:
 
             # print('hi')
 
-            print('BEFORE EXECUTION:')
-            print('INPUTS:')
-            d(node_instance.data.inputs)
-            print('OUTPUTS:')
-            d(node_instance.data.outputs)
+            # print('BEFORE EXECUTION:')
+            # print('INPUTS:')
+            # d(node_instance.data.inputs)
+            # print('OUTPUTS:')
+            # d(node_instance.data.outputs)
 
-            print('pause')
+            # print('pause')
 
             await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
             

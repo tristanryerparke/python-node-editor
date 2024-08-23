@@ -39,7 +39,7 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
 
   const renderInput = () => {
     switch (input.type) {
-
+      
       // Number input
       case 'number':
         return <NumberInput
@@ -59,9 +59,11 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
         />;
 
       case 'image':
+        // console.log(input)
         return <ImageInput
           input={input}
-          disabled={isEdgeConnected}
+          isEdgeConnected={isEdgeConnected}
+          // disabled={isEdgeConnected}
           onChange={onChange}
         />
 
