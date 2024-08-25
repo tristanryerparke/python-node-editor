@@ -1,7 +1,7 @@
 import os
 import importlib
 import inspect
-from .base_node import BaseNode, StreamingBaseNode
+from .datatypes.base_node import BaseNode, StreamingBaseNode
 from collections import deque
 
 

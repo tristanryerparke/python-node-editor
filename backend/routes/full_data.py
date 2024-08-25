@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from ..base_node import BaseNode
+from ..datatypes.base_node import BaseNode
 from ..config import EXECUTION_WRAPPER
-from ..class_defs.image import ImageData, image_database
+from ..datatypes.image import ImageData, image_database
 import base64
 from io import BytesIO
 from PIL import Image

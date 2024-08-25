@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from ..base_node import BaseNodeData
+from ..datatypes.base_node import BaseNodeData
 from ..config import EXECUTION_WRAPPER, reload_nodes
 
 node_list_router = APIRouter()

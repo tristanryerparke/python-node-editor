@@ -4,7 +4,7 @@ from functools import lru_cache
 import sys
 import time
 sys.path.append('./')
-from base_node import BaseNode, StreamingBaseNode, NodeOutput
+from backend.datatypes.base_node import BaseNode, StreamingBaseNode, NodeOutput
 
 MAXSIZE = 10
 

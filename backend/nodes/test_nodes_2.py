@@ -4,8 +4,8 @@ import sys
 import time
 from typing import List
 from collections import namedtuple
-from ..classes import NodeInput, NodeOutput, NodeOutputNumber
-from ..base_node import BaseNode, BaseNodeData, StreamingBaseNode
+from ..datatypes.fields import NodeInput, NodeOutput, NodeOutputNumber
+from ..datatypes.base_node import BaseNode, BaseNodeData, StreamingBaseNode
 
 MAXSIZE = 10
 

@@ -14,7 +14,7 @@ from devtools import debug as d
 
 from pydantic import BaseModel
 
-from .classes import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
+from .fields import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
 
 from devtools import debug as d
     

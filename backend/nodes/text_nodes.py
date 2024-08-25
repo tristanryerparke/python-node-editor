@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Tuple
-from ..base_node import BaseNode
-from ..classes import NodeInput, NodeOutput
+from ..datatypes.base_node import BaseNode
+from ..datatypes.fields import NodeInput, NodeOutput
 
 MAXSIZE = 10
 

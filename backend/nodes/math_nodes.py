@@ -2,8 +2,8 @@ from typing import Tuple, Union, Dict, Generator
 from functools import lru_cache
 import sys
 import time
-from ..classes import NodeInput, NodeOutput
-from ..base_node import BaseNode, BaseNodeData
+from ..datatypes.fields import NodeInput, NodeOutput
+from ..datatypes.base_node import BaseNode, BaseNodeData
 
 MAXSIZE = 10
 

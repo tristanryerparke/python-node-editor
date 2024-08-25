@@ -5,12 +5,12 @@ from docarray.typing import ImageUrl
 from PIL import Image, ImageFilter
 from devtools import debug as d
 
-from ..class_defs.image import ImageData
+from ..datatypes.image import ImageData
 
 import sys
 import time
-from ..base_node import BaseNode, BaseNodeData
-from ..classes import NodeInput, NodeOutput, NodeOutputImage, NodeInputImage
+from ..datatypes.base_node import BaseNode, BaseNodeData
+from ..datatypes.fields import NodeInput, NodeOutput, NodeOutputImage, NodeInputImage
 MAXSIZE = 10
 
 from cachetools import cached, TTLCache

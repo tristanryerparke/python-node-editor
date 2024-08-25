@@ -3,7 +3,7 @@ import json
 import traceback
 from pydantic import BaseModel
 from .utils import topological_sort
-from .base_node import BaseNode, NodeInput, NodeOutput
+from .datatypes.base_node import BaseNode, NodeInput, NodeOutput
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d

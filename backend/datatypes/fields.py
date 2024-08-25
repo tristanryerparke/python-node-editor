@@ -1,11 +1,11 @@
 import base64
 import numpy as np
 from PIL import Image
-from pydantic import BaseModel, Field, field_serializer, field_validator, SerializeAsAny
+from pydantic import BaseModel, Field, field_serializer, field_validator
 from io import BytesIO
 from typing import Any, Union
 import cv2
-from .class_defs.image import ImageData
+from .image import ImageData
 
 THUMBNAIL_SIZE = (100, 100)  # Global variable for thumbnail size
 
