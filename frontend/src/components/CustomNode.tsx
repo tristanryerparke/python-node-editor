@@ -69,6 +69,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       radius="md"
       bg="dark.5"
       miw='10rem'
+      maw='20rem'
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -82,7 +83,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       <NodeTopBar id={id} />
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
-      <Flex direction='column' gap='0.5rem' py='0.5rem' w='100%'>
+      <Flex direction='column' gap='0.5rem' py='0.5rem' px={0} mx={0} w='100%'>
         {data.inputs.map((input) => renderInputComponent(input))}
       </Flex>
 

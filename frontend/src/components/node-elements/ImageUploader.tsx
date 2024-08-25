@@ -47,6 +47,8 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       accept="image/png,image/jpeg,image/jpg"
       leftSection={<IconUpload size={20} style={{cursor: 'pointer'}}/>}
       w='100%'
+      p={0}
+      m={0}
       clearable 
       disabled={isEdgeConnected}
       value={isEdgeConnected ? dummyFile : fileValue}
@@ -57,6 +59,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
           opacity: isEdgeConnected ? 0 : 1
         }
       }}
+      style={{overflow: 'hidden'}}
       onChange={(file) => file && handleUpload(file)}
     />
   ) 

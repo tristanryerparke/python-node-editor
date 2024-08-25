@@ -73,9 +73,9 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
   };
 
   return (
-    <Flex style={{position: 'relative'}} px='0.5rem' my='auto' align='center' justify='space-between' w='100%'>
-      <Tooltip offset={15} floatingStrategy='fixed' label={input.type} color='dark.3' position='left' withArrow arrowSize={8}>
-        <Flex>
+    <Flex px='0.5rem' my='auto' align='center' justify='space-between' w='100%'>
+      <Tooltip offset={15} floatingStrategy='fixed' label={input.type} color='dark.3' position='left' withArrow arrowSize={8} w='100%'>
+        <Flex style={{flexGrow: 0}}>
         <Handle
             type="target"
             id={handleId}
@@ -93,8 +93,8 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
         <Text px="0.5rem">{input.label}</Text>
         </Flex>
       </Tooltip>
-      
       {renderInput()}
     </Flex>
   )
 }
+
