@@ -16,7 +16,6 @@ import {
 import { Panel } from 'react-resizable-panels';
 import CustomNode from './CustomNode';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
-import { useExecutionManager } from '../hooks/useExecutionManager';
 import { BaseNodeData } from '../types/DataTypes';
 import type { Node, Edge } from '@xyflow/react';
 
@@ -33,8 +32,6 @@ const NodeGraph: React.FC = () => {
   const { screenToFlowPosition } = useReactFlow();
 
   const { setSelectedNodeId } = useContext(NodeSelectionContext);
-  const { autoExecute } = useContext(AutoExecuteContext);
-  const { debouncedExecute } = useExecutionManager();
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -88,11 +85,6 @@ const NodeGraph: React.FC = () => {
     onChange: onSelectionChange,
   });
 
-  useEffect(() => {
-    if (autoExecute) {
-      debouncedExecute();
-    }
-  }, [nodes.length, edges.length, autoExecute]);
 
   return (
     <Panel id="node-graph" order={1}>

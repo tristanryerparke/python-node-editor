@@ -23,13 +23,18 @@ export interface BaseNodeData {
   definition_path: string;
 }
 
-export interface Image {
+export interface ImageData {
   thumbnail: string | null;
   description: string | null;
+  image_array: string | null;
 }
 
 export interface NodeOutputImage extends NodeOutput {
-  value: Image;
+  output_data: ImageData;
+}
+
+export interface NodeInputImage extends NodeInput {
+  input_data: ImageData;
 }
 
 export interface BaseNode {

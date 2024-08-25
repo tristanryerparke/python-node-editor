@@ -1,10 +1,11 @@
 import { useRef, useEffect } from 'react';
 import { NodeInput } from '../../types/DataTypes';
-import { NumberInput, TextInput, Flex, Tooltip, Text, ActionIcon } from '@mantine/core';
+import { NumberInput, TextInput, Flex, Tooltip, Text, ActionIcon, Button } from '@mantine/core';
 import { Handle, Position, useEdges } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
-import { Image } from '../../types/DataTypes';
+import { ImageData } from '../../types/DataTypes';
+import ImageInput from './ImageUploader';
 
 export interface InputFieldProps {
   nodeId: string;
@@ -38,7 +39,7 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
 
   const renderInput = () => {
     switch (input.type) {
-
+      
       // Number input
       case 'number':
         return <NumberInput
@@ -58,17 +59,13 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
         />;
 
       case 'image':
-        const image = input.input_data as Image | null;
-        return <TextInput
-          w='100%'
-          value={image?.description ?? ''}
-          disabled
-          rightSection={
-            <ActionIcon variant='subtle' color='dark.2' disabled={isEdgeConnected}>
-              <IconUpload />
-            </ActionIcon>
-          }
-        />;
+        // console.log(input)
+        return <ImageInput
+          input={input}
+          isEdgeConnected={isEdgeConnected}
+          // disabled={isEdgeConnected}
+          onChange={onChange}
+        />
 
       default:
         return null;

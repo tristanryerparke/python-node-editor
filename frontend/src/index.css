@@ -56,6 +56,7 @@ body {
   stroke-width: 4px;
 }
 
+
 .react-flow.dark {
   --xy-background-color-default: var(--mantine-color-dark-9);
   --xy-minimap-mask-background-color-default: var(--mantine-color-dark-7);
@@ -68,6 +69,29 @@ body {
   right: 0;
 }
 
+.button-like-input {
+  color-scheme: var(--mantine-color-scheme);
+  font-size: var(--mantine-font-size-md);
+  color: var(--mantine-color-text);
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  direction: ltr;
+  user-select: none;
+  cursor: pointer;
+  pointer-events: all;
+  visibility: visible;
+  line-height: var(--mantine-line-height);
+  box-sizing: border-box;
+  position: relative;
+  margin-top: 0rem;
+  margin-bottom: 0rem;
+  border: 1px solid var(--mantine-color-dark-4);
+}
+
+.m_8fb7ebe7:disabled, .m_8fb7ebe7[data-disabled] {
+  cursor: text;
+}
 
 .App {
   width: 100vw;

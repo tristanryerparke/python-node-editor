@@ -68,17 +68,6 @@ export function useExecutionManager() {
     }
   }, [reactFlow]);
 
-  const debouncedExecute = useCallback(() => {
-    if (autoExecuteTimeoutRef.current) {
-      clearTimeout(autoExecuteTimeoutRef.current);
-    }
-    autoExecuteTimeoutRef.current = setTimeout(() => {
-      if (nodesRef.current.length > 0) {
-        execute();
-      }
-    }, 500);
-  }, [execute]);
-
   const sendExecuteMessage = useCallback(() => {
     const graph_def = { nodes: nodesRef.current, edges: edgesRef.current };
     
@@ -109,5 +98,5 @@ export function useExecutionManager() {
     };
   }, []);
 
-  return { execute, debouncedExecute, isExecuting };
+  return { execute, isExecuting };
 }
