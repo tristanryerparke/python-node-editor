@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { FileInput } from "@mantine/core";
 import { ImageData, NodeInputImage } from "../../types";
-import { IconUpload } from "@tabler/icons-react";
+import { IconUpload, IconX } from "@tabler/icons-react";
 
 export interface ImageUploaderProps {
   input: NodeInputImage | null;
@@ -14,9 +14,9 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
   const [dummyFile, setDummyFile] = useState<File | null>(null);
 
   useEffect(() => {
-    console.log('Edge connection state changed:', isEdgeConnected);
+    // console.log('Edge connection state changed:', isEdgeConnected);
     if (input && isEdgeConnected) {
-      console.log('setting dummy file name:', input.input_data?.description);
+      // console.log('setting dummy file name:', input.input_data?.description);
       setDummyFile(new File([], input.input_data?.description || ''));
     } else {
       setDummyFile(null);
@@ -47,18 +47,14 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       accept="image/png,image/jpeg,image/jpg"
       leftSection={<IconUpload size={20} style={{cursor: 'pointer'}}/>}
       w='100%'
-      p={0}
-      m={0}
-      clearable 
+      rightSection={<IconX
+        size={20} style={{cursor: 'pointer'}}
+        onClick={() => {handleUpload(null)}}
+        opacity={isEdgeConnected || !fileValue ? 0 : 1}
+      />}
       disabled={isEdgeConnected}
       value={isEdgeConnected ? dummyFile : fileValue}
       placeholder={isEdgeConnected ? "Connected" : "Upload image"}
-      clearButtonProps={{
-        disabled: isEdgeConnected, 
-        style: {
-          opacity: isEdgeConnected ? 0 : 1
-        }
-      }}
       style={{overflow: 'hidden'}}
       onChange={(file) => file && handleUpload(file)}
     />
