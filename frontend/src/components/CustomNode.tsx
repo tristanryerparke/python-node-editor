@@ -3,7 +3,6 @@ import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
 import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
-import { useExecutionManager } from '../hooks/useExecutionManager';
 import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 
 import InputField from './node-elements/InputField';
@@ -13,8 +12,6 @@ type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   const reactFlow = useReactFlow();
-  const { autoExecute } = useContext(AutoExecuteContext);
-  const { debouncedExecute } = useExecutionManager();
 
   const updateNodeData = useCallback((label: string, value: any) => {
     console.log('updating node data', label, value);
@@ -34,10 +31,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
     );
 
-    if (autoExecute) {
-      debouncedExecute();
-    }
-  }, [data, autoExecute, reactFlow, debouncedExecute, id]);
+  }, [data, reactFlow, id]);
 
   const renderInputComponent = (input: NodeInput) => (
     <InputField 
