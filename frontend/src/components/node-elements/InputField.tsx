@@ -1,10 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { NodeInput } from '../../types/DataTypes';
-import { NumberInput, TextInput, Flex, Tooltip, Text, ActionIcon, Button } from '@mantine/core';
+import { NumberInput, TextInput, Flex, Tooltip, Text } from '@mantine/core';
 import { Handle, Position, useEdges } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
-import { IconUpload } from '@tabler/icons-react';
-import { ImageData } from '../../types/DataTypes';
 import ImageInput from './ImageUploader';
 
 export interface InputFieldProps {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileInput } from "@mantine/core";
-import { ImageData, NodeInputImage } from "../../types";
+import { ImageData, NodeInputImage } from '../../types/DataTypes';
 import { IconUpload, IconX } from "@tabler/icons-react";
 
 export interface ImageUploaderProps {
@@ -29,7 +29,9 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       reader.onload = (e) => {
         const base64String = e.target?.result as string;
         const jsonRepresentation: ImageData = {
-          image_array: base64String
+          image_array: base64String,
+          thumbnail: null,
+          description: null
         };
         onChange(input.label, jsonRepresentation);
       };

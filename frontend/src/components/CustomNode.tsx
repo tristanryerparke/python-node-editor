@@ -2,7 +2,7 @@ import { memo, useCallback, useContext } from 'react';
 import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
 import NodeTopBar from './node-elements/NodeTopBar';
-import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
+import { NodeSelectionContext } from '../GlobalContext';
 import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 
 import InputField from './node-elements/InputField';

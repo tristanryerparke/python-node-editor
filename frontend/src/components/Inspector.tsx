@@ -19,7 +19,7 @@ import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
-import type { BaseNode, BaseNodeData, NodeInput, NodeOutput, Image } from '../types/DataTypes';
+import type { BaseNodeData, NodeInput, NodeOutput, ImageData } from '../types/DataTypes';
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 
@@ -64,7 +64,9 @@ function InspectorPanel() {
   }, [open]);
 
   const renderImageItem = (item: NodeInput | NodeOutput, inputOrOutput: 'input' | 'output') => {
-    const imageValue = (inputOrOutput === 'input' ? item.input_data : item.output_data) as Image;
+    const imageValue = (inputOrOutput === 'input' 
+      ? (item as NodeInput).input_data 
+      : (item as NodeOutput).output_data) as ImageData;
     return (
       <Flex direction="column" key={item.label} w="100%" pb='0.5rem'>
         <Text fw={700} span>{item.label}:</Text> <Text span>{imageValue.description}</Text>

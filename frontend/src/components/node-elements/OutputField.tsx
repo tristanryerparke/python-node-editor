@@ -2,7 +2,7 @@ import { NodeOutput } from '../../types/DataTypes';
 import { TextInput, Flex, Tooltip, Text } from '@mantine/core';
 import { Handle, Position } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
-import { Image } from '../../types/DataTypes';
+import { ImageData } from '../../types/DataTypes';
 
 export interface OutputFieldProps {
   nodeId: string;
@@ -29,7 +29,7 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
         />;
       case 'image':
         // console.log(output)
-        const image = output.output_data as Image | null;
+        const image = output.output_data as ImageData | null;
         return <TextInput
           className='input-as-text-display'
           disabled

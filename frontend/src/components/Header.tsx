@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { Flex, Group, ActionIcon, Button, Switch } from '@mantine/core';
+import { Flex, Group, ActionIcon, Button } from '@mantine/core';
 import { IconLayoutSidebarFilled } from '@tabler/icons-react';
 import { PanelsContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
