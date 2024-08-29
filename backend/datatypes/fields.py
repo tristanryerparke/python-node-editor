@@ -1,7 +1,7 @@
 import base64
 import numpy as np
 from PIL import Image
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, ConfigDict
 from io import BytesIO
 from typing import Any, Union
 import cv2
@@ -38,8 +38,7 @@ def input_class_from_type_name(type_name: str):
     
 
 class NodeInputImage(NodeInput):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     type: str = 'image'
     input_data: Union[ImageData, None] = None
@@ -55,8 +54,7 @@ class NodeInputImage(NodeInput):
     
 
 class NodeOutputImage(NodeOutput):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     type: str = 'image'
     output_data: Union[ImageData, None] = None

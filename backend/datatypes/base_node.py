@@ -11,7 +11,7 @@ from PIL import Image
 from io import BytesIO
 from devtools import debug as d
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .fields import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
 
@@ -61,11 +61,7 @@ def image_to_base64(im: np.ndarray) -> str:
     return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
 
 class BaseNode(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            np.ndarray: image_to_base64
-        }
+    model_config = ConfigDict(arbitrary_types_allowed=True) 
 
     id: str = ''
     position: NodePosition = NodePosition(x=0, y=0)

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, ConfigDict
 from docarray.typing import ImageUrl, ImageNdArray
 
 import json
@@ -24,8 +24,7 @@ def image_to_base64(im: np.ndarray) -> str:
 
 
 class ImageOutput(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     value: Union[np.ndarray, None] = None
 

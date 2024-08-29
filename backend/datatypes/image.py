@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, computed_field, field_serializer, PrivateAttr
+from pydantic import BaseModel, Field, computed_field, field_serializer, PrivateAttr, ConfigDict
 from typing import Union, Literal
 import numpy as np
 from PIL import Image
@@ -22,8 +22,7 @@ def get_type_string(array: np.ndarray):
 image_database = {}
 
 class ImageData(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     _image_array: np.ndarray = PrivateAttr(default=None)
