@@ -1,8 +1,7 @@
-import { NodeOutput } from '../../types/DataTypes';
+import { NodeOutput, Data } from '../../types/DataTypes';
 import { TextInput, Flex, Tooltip, Text } from '@mantine/core';
 import { Handle, Position } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
-import { ImageData } from '../../types/DataTypes';
 
 export interface OutputFieldProps {
   nodeId: string;
@@ -10,12 +9,8 @@ export interface OutputFieldProps {
 }
 
 export default function OutputField({ nodeId, output }: OutputFieldProps) {
-
   const handleId = `${nodeId}-output-${output.label}`
-
   const theme = useMantineTheme();
-
-  
 
   const renderOutput = () => {
     switch (output.type) {
@@ -25,11 +20,10 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
           className='input-as-text-display'
           disabled
           w='100%'
-          value={output.output_data ?? ''}
+          value={output.output_data?.data ?? ''}
         />;
       case 'image':
-        // console.log(output)
-        const image = output.output_data as ImageData | null;
+        const image = output.output_data as Data | null;
         return <TextInput
           className='input-as-text-display'
           disabled
@@ -49,19 +43,18 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
         <Flex>
           <Text px="0.5rem">{output.label}</Text>
           <Handle
-              type="source"
-              id={handleId}
-              position={Position.Right}
-              style={{ 
-                width: '1rem',
-                height: '1rem',
-                borderRadius: '50%',
-                border: '2px solid',
-                borderColor: theme.colors.dark[2],
-                backgroundColor: theme.colors.dark[5],
-              }}
-              />
-        
+            type="source"
+            id={handleId}
+            position={Position.Right}
+            style={{ 
+              width: '1rem',
+              height: '1rem',
+              borderRadius: '50%',
+              border: '2px solid',
+              borderColor: theme.colors.dark[2],
+              backgroundColor: theme.colors.dark[5],
+            }}
+          />
         </Flex>
       </Tooltip>
     </Flex>

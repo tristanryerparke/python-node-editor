@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { FileInput } from "@mantine/core";
-import { ImageData, NodeInputImage } from '../../types/DataTypes';
+import { Data, NodeInputImage } from '../../types/DataTypes';
 import { IconUpload, IconX } from "@tabler/icons-react";
 
 export interface ImageUploaderProps {
   input: NodeInputImage | null;
   isEdgeConnected: boolean;
-  onChange: (label: string, value: any) => void;
+  onChange: (label: string, value: Data) => void;
 }
 
 function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
@@ -14,9 +14,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
   const [dummyFile, setDummyFile] = useState<File | null>(null);
 
   useEffect(() => {
-    // console.log('Edge connection state changed:', isEdgeConnected);
     if (input && isEdgeConnected) {
-      // console.log('setting dummy file name:', input.input_data?.description);
       setDummyFile(new File([], input.input_data?.description || ''));
     } else {
       setDummyFile(null);
@@ -27,17 +25,13 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
     if (file && input) {
       const reader = new FileReader();
       reader.onload = async (e) => {
+        console.log('file content', (e.target?.result as string).slice(0, 100));
         const base64String = e.target?.result as string;
-        const jsonRepresentation: ImageData = {
-          image_array: base64String,
-          thumbnail: null,
-          description: null
+        const jsonRepresentation: Data = {
+          dtype: 'image',
+          data: base64String,
         };
 
-        const sizeInMB = JSON.stringify(jsonRepresentation).length / (1024 * 1024);
-        const maxFileSizeMB = parseInt(import.meta.env.VITE_MAX_FILE_SIZE_MB);
-
-        if (sizeInMB > maxFileSizeMB) {
           const formData = new FormData();
           const blob = new Blob([JSON.stringify(jsonRepresentation)], { type: 'application/json' });
           formData.append('file', blob, 'large_data.json');
@@ -45,23 +39,21 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
           formData.append('file_extension', file.name.split('.').pop() || '');
 
           try {
-            const response = await fetch('http://localhost:8000/large_files', {
+            const response = await fetch('http://localhost:8000/large_file_upload', {
               method: 'POST',
               body: formData,
             });
 
             if (response.ok) {
               const result = await response.json();
-              onChange(input.label, { fileId: result.fileId });
+              console.log('result', result);
+              onChange(input.label, result);
             } else {
               console.error('Failed to upload large file');
             }
           } catch (error) {
             console.error('Error uploading large file:', error);
           }
-        } else {
-          onChange(input.label, jsonRepresentation);
-        }
       };
       reader.readAsDataURL(file);
       setFileValue(file);

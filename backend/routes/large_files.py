@@ -1,25 +1,25 @@
 from fastapi import APIRouter, UploadFile, File, Form
-
+from ..datatypes.field_data import Data
+import numpy as np
+from PIL import Image
+import io
+import json
 large_files_router = APIRouter()
 
-@large_files_router.post("/large_files")
+@large_files_router.post("/large_file_upload")
 async def handle_large_file(
     file: UploadFile = File(...),
     original_filename: str = Form(...),
     file_extension: str = Form(...)
 ):
     file_content = await file.read()
-    print(f"Received file: {file.filename}")
-    print(f"Original filename: {original_filename}")
-    print(f"File extension: {file_extension}")
-    print(f"File size: {len(file_content)} bytes")
+
+    json_str = file_content.decode('utf-8')
     
-    # Generate a dummy file ID
-    file_id = f"large_file_{hash(file.filename)}"
-    
-    print(f"Assigned file ID: {file_id}")
-    
-    # Here you would typically save the file or process it
-    # For this dummy route, we'll just return the file ID
-    
-    return {"fileId": file_id}
+
+    data_instance = Data.model_validate_json(json_str)
+
+
+    return data_instance.model_dump()
+
+

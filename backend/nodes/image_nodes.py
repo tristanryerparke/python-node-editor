@@ -5,12 +5,13 @@ from docarray.typing import ImageUrl
 from PIL import Image, ImageFilter
 from devtools import debug as d
 
-from ..datatypes.image import ImageData
+# from ..datatypes.image import ImageData
+from ..datatypes.field_data import Data
 
 import sys
 import time
 from ..datatypes.base_node import BaseNode, BaseNodeData
-from ..datatypes.fields import NodeInput, NodeOutput, NodeOutputImage, NodeInputImage
+from ..datatypes.fields import NodeInput, NodeOutput
 MAXSIZE = 10
 
 from cachetools import cached, TTLCache
@@ -22,13 +23,14 @@ class ImageFromUrlNode(BaseNode):
     # @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls, 
-        url: NodeInput(label='URL', type='string', input_data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true')
-    ) -> NodeOutputImage(label='Image', type='image'):
+        url: NodeInput(label='URL', type='string', input_data=Data(dtype='json', data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true'))
+    ) -> NodeOutput(label='Image', type='image'):
         image_url = ImageUrl(url)
         image_tensor = np.array(image_url.load())
         print(f"Image shape: {image_tensor.shape}")
-        return NodeOutputImage(label='Image', type='image', output_data=ImageData(
-            image_array=image_tensor
+        return NodeOutput(label='Image', type='image', output_data=Data(
+            data=image_tensor,
+            dtype='image'
         ))
     
 
@@ -38,13 +40,14 @@ class BlurImageNode(BaseNode):
     # @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image, radius: hashkey(image.image_array.tobytes(), radius))
     def exec(
         cls,
-        image: NodeInputImage(label='A', type='image'),
-        radius: NodeInput(label='B', type='number', input_data=5)
-    ) -> NodeOutputImage(label='Blurred Image', type='image'):
-        img = Image.fromarray(image.image_array)
+        image: NodeInput(label='A', type='image'),
+        radius: NodeInput(label='B', type='number', input_data=Data(dtype='json', data=5))
+    ) -> NodeOutput(label='Blurred Image', type='image'):
+        img = Image.fromarray(image)
         img = img.filter(ImageFilter.GaussianBlur(radius=radius))
-        return NodeOutputImage(label='Blurred Image', type='image', output_data=ImageData(
-            image_array=np.array(img)
+        return NodeOutput(label='Blurred Image', type='image', output_data=Data(
+            data=np.array(img),
+            dtype='image'
         ))
     
 class FlipHorizontallyNode(BaseNode):
@@ -53,10 +56,11 @@ class FlipHorizontallyNode(BaseNode):
     # @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image: hashkey(image.array.tobytes()))
     def exec(
         cls,
-        image: NodeInputImage(label='Image', type='image')
-    ) -> NodeOutputImage(label='Flipped Image', type='image'):
+        image: NodeInput(label='Image', type='image')
+    ) -> NodeOutput(label='Flipped Image', type='image'):
         img = Image.fromarray(image.image_array)
         flipped_img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-        return NodeOutputImage(label='Flipped Image', type='image', output_data=ImageData(
-            image_array=np.array(flipped_img)
+        return NodeOutput(label='Flipped Image', type='image', output_data=Data(
+            data=np.array(flipped_img),
+            dtype='image'
         ))

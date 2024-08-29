@@ -14,7 +14,7 @@ from pydantic import (
     field_validator,
 )
 
-from backend.utils import (
+from .field_data_utils import (
     db_str_serialize,
     db_str_deserialize,
     image_to_base64,
@@ -28,7 +28,7 @@ from backend.utils import (
 redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 
-MAX_FILE_SIZE_MB = 1
+MAX_FILE_SIZE_MB = 0.1
 
 
 class Data(BaseModel):
@@ -47,6 +47,7 @@ class Data(BaseModel):
         '''return a truncated repr of the data if big (cached), otherwise return the data'''
         if self.cached:
             redis_client.set(self.id, db_str_serialize(self.dtype, self.data))
+            print(f"SERIALIZED cached data for id: {self.id}")
             if self.dtype == 'image':
                 return create_thumbnail(data, self.max_file_size_mb)
             else:
@@ -101,6 +102,7 @@ class Data(BaseModel):
         if values.get('cached') and redis_client.exists(values.get('id')):
             cached_data = redis_client.get(values['id']).decode('utf-8')
             values['data'] = db_str_deserialize(cls, values['dtype'], cached_data)
+            print(f"DESERIALIZED cached data for id: {values['id']}")
         else:
             values['data'] = prep_data_for_frontend_deserialization(values['dtype'], values['data'])
             if values['dtype'] == 'basemodel':

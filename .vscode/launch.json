@@ -20,7 +20,9 @@
         "console": "integratedTerminal",
         "env": {
           "VITE_MAX_FILE_SIZE_MB": "2"
-        }
+        },
+        "justMyCode": false,
+        "pythonPath": "${command:python.interpreterPath}"
       },
       {
         "name": "Python: Current File",
