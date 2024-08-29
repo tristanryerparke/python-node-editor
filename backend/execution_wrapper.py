@@ -60,7 +60,16 @@ class ExecutionWrapper:
         node_instantiation_start = time.time()
         for node in graph_def.nodes:
             id = str(node['id'])
-            # print(f"Instantiating node {id}...")
+
+            # Set input_data to None for connected inputs
+            for edge in graph_def.edges:
+                if edge['target'] == id:
+                    target_handle = edge['targetHandle'].split('-')[-1]
+                    if 'data' in node and 'inputs' in node['data']:
+                        for input in node['data']['inputs']:
+                            if input['label'] == target_handle:
+                                input['input_data'] = None
+
             node_type = node['data']['name']
             namespace = node['data']['namespace']
             NodeClass = next((cls for cls in self.classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
