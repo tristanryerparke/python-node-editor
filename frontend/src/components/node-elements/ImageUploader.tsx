@@ -26,14 +26,42 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
   function handleUpload(file: File | null) {
     if (file && input) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const base64String = e.target?.result as string;
         const jsonRepresentation: ImageData = {
           image_array: base64String,
           thumbnail: null,
           description: null
         };
-        onChange(input.label, jsonRepresentation);
+
+        const sizeInMB = JSON.stringify(jsonRepresentation).length / (1024 * 1024);
+        const maxFileSizeMB = parseInt(import.meta.env.VITE_MAX_FILE_SIZE_MB);
+
+        if (sizeInMB > maxFileSizeMB) {
+          const formData = new FormData();
+          const blob = new Blob([JSON.stringify(jsonRepresentation)], { type: 'application/json' });
+          formData.append('file', blob, 'large_data.json');
+          formData.append('original_filename', file.name);
+          formData.append('file_extension', file.name.split('.').pop() || '');
+
+          try {
+            const response = await fetch('http://localhost:8000/large_files', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              onChange(input.label, { fileId: result.fileId });
+            } else {
+              console.error('Failed to upload large file');
+            }
+          } catch (error) {
+            console.error('Error uploading large file:', error);
+          }
+        } else {
+          onChange(input.label, jsonRepresentation);
+        }
       };
       reader.readAsDataURL(file);
       setFileValue(file);

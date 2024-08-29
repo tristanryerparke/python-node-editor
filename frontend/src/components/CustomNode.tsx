@@ -33,19 +33,12 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
 
   }, [data, reactFlow, id]);
 
-  const updateNodeDataWithSizeLogging = useCallback((label: string, value: any) => {
-    const sizeInMB = (obj: any) => JSON.stringify(obj).length / (1024 * 1024);
-    console.log('Data size before update:', sizeInMB(data).toFixed(2), 'MB');
-    updateNodeData(label, value);
-    console.log('Data size after update:', sizeInMB(data).toFixed(2), 'MB');
-  }, [data, updateNodeData]);
-
   const renderInputComponent = (input: NodeInput) => (
     <InputField 
       key={`${id}-input-${input.label}`}
       nodeId={id} 
       input={input} 
-      onChange={updateNodeDataWithSizeLogging}
+      onChange={updateNodeData}
     />
   );
 

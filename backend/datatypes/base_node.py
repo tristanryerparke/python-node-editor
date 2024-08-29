@@ -1,6 +1,5 @@
 
 from typing import TypeVar, Generic, NamedTuple, Tuple
-import shortuuid
 import numpy as np
 import time
 from inspect import signature, Parameter
