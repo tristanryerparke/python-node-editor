@@ -14,3 +14,4 @@ jobs:
 
       - name: Print repository contents
         run: ls -R
+        run: pwd
