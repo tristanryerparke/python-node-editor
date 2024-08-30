@@ -1,0 +1,16 @@
+name: Clone Repository
+
+on:
+  push:
+    branches:
+      - main  # or any branch you want to trigger on
+
+jobs:
+  clone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Print repository contents
+        run: ls -R
