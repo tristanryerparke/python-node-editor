@@ -25,7 +25,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
     if (file && input) {
       const reader = new FileReader();
       reader.onload = async (e) => {
-        console.log('file content', (e.target?.result as string).slice(0, 100));
+        // console.log('file content', (e.target?.result as string).slice(0, 100));
         const base64String = e.target?.result as string;
         const jsonRepresentation: Data = {
           dtype: 'image',
@@ -46,7 +46,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
 
             if (response.ok) {
               const result = await response.json();
-              console.log('result', result);
+              // console.log('result', result);
               onChange(input.label, result);
             } else {
               console.error('Failed to upload large file');

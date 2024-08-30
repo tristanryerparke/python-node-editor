@@ -17,7 +17,7 @@ from devtools import debug as d
 
 
 from backend.datatypes.field_data import Data
-from backend.utils import get_string_size_mb, image_to_base64
+from backend.datatypes.field_data_utils import get_string_size_mb, image_to_base64
 
 
 def test_serialize_and_deserialize():

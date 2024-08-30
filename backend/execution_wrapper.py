@@ -95,24 +95,6 @@ class ExecutionWrapper:
             node_instance: BaseNode = self.node_instances[str(node_id)]
             print(f"Executing node {node_id} ({node_instance.data.name})...")
             
-            exclude_object = {'data': {
-                'inputs': {'__all__': {'input_data': {'image_array'}}},
-                'outputs': {'__all__': {'output_data': {'image_array'}}}
-            }}
-
-            # print('BEFORE EXECUTION:')
-            # print('INPUTS:')
-            # d(node_instance.data.inputs)
-            # print('OUTPUTS:')
-            # d(node_instance.data.outputs)
-
-            # print('pause')
-            # for i in node_instance.data.inputs:
-            #     d(i)
-            # print('OUTPUTS:')
-            # for o in node_instance.data.outputs:
-            #     d(o)
-
             # clear the node's outputs
             for o in node_instance.data.outputs:
                 o.output_data = None
@@ -120,11 +102,10 @@ class ExecutionWrapper:
             
 
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
-
 
             try:
                 if node_instance.data.streaming:
@@ -136,7 +117,7 @@ class ExecutionWrapper:
                             for key, value in item.items():
                                 if key != 'status':
                                     node_instance.data.outputs[key].output_data = value
-                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
+                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
                             await asyncio.sleep(0)
                         elif item.get('status') == 'complete':
                             print(f"Server: Node {node_id} completed with result {item}")
@@ -171,7 +152,7 @@ class ExecutionWrapper:
 
             # print('pause')
 
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
             
             # Allow other tasks to run
             await asyncio.sleep(0)

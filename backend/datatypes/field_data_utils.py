@@ -3,7 +3,7 @@ import json
 import base64
 import reprlib
 
-from typing import Any
+from typing import Any, FrozenSet, Tuple
 from functools import lru_cache
 import numpy as np
 from PIL import Image
@@ -24,8 +24,9 @@ def db_str_serialize(dtype: str, data: Any):
         raise TypeError('unsupported dtype for db storage')
 
 @lru_cache(maxsize=128)
-def db_str_deserialize(cls, dtype: str, data: str):
+def db_str_deserialize(class_options: FrozenSet[Tuple[str, Any]], dtype: str, data: str):
     '''deserializes data that came from redis'''
+    class_options_dict = dict(class_options)
     if dtype == 'json':
         return json.loads(data)
 
@@ -35,8 +36,8 @@ def db_str_deserialize(cls, dtype: str, data: str):
     elif dtype == 'basemodel':
         class_dict = json.loads(data)
         class_name = class_dict.get('class_name')
-        if class_name in cls.class_options:
-            return cls.class_options[class_name].model_validate(class_dict)
+        if class_name in class_options_dict:
+            return class_options_dict[class_name].model_validate(class_dict)
         else:
             raise ValueError(
                 f"Class name {class_name} not found in class options")
@@ -47,7 +48,7 @@ def db_str_deserialize(cls, dtype: str, data: str):
 
 def image_to_base64(img: np.ndarray) -> str:
     '''converts a numpy array to a base64 encoded string'''
-    img = Image.fromarray(img)
+    img = Image.fromarray(img.astype(np.uint8))
     img_byte_arr = io.BytesIO()
     img.save(img_byte_arr, format='PNG')
     return base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
@@ -59,7 +60,6 @@ def base64_to_image(base64_str: str) -> np.ndarray:
         base64_str = base64_str.split(',', 1)[1]
     img_data = base64.b64decode(base64_str)
     return np.array(Image.open(io.BytesIO(img_data)))
-
 
 def prep_data_for_frontend_serialization(dtype: str, data: Any) -> str:
     '''catches and converts non-serializable small data types before sending to frontend'''
@@ -77,7 +77,6 @@ def prep_data_for_frontend_serialization(dtype: str, data: Any) -> str:
 
     else:
         raise TypeError('unsupported dtype for frontend serialization')
-
 
 def prep_data_for_frontend_deserialization(dtype: str, data: Any) -> Any:
     '''re-instantiates non-serializable data types when receiving small data from frontend'''
@@ -112,7 +111,7 @@ def truncate_repr(obj):
     return r.repr(obj).strip("'")
 
 def create_thumbnail(data, max_file_size_mb):
-    img = Image.fromarray(data).convert("RGB")
+    img = Image.fromarray(data.astype(np.uint8)).convert("RGB")
     max_pixels = int((max_file_size_mb * 1024 * 1024) / 3)  # 3 bytes per pixel for RGB
     max_side = int(np.sqrt(max_pixels))
     img.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)

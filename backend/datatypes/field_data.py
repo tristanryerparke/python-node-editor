@@ -1,7 +1,7 @@
 import redis
 import uuid
 import json
-from typing import Any, Union, Literal, ClassVar
+from typing import Any, Union, Literal, ClassVar, FrozenSet, Tuple
 
 from pydantic import (
     BaseModel,
@@ -101,7 +101,7 @@ class Data(BaseModel):
         '''loads data from cache if the id is in the cache, and replaces the data attribute with the deserialized data'''
         if values.get('cached') and redis_client.exists(values.get('id')):
             cached_data = redis_client.get(values['id']).decode('utf-8')
-            values['data'] = db_str_deserialize(cls, values['dtype'], cached_data)
+            values['data'] = db_str_deserialize(frozenset(cls.class_options.items()), values['dtype'], cached_data)
             print(f"DESERIALIZED cached data for id: {values['id']}")
         else:
             values['data'] = prep_data_for_frontend_deserialization(values['dtype'], values['data'])

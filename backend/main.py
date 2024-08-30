@@ -2,7 +2,7 @@ from .config import app, CLASSES_DICT
 from .routes.node_list import node_list_router
 from .routes.execution import execution_router
 from .routes.full_data import full_data_list_router
-from .routes.large_files import large_files_router
+from .routes.large_files_upload import large_files_router
 
 app.include_router(node_list_router)
 app.include_router(execution_router)

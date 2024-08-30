@@ -43,7 +43,7 @@ class BlurImageNode(BaseNode):
         image: NodeInput(label='A', type='image'),
         radius: NodeInput(label='B', type='number', input_data=Data(dtype='json', data=5))
     ) -> NodeOutput(label='Blurred Image', type='image'):
-        img = Image.fromarray(image)
+        img = Image.fromarray(image.astype(np.uint8))
         img = img.filter(ImageFilter.GaussianBlur(radius=radius))
         return NodeOutput(label='Blurred Image', type='image', output_data=Data(
             data=np.array(img),

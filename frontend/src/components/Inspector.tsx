@@ -53,15 +53,28 @@ function InspectorPanel() {
     open();
     setModalTitle(label);
     try {
-      const response = await axios.get(`http://localhost:8000/image/${nodeId}/${inputOrOutput}/${label}`);
-      setModalImage(response.data.image);
+      const item = inputOrOutput === 'input' 
+        ? selectedNodeData.inputs.find(input => input.label === label)
+        : selectedNodeData.outputs.find(output => output.label === label);
+      
+      const dataObject = inputOrOutput === 'input' ? item?.input_data : item?.output_data;
+      if (dataObject && dataObject.id) {
+        const response = await fetch(`http://localhost:8000/data/${dataObject.id}?dtype=${dataObject.dtype}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch image data');
+        }
+        const imageData = await response.text();
+        setModalImage(`data:image/jpeg;base64,${imageData.replace(/"/g, '')}`);
+      } else {
+        throw new Error('Image data ID not found');
+      }
     } catch (error) {
       console.error('Error fetching image:', error);
-      setModalImage(''); // Clear the image in case of error
+      setModalImage('');
     } finally {
       setIsLoading(false);
     }
-  }, [open]);
+  }, [open, selectedNodeData]);
 
   const renderImageItem = (item: NodeInput | NodeOutput, inputOrOutput: 'input' | 'output') => {
     
@@ -205,7 +218,7 @@ function InspectorPanel() {
       </Flex>
     </Panel>
     <Modal 
-      size="auto" 
+      size="lg" 
       centered 
       opened={opened} 
       onClose={close} 
@@ -213,11 +226,11 @@ function InspectorPanel() {
       withinPortal={false}
     >
       {isLoading ? (
-        <Flex justify="center" align="center" style={{ width: '300px', height: '300px' }}>
+        <Flex justify="center" align="center" w="100%" h="100%">
           <Loader size="xl" />
         </Flex>
       ) : (
-        <MantineImage src={modalImage} alt={modalTitle} fit="contain" />
+        <MantineImage w="100%" h="100%" src={modalImage} alt={modalTitle} fit="contain" />
       )}
     </Modal>
     </>
