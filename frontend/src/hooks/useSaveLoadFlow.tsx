@@ -6,13 +6,15 @@ export function useSaveFlow() {
     const [isSaving, setIsSaving] = useState(false);
 
     const saveFlow = useCallback(async () => {
+        // retrieves the data for cached unconnected inputs and saves the flow
         setIsSaving(true);
         try {
             const flow = reactFlow.toObject();
             
             // Process nodes to include full data for unconnected inputs
             for (const node of flow.nodes) {
-                if (node.data && node.data.inputs) {
+                node.data.status = 'not evaluated';
+                if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
                     for (const input of node.data.inputs) {
                         if (input.input_data && input.input_data.cached) {
                             try {
@@ -45,6 +47,7 @@ export function useSaveFlow() {
 }
 
 export function useLoadFlow() {
+    // loads a flow from a file and uploads the data for cached inputs
     const reactFlow = useReactFlow();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -89,7 +92,6 @@ export function useLoadFlow() {
                             }
                         }
                     }
-                    // Set status to "not evaluated" for all nodes
                     node.data.status = 'not evaluated';
                 }
 

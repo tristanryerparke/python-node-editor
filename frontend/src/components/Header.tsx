@@ -56,11 +56,19 @@ function Header() {
             Save
           </Button>
           <FileButton
-            onChange={loadFlow}
+            onChange={(file: File | null) => file && loadFlow(file)}
             accept="application/json"
-            loading={isLoading}
           >
-            {(props) => <Button size='xs' variant='outline' color='blue.4' {...props}>Load</Button>}
+            {(props) => <Button 
+              size='xs' 
+              variant='outline' 
+              color='blue.4' 
+              loading={isLoading} 
+              {...props}
+            >
+              Load
+            </Button>
+          }
           </FileButton>
         </Flex>
         <ActionIcon color='dark.2' variant='subtle' onClick={toggleInspector}>
