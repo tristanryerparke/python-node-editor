@@ -70,6 +70,7 @@ export function useLoadFlow() {
                                 const isEdgeConnected = flow.edges.some(edge => edge.target === node.id && edge.targetHandle === handleId);
                                 
                                 if (!isEdgeConnected && input.input_data && input.input_data.cached) {
+                                    // prep the data to be sent to the backend
                                     const jsonRepresentation = {
                                         dtype: input.input_data.dtype,
                                         data: flow.embedded_data[input.input_data.id],
@@ -80,7 +81,8 @@ export function useLoadFlow() {
                                     formData.append('file', blob, 'large_data.json');
                                     formData.append('original_filename', 'embedded_data');
                                     formData.append('file_extension', 'json');
-
+                                    
+                                    // send the large data to the backend and replace the cached data with the full data
                                     try {
                                         const response = await fetch('http://localhost:8000/large_file_upload', {
                                             method: 'POST',
@@ -99,10 +101,13 @@ export function useLoadFlow() {
                     }
                 }
 
-                
-
                 reactFlow.setNodes(flow.nodes);
                 reactFlow.setEdges(flow.edges);
+                
+                // Set the viewport if it exists in the loaded flow
+                if (flow.viewport) {
+                    reactFlow.setViewport(flow.viewport);
+                }
             } finally {
                 setIsLoading(false);
             }

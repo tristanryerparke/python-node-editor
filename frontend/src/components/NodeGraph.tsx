@@ -26,26 +26,33 @@ const nodeTypes: NodeTypes = {
 const NodeGraph: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, getViewport, setViewport } = useReactFlow();
   const { setSelectedNodeId } = useContext(NodeSelectionContext);
 
   useEffect(() => {
     const savedFlow = localStorage.getItem('savedFlow');
     if (savedFlow) {
-      const { nodes: savedNodes, edges: savedEdges } = JSON.parse(savedFlow);
+      const { nodes: savedNodes, edges: savedEdges, viewport: savedViewport } = JSON.parse(savedFlow);
       setNodes(savedNodes);
       setEdges(savedEdges);
+      if (savedViewport) {
+        setViewport(savedViewport);
+      }
     }
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, setViewport]);
 
   useEffect(() => {
     const saveFlow = () => {
-      const flow = { nodes, edges };
+      const flow = { 
+        nodes, 
+        edges,
+        viewport: getViewport()
+      };
       localStorage.setItem('savedFlow', JSON.stringify(flow));
     };
     window.addEventListener('beforeunload', saveFlow);
     return () => window.removeEventListener('beforeunload', saveFlow);
-  }, [nodes, edges]);
+  }, [nodes, edges, getViewport]);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -104,6 +111,9 @@ const NodeGraph: React.FC = () => {
         onDrop={onDrop}
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
+        onMoveEnd={(_, viewport) => {
+          localStorage.setItem('savedViewport', JSON.stringify(viewport));
+        }}
       >
         <Controls />
         <MiniMap />
