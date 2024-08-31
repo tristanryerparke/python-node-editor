@@ -82,6 +82,7 @@ export function useExecutionManager() {
       action: 'execute',
       graph_def: graph_def
     }));
+    console.log(graph_def)
   }, []);
 
   const resetPendingNodes = useCallback(() => {

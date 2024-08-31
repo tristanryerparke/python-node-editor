@@ -6,22 +6,26 @@ export function useSaveFlow() {
     const [isSaving, setIsSaving] = useState(false);
 
     const saveFlow = useCallback(async () => {
-        // retrieves the data for cached unconnected inputs and saves the flow
         setIsSaving(true);
         try {
             const flow = reactFlow.toObject();
+            flow.embedded_data = {};
             
-            // Process nodes to include full data for unconnected inputs
             for (const node of flow.nodes) {
                 node.data.status = 'not evaluated';
                 if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
                     for (const input of node.data.inputs) {
-                        if (input.input_data && input.input_data.cached) {
+                        const handleId = `${node.id}-input-${input.label}`;
+                        const isEdgeConnected = flow.edges.some(edge => edge.target === node.id && edge.targetHandle === handleId);
+                        
+                        if (!isEdgeConnected && input.input_data && input.input_data.cached) {
+                            console.log('found input to cache');
                             try {
                                 const response = await fetch(`http://localhost:8000/data/${input.input_data.id}?dtype=${input.input_data.dtype}`);
                                 if (response.ok) {
+                                    
                                     const fullData = await response.text();
-                                    input.input_data.data = fullData;
+                                    flow.embedded_data[input.input_data.id] = fullData.replace(/"/g, '');
                                 }
                             } catch (error) {
                                 console.error('Error fetching full data:', error);
@@ -47,7 +51,6 @@ export function useSaveFlow() {
 }
 
 export function useLoadFlow() {
-    // loads a flow from a file and uploads the data for cached inputs
     const reactFlow = useReactFlow();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -58,42 +61,45 @@ export function useLoadFlow() {
             try {
                 const flow = JSON.parse(event.target?.result as string);
                 
-                // Process nodes to upload full data for cached inputs
-                for (const node of flow.nodes) {
-                    if (node.data && node.data.inputs) {
-                        for (const input of node.data.inputs) {
-                            if (input.input_data && input.input_data.cached && input.input_data.data) {
-                                const jsonRepresentation = {
-                                    dtype: input.input_data.dtype,
-                                    data: input.input_data.data,
-                                };
+                if (flow.embedded_data) {
+                    for (const node of flow.nodes) {
+                        node.data.status = 'not evaluated';
+                        if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
+                            for (const input of node.data.inputs) {
+                                const handleId = `${node.id}-input-${input.label}`;
+                                const isEdgeConnected = flow.edges.some(edge => edge.target === node.id && edge.targetHandle === handleId);
+                                
+                                if (!isEdgeConnected && input.input_data && input.input_data.cached) {
+                                    const jsonRepresentation = {
+                                        dtype: input.input_data.dtype,
+                                        data: flow.embedded_data[input.input_data.id],
+                                        id: input.input_data.id
+                                    };
+                                    const formData = new FormData();
+                                    const blob = new Blob([JSON.stringify(jsonRepresentation)], { type: 'application/json' });
+                                    formData.append('file', blob, 'large_data.json');
+                                    formData.append('original_filename', 'embedded_data');
+                                    formData.append('file_extension', 'json');
 
-                                const formData = new FormData();
-                                const blob = new Blob([JSON.stringify(jsonRepresentation)], { type: 'application/json' });
-                                formData.append('file', blob, 'large_data.json');
-                                formData.append('original_filename', input.input_data.description || 'unknown');
-                                formData.append('file_extension', 'json');
-
-                                try {
-                                    const response = await fetch('http://localhost:8000/large_file_upload', {
-                                        method: 'POST',
-                                        body: formData,
-                                    });
-
-                                    if (response.ok) {
-                                        const result = await response.json();
-                                        input.input_data = result;
-                                    } else {
-                                        console.error('Failed to upload large file');
+                                    try {
+                                        const response = await fetch('http://localhost:8000/large_file_upload', {
+                                            method: 'POST',
+                                            body: formData,
+                                        });
+                                        if (response.ok) {
+                                            const data = await response.json();
+                                            input.input_data.data = data;
+                                        }
+                                    } catch (error) {
+                                        console.error('Error fetching full data:', error);
                                     }
-                                } catch (error) {
-                                    console.error('Error uploading large file:', error);
                                 }
                             }
                         }
                     }
-                    node.data.status = 'not evaluated';
                 }
+
+                
 
                 reactFlow.setNodes(flow.nodes);
                 reactFlow.setEdges(flow.edges);

@@ -14,15 +14,11 @@ from ..datatypes.base_node import BaseNode, BaseNodeData
 from ..datatypes.fields import NodeInput, NodeOutput
 MAXSIZE = 10
 
-from cachetools import cached, TTLCache
-from cachetools.keys import hashkey
-
 DISPLAY_NAME = "Image"
 
 class ImageFromUrlNode(BaseNode):
 
     @classmethod
-    # @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls, 
         url: NodeInput(label='URL', type='string', input_data=Data(dtype='json', data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true'))
@@ -39,12 +35,16 @@ class ImageFromUrlNode(BaseNode):
 class BlurImageNode(BaseNode):
 
     @classmethod
-    @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image, radius: hashkey(image.tobytes(), radius))
     def exec(
         cls,
         image: NodeInput(label='A', type='image'),
         radius: NodeInput(label='B', type='number', input_data=Data(dtype='json', data=5))
     ) -> NodeOutput(label='Blurred Image', type='image'):
+        
+        print('hi')
+
+
+
         img = Image.fromarray(image.astype(np.uint8))
         img = img.filter(ImageFilter.GaussianBlur(radius=radius))
         return NodeOutput(label='Blurred Image', type='image', output_data=Data(
@@ -55,7 +55,6 @@ class BlurImageNode(BaseNode):
 class FlipHorizontallyNode(BaseNode):
 
     @classmethod
-    @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image: hashkey(image.tobytes()))
     def exec(
         cls,
         image: NodeInput(label='Image', type='image')

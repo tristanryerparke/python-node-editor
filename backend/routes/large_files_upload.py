@@ -15,10 +15,12 @@ async def handle_large_file(
     file_content = await file.read()
 
     json_str = file_content.decode('utf-8')
+
+    print('hi')
     
 
     data_instance = Data.model_validate_json(json_str)
-
+    print('hi')
 
     return data_instance.model_dump()
 
