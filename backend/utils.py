@@ -17,35 +17,36 @@ from backend.datatypes.base_node import BaseNode, StreamingBaseNode
 
 def find_and_load_classes(directory: str):
     '''finds all node classes in a given directory and loads them'''
-    # List to store the classes
     all_classes = {}
 
-    # Iterate through the files in the directory
     for filename in os.listdir(directory):
-        print(filename)
-
         if filename.endswith('.py'):
             module_name = filename[:-3]
-            module = importlib.import_module(f"backend.nodes.{module_name}")
+            module_path = f"backend.nodes.{module_name}"
 
-            # Get a list of classes defined in the module
+            try:
+                importlib.invalidate_caches()
+                module = importlib.import_module(module_path)
+                importlib.reload(module)
+            except ModuleNotFoundError:
+                print(f"Error loading module {module_path}")
+                continue
+
             classes = [obj for name, obj in inspect.getmembers(module) if inspect.isclass(
                 obj) and issubclass(obj, BaseNode) and obj != BaseNode and obj != StreamingBaseNode]
 
-            # Add the definition_path attribute to each class
             for obj in classes:
-                source_file = inspect.getsourcefile(obj)
-                start_line = inspect.getsourcelines(obj)[1]
-                definition_path = f"{source_file}:{start_line}"
-                obj.definition_path = definition_path
+                try:
+                    source_file = inspect.getsourcefile(obj)
+                    start_line = inspect.getsourcelines(obj)[1]
+                    definition_path = f"{source_file}:{start_line}"
+                    obj.definition_path = definition_path
+                except OSError:
+                    print(f"Error getting source file for {obj.__name__}")
+                    continue
 
-            # Use the module's custom display name if available, otherwise use the module name
             display_name = getattr(module, 'DISPLAY_NAME', module_name)
-
-            # Add to the list of all classes
             all_classes[display_name] = classes
-
-    print(all_classes)
 
     return all_classes
 

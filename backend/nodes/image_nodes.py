@@ -55,7 +55,7 @@ class BlurImageNode(BaseNode):
 class FlipHorizontallyNode(BaseNode):
 
     @classmethod
-    @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image: hashkey(image.etobytes()))
+    @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image: hashkey(image.tobytes()))
     def exec(
         cls,
         image: NodeInput(label='Image', type='image')
