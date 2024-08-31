@@ -218,20 +218,20 @@ function InspectorPanel() {
       </Flex>
     </Panel>
     <Modal 
-      size="lg" 
+      size="90%"
       centered 
       opened={opened} 
       onClose={close} 
       title={modalTitle}
-      withinPortal={false}
+      style={{overflow: 'hidden'}}
     >
+      <Flex justify="center" align="center" w="100%" h="80%" style={{overflow: 'hidden', flexGrow: 1}}>
       {isLoading ? (
-        <Flex justify="center" align="center" w="100%" h="100%">
-          <Loader size="xl" />
-        </Flex>
+          <Loader color='dark.3' size="xl" />
       ) : (
-        <MantineImage w="100%" h="100%" src={modalImage} alt={modalTitle} fit="contain" />
+        <MantineImage h="100%" src={modalImage} alt={modalTitle} fit="contain" />
       )}
+    </Flex>
     </Modal>
     </>
   );

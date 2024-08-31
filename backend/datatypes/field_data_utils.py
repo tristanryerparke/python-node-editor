@@ -2,48 +2,11 @@ import io
 import json
 import base64
 import reprlib
-
-from typing import Any, FrozenSet, Tuple
-from functools import lru_cache
 import numpy as np
 from PIL import Image
+from typing import Any
 
-def db_str_serialize(dtype: str, data: Any):
-    '''serializes data for storage in redis'''
-
-    if dtype == 'json':
-        return json.dumps(data)
-
-    elif dtype == 'numpy' or dtype == 'image':
-        return json.dumps(data.tolist())
-
-    elif dtype == 'basemodel':
-        return data.model_dump_json()
-
-    else:
-        raise TypeError('unsupported dtype for db storage')
-
-@lru_cache(maxsize=128)
-def db_str_deserialize(class_options: FrozenSet[Tuple[str, Any]], dtype: str, data: str):
-    '''deserializes data that came from redis'''
-    class_options_dict = dict(class_options)
-    if dtype == 'json':
-        return json.loads(data)
-
-    elif dtype == 'numpy' or dtype == 'image':
-        return np.array(json.loads(data))
-
-    elif dtype == 'basemodel':
-        class_dict = json.loads(data)
-        class_name = class_dict.get('class_name')
-        if class_name in class_options_dict:
-            return class_options_dict[class_name].model_validate(class_dict)
-        else:
-            raise ValueError(
-                f"Class name {class_name} not found in class options")
-
-    else:
-        raise TypeError('unsupported dtype for db deserialization')
+LARGE_DATA_CACHE = {}
 
 
 def image_to_base64(img: np.ndarray) -> str:

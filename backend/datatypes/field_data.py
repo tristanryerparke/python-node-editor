@@ -1,4 +1,3 @@
-import redis
 import uuid
 import json
 from typing import Any, Union, Literal, ClassVar, FrozenSet, Tuple
@@ -7,25 +6,19 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    PrivateAttr,
     computed_field,
     field_serializer,
     model_validator,
-    field_validator,
 )
 
 from .field_data_utils import (
-    db_str_serialize,
-    db_str_deserialize,
-    image_to_base64,
     truncate_repr,
     prep_data_for_frontend_serialization,
     prep_data_for_frontend_deserialization,
     create_thumbnail,
+    LARGE_DATA_CACHE,
 )
 
-
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 
 MAX_FILE_SIZE_MB = 0.1
@@ -37,7 +30,6 @@ class Data(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4())) # id is for retrieving large data from the db
     dtype: Literal['json', 'numpy', 'image', 'basemodel'] # dtype helps us know how to save, load, serialize, deserialize
     data: Any = None # front facing data attribute / preview
-    # _data: Any = PrivateAttr(default=None)  # this is the "true" data attribute where full data is stored
     max_file_size_mb: float = Field(default=MAX_FILE_SIZE_MB)
     class_name: str
     class_options: ClassVar[dict] = {}
@@ -46,8 +38,8 @@ class Data(BaseModel):
     def serialize_data(self, data: Any, _info: Any) -> Any:
         '''return a truncated repr of the data if big (cached), otherwise return the data'''
         if self.cached:
-            redis_client.set(self.id, db_str_serialize(self.dtype, self.data))
-            print(f"SERIALIZED cached data for id: {self.id}")
+            LARGE_DATA_CACHE[self.id] = data
+            print(f"Stored data in LARGE_DATA_CACHE for id: {self.id}")
             if self.dtype == 'image':
                 return create_thumbnail(data, self.max_file_size_mb)
             else:
@@ -58,7 +50,7 @@ class Data(BaseModel):
     @computed_field(alias='cached', title='Flag for large data cached in db', repr=True)
     @property
     def cached(self) -> bool:
-        '''for large data, we cache in redis db, this checks the size and assigns the flag'''
+        '''for large data we need tocache, this checks the size and assigns the flag'''
         if self.size_mb >= self.max_file_size_mb:
             return True
         else:
@@ -99,10 +91,10 @@ class Data(BaseModel):
     @classmethod
     def load_cached_data(cls, values):
         '''loads data from cache if the id is in the cache, and replaces the data attribute with the deserialized data'''
-        if values.get('cached') and redis_client.exists(values.get('id')):
-            cached_data = redis_client.get(values['id']).decode('utf-8')
-            values['data'] = db_str_deserialize(frozenset(cls.class_options.items()), values['dtype'], cached_data)
-            print(f"DESERIALIZED cached data for id: {values['id']}")
+        if values.get('cached'):
+            if values['id'] in LARGE_DATA_CACHE:
+                values['data'] = LARGE_DATA_CACHE[values['id']]
+                print(f"Loaded data from LARGE_DATA_CACHE for id: {values['id']}")
         else:
             values['data'] = prep_data_for_frontend_deserialization(values['dtype'], values['data'])
             if values['dtype'] == 'basemodel':

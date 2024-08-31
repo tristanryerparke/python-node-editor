@@ -17,6 +17,8 @@ MAXSIZE = 10
 from cachetools import cached, TTLCache
 from cachetools.keys import hashkey
 
+DISPLAY_NAME = "Image"
+
 class ImageFromUrlNode(BaseNode):
 
     @classmethod
@@ -37,7 +39,7 @@ class ImageFromUrlNode(BaseNode):
 class BlurImageNode(BaseNode):
 
     @classmethod
-    # @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image, radius: hashkey(image.image_array.tobytes(), radius))
+    @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image, radius: hashkey(image.tobytes(), radius))
     def exec(
         cls,
         image: NodeInput(label='A', type='image'),
@@ -53,7 +55,7 @@ class BlurImageNode(BaseNode):
 class FlipHorizontallyNode(BaseNode):
 
     @classmethod
-    # @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image: hashkey(image.array.tobytes()))
+    @cached(cache=TTLCache(maxsize=MAXSIZE, ttl=300), key=lambda cls, image: hashkey(image.etobytes()))
     def exec(
         cls,
         image: NodeInput(label='Image', type='image')

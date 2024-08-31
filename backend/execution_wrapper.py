@@ -1,6 +1,7 @@
 import time
 import json
 import traceback
+import cProfile
 from pydantic import BaseModel
 
 from .datatypes.base_node import BaseNode
@@ -48,6 +49,8 @@ class ExecutionWrapper:
             print(f"Websocket not set, cannot send message: {message}")
 
     async def execute_graph(self, graph_def: GraphDef):
+        profiler = cProfile.Profile()
+        profiler.enable()
         start_time = time.time()
         self.node_instances = {}
 
@@ -177,3 +180,6 @@ class ExecutionWrapper:
         if self.websocket:
             await self.websocket.close()
             self.websocket = None
+
+        profiler.disable()
+        profiler.dump_stats("execution_profile.pstat")

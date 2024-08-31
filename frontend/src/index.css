@@ -68,6 +68,10 @@ body {
   right: 0;
 }
 
+.m_54c44539 {
+  overflow: hidden;
+}
+
 .m_8fb7ebe7:disabled, .m_8fb7ebe7[data-disabled] {
   cursor: text;
 }
