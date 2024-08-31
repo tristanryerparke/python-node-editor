@@ -25,11 +25,11 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
   useEffect(() => {
     if (isEdgeConnected && !prevIsEdgeConnectedRef.current) {
       // console.log('Rising edge: Connection established');
-      onChange(input.label, null)
+      onChange(input.label, {} as Data)
       // Handle rising edge event
     } else if (!isEdgeConnected && prevIsEdgeConnectedRef.current) {
       // console.log('Falling edge: Connection lost');
-      onChange(input.label, null)
+      onChange(input.label, {} as Data)
     }
     prevIsEdgeConnectedRef.current = isEdgeConnected;
   }, [input.label, isEdgeConnected, onChange]);

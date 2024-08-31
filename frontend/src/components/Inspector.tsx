@@ -21,7 +21,6 @@ import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
 import type { BaseNodeData, NodeInput, NodeOutput, Data } from '../types/DataTypes';
 import { useState, useCallback } from 'react';
-import axios from 'axios';
 
 function InspectorPanel() {
   const { selectedNodeId } = useContext(NodeSelectionContext);
@@ -48,7 +47,7 @@ function InspectorPanel() {
   const [modalTitle, setModalTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const openModal = useCallback(async (nodeId: string, inputOrOutput: 'input' | 'output', label: string) => {
+  const openModal = useCallback(async (inputOrOutput: 'input' | 'output', label: string) => {
     setIsLoading(true);
     open();
     setModalTitle(label);
@@ -57,7 +56,9 @@ function InspectorPanel() {
         ? selectedNodeData.inputs.find(input => input.label === label)
         : selectedNodeData.outputs.find(output => output.label === label);
       
-      const dataObject = inputOrOutput === 'input' ? item?.input_data : item?.output_data;
+      const dataObject = inputOrOutput === 'input' 
+        ? (item as NodeInput).input_data 
+        : (item as NodeOutput).output_data;
       if (dataObject && dataObject.id) {
         const response = await fetch(`http://localhost:8000/data/${dataObject.id}?dtype=${dataObject.dtype}`);
         if (!response.ok) {
@@ -93,7 +94,7 @@ function InspectorPanel() {
           style={{ position: 'relative', top: -30, right: -2 }} 
           variant="subtle" 
           color="dark.3"
-          onClick={() => selectedNode && openModal(selectedNode.id, inputOrOutput, item.label)}
+          onClick={() => selectedNode && openModal(inputOrOutput, item.label)}
         >
           <IconEye />
         </ActionIcon>
