@@ -42,12 +42,19 @@ export function useExecutionManager() {
       websocketRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.status === 'node_update') {
-          const updatedNode = JSON.parse(data.node);
-          reactFlow.setNodes(nds => 
-            nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
-          );
-          
-          if (updatedNode.data.status === 'error') {
+          const { node_id, node_status, node } = data;
+          if (node) {
+            const updatedNode = JSON.parse(node);
+            reactFlow.setNodes(nds => 
+              nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
+            );
+          }
+          if (node_status) {
+            reactFlow.setNodes(nds => 
+              nds.map(n => n.id === node_id ? { ...n, data: { ...n.data, status: node_status } } : n)
+            );
+          }
+          if (node_status === 'error') {
             resetPendingNodes();
           }
         } else if (data.status === 'finished') {

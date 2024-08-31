@@ -99,10 +99,10 @@ class ExecutionWrapper:
             for o in node_instance.data.outputs:
                 o.output_data = None
 
-            
-
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
+
+            # send a status update
+            await self.send_update({"status": "node_update", "node_id": node_id, "node_status": node_instance.data.status})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
@@ -133,38 +133,20 @@ class ExecutionWrapper:
                 
                 node_instance.data.status = 'evaluated'
 
-            # Capture and send any errors
+            # capture any errors
             except Exception as e:
                 node_instance.data.status = 'error'
                 node_instance.data.error_output = f"Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
                 print(f"Error executing node {node_id}: {str(e)}")
                 print(f"Traceback:\n{traceback.format_exc()}")
 
-            # print(json_analyze_outputs(node_instance.model_dump_json(exclude=exclude_object)))
-
-            # print('hi')
-
-            # print('BEFORE EXECUTION:')
-            # print('INPUTS:')
-            # d(node_instance.data.inputs)
-            # print('OUTPUTS:')
-            # d(node_instance.data.outputs)
-
-            # print('pause')
-
+            # send a full update
             await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
             
-            # Allow other tasks to run
+            # allow other tasks to run
             await asyncio.sleep(0)
 
-            # Stop execution if node has errored
-            # if node_instance.data.status == 'error':
-            #     print(f"Stopping execution due to error in node {node_id}")
-            #     break
-
-            # d(graph_def.edges)
-
-            # Edge processing
+            # edge processing
             for edge in graph_def.edges:
                 if edge['source'] == node_id:
                     to_node_id = edge['target']

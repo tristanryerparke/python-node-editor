@@ -58,7 +58,7 @@ class FlipHorizontallyNode(BaseNode):
         cls,
         image: NodeInput(label='Image', type='image')
     ) -> NodeOutput(label='Flipped Image', type='image'):
-        img = Image.fromarray(image.image_array)
+        img = Image.fromarray(image.astype(np.uint8))
         flipped_img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         return NodeOutput(label='Flipped Image', type='image', output_data=Data(
             data=np.array(flipped_img),
