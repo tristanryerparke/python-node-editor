@@ -1,6 +1,5 @@
 
-from typing import TypeVar, Generic, NamedTuple, Tuple
-import shortuuid
+from typing import Generic, NamedTuple, Tuple
 import numpy as np
 import time
 from inspect import signature, Parameter
@@ -12,9 +11,9 @@ from PIL import Image
 from io import BytesIO
 from devtools import debug as d
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-from .fields import NodeInput, NodeOutput, NodeOutputImage, NodeOutputNumber, NodeOutputString, input_class_from_type_name, output_class_from_type_name
+from .fields import NodeInput, NodeOutput
 
 from devtools import debug as d
     
@@ -39,9 +38,6 @@ class NodePosition(BaseModel):
     x: float
     y: float
 
-TI = TypeVar('TI', bound=NodeInput)
-TO = TypeVar('TO', bound=NodeOutput)
-
 class BaseNodeData(BaseModel):
     name: str = ''
     namespace: str = ''
@@ -49,8 +45,8 @@ class BaseNodeData(BaseModel):
     terminal_output: str = ''
     error_output: str = ''
     description: str = ''
-    inputs: List[TI] = []
-    outputs: List[TO] = []
+    inputs: List[NodeInput] = []
+    outputs: List[NodeOutput] = []
     streaming: bool = False
     definition_path: str = ''
 
@@ -62,11 +58,7 @@ def image_to_base64(im: np.ndarray) -> str:
     return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
 
 class BaseNode(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            np.ndarray: image_to_base64
-        }
+    model_config = ConfigDict(arbitrary_types_allowed=True) 
 
     id: str = ''
     position: NodePosition = NodePosition(x=0, y=0)
@@ -108,19 +100,9 @@ class BaseNode(BaseModel):
         else:
             input_instances = self.data.inputs
 
-        # d(input_instances)
 
-        new_input_instances = []
-        for input_inst in input_instances:
-            new_class = input_class_from_type_name(input_inst.type)
-            # print(f'changing input type of {input_inst} to {new_class}')
-            new_input_instances.append(new_class(
-                label=input_inst.label, 
-                type=input_inst.type,
-                input_data=input_inst.input_data
-            ))
-        
-        self.data.inputs = new_input_instances
+        self.data.inputs = input_instances
+
 
     def analyze_outputs(self):
         if len(self.data.outputs) == 0:
@@ -143,22 +125,8 @@ class BaseNode(BaseModel):
         
         else:
             output_instances = self.data.outputs
-
-        # d(output_instances)
-
-        # change the type of the output instances to the correct class
-        new_output_instances = []
-        for output_inst in output_instances:
-            new_class = output_class_from_type_name(output_inst.type)
-            # print(f'changing output type of {output_inst} to {new_class}')
-            
-            new_output_instances.append(new_class(
-                label=output_inst.label, 
-                type=output_inst.type,
-                output_data=output_inst.output_data
-            ))
         
-        self.data.outputs = new_output_instances
+        self.data.outputs = output_instances
         
         # d(self.data.outputs)
 
@@ -179,7 +147,7 @@ class BaseNode(BaseModel):
         sig = signature(exec_method)
         
         for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
-            kwargs[name] = inpt.input_data   
+            kwargs[name] = inpt.input_data.data   
         
         with CaptureOutput() as output:
             result = self.__class__.exec(**kwargs)

@@ -4,8 +4,10 @@ import sys
 import time
 from typing import List
 from collections import namedtuple
-from ..datatypes.fields import NodeInput, NodeOutput, NodeOutputNumber
+from ..datatypes.fields import NodeInput, NodeOutput
 from ..datatypes.base_node import BaseNode, BaseNodeData, StreamingBaseNode
+
+from ..datatypes.field_data import Data
 
 MAXSIZE = 10
 
@@ -23,7 +25,7 @@ class AddNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls, 
-        a: NodeInput(label='a', type='number', value=0),
+        a: NodeInput(label='a', type='number', value=Data(dtype='json', data=0)),
         b: NodeInput(label='b', type='number')
     ):
         #NodeOutput(label='result', type='number')
@@ -39,7 +41,7 @@ class AddSubtractNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls, 
-        a: NodeInput(label='a', type='number', value=0),
+        a: NodeInput(label='a', type='number', value=Data(dtype='json', data=0)),
         b: NodeInput(label='b', type='number')
     ) -> Tuple[NodeOutput(label='result A', type='number'), NodeOutput(label='result B', type='string')]:
         '''

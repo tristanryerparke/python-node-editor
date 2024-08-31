@@ -7,7 +7,9 @@
         "request": "launch",
         "cwd": "${workspaceFolder}/frontend",
         "command": "bun run dev",
-        "preLaunchTask": "wait"
+        "env": {
+          "VITE_MAX_FILE_SIZE_MB": "2"
+        }
       },
       {
         "name": "Backend",
@@ -15,15 +17,20 @@
         "request": "launch",
         "cwd": "${workspaceFolder}",
         "module": "backend.main",
-        "console": "integratedTerminal"
+        "console": "integratedTerminal",
+        "env": {
+          "VITE_MAX_FILE_SIZE_MB": "2"
+        },
+        "justMyCode": false,
+        "pythonPath": "${command:python.interpreterPath}"
       },
       {
-        "name": "Native Window",
+        "name": "Python: Current File",
         "type": "python",
         "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "program": "${workspaceFolder}/backend/native_window.py",
-        "console": "integratedTerminal"
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "justMyCode": true
       }
     ],
     "compounds": [

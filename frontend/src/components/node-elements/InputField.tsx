@@ -1,16 +1,14 @@
 import { useRef, useEffect } from 'react';
-import { NodeInput } from '../../types/DataTypes';
-import { NumberInput, TextInput, Flex, Tooltip, Text, ActionIcon, Button } from '@mantine/core';
+import { NodeInput, Data } from '../../types/DataTypes';
+import { NumberInput, TextInput, Flex, Tooltip, Text } from '@mantine/core';
 import { Handle, Position, useEdges } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
-import { IconUpload } from '@tabler/icons-react';
-import { ImageData } from '../../types/DataTypes';
 import ImageInput from './ImageUploader';
 
 export interface InputFieldProps {
   nodeId: string;
   input: NodeInput;
-  onChange: (label: string, value: any) => void;
+  onChange: (label: string, value: Data) => void;
 }
 
 export default function InputField({ nodeId, input, onChange }: InputFieldProps) {
@@ -44,18 +42,18 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
       case 'number':
         return <NumberInput
           w='100%'
-          value={input.input_data ?? ''}
+          value={input.input_data?.data ?? ''}
           disabled={isEdgeConnected}
-          onChange={(value) => onChange(input.label, value)}
+          onChange={(value) => onChange(input.label, { ...input.input_data, data: value } as Data)}
         />;
 
       // Text input
       case 'string':
         return <TextInput
           w='100%'
-          value={input.input_data ?? ''}
+          value={input.input_data?.data ?? ''}
           disabled={isEdgeConnected}
-          onChange={(e) => {onChange(input.label, e.currentTarget.value)}}
+          onChange={(e) => onChange(input.label, { ...input.input_data, data: e.currentTarget.value } as Data)}
         />;
 
       case 'image':
@@ -73,8 +71,8 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
   };
 
   return (
-    <Flex px='0.5rem' my='auto' align='center' justify='space-between' w='100%'>
-      <Tooltip offset={15} floatingStrategy='fixed' label={input.type} color='dark.3' position='left' withArrow arrowSize={8} w='100%'>
+    <Flex style={{position: 'relative'}} px='0.5rem' my='auto' align='center' justify='space-between' w='100%'>
+      <Tooltip offset={15} floatingStrategy='fixed' label={input.type} color='dark.3' position='left' withArrow arrowSize={8}>
         <Flex style={{flexGrow: 0}}>
         <Handle
             type="target"

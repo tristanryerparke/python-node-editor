@@ -19,7 +19,7 @@ import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
-import type { BaseNode, BaseNodeData, NodeInput, NodeOutput, Image } from '../types/DataTypes';
+import type { BaseNodeData, NodeInput, NodeOutput, Data } from '../types/DataTypes';
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 
@@ -53,23 +53,41 @@ function InspectorPanel() {
     open();
     setModalTitle(label);
     try {
-      const response = await axios.get(`http://localhost:8000/image/${nodeId}/${inputOrOutput}/${label}`);
-      setModalImage(response.data.image);
+      const item = inputOrOutput === 'input' 
+        ? selectedNodeData.inputs.find(input => input.label === label)
+        : selectedNodeData.outputs.find(output => output.label === label);
+      
+      const dataObject = inputOrOutput === 'input' ? item?.input_data : item?.output_data;
+      if (dataObject && dataObject.id) {
+        const response = await fetch(`http://localhost:8000/data/${dataObject.id}?dtype=${dataObject.dtype}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch image data');
+        }
+        const imageData = await response.text();
+        setModalImage(`data:image/jpeg;base64,${imageData.replace(/"/g, '')}`);
+      } else {
+        throw new Error('Image data ID not found');
+      }
     } catch (error) {
       console.error('Error fetching image:', error);
-      setModalImage(''); // Clear the image in case of error
+      setModalImage('');
     } finally {
       setIsLoading(false);
     }
-  }, [open]);
+  }, [open, selectedNodeData]);
 
   const renderImageItem = (item: NodeInput | NodeOutput, inputOrOutput: 'input' | 'output') => {
-    const imageValue = (inputOrOutput === 'input' ? item.input_data : item.output_data) as Image;
+    
+    const dataWithImage = (inputOrOutput === 'input' 
+      ? (item as NodeInput).input_data
+      : (item as NodeOutput).output_data) as Data;
+
+
     return (
       <Flex direction="column" key={item.label} w="100%" pb='0.5rem'>
-        <Text fw={700} span>{item.label}:</Text> <Text span>{imageValue.description}</Text>
-        {imageValue.thumbnail && (
-          <MantineImage fit="contain" src={imageValue.thumbnail} alt={`${item.label} preview`} w="100%" h="100%" />
+        <Text fw={700} span>{item.label}:</Text> <Text span>{dataWithImage.description}</Text>
+        {dataWithImage.data && typeof dataWithImage.data === 'string' && (
+          <MantineImage fit="contain" src={`data:image/jpeg;base64,${dataWithImage.data}`} alt={`${item.label} preview`} w="100%" h="100%" />
         )}
         <ActionIcon 
           style={{ position: 'relative', top: -30, right: -2 }} 
@@ -92,7 +110,7 @@ function InspectorPanel() {
         }
         return (
           <Text key={input.label}>
-            <Text fw={700} span>{input.label}:</Text> <Text span>{String(input.input_data)} (Type: {input.type}) </Text>
+            <Text fw={700} span>{input.label}:</Text> <Text span>{String(input.input_data?.data)} (Type: {input.type}) </Text>
           </Text>
         );
       })}
@@ -108,7 +126,7 @@ function InspectorPanel() {
         }
         return (
           <Text key={output.label}>
-            <Text fw={700} span>{output.label}</Text>: {String(output.output_data)} (Type: {output.type})
+            <Text fw={700} span>{output.label}</Text>: {String(output.output_data?.data)} (Type: {output.type})
           </Text>
         );
       })}
@@ -200,7 +218,7 @@ function InspectorPanel() {
       </Flex>
     </Panel>
     <Modal 
-      size="auto" 
+      size="lg" 
       centered 
       opened={opened} 
       onClose={close} 
@@ -208,11 +226,11 @@ function InspectorPanel() {
       withinPortal={false}
     >
       {isLoading ? (
-        <Flex justify="center" align="center" style={{ width: '300px', height: '300px' }}>
+        <Flex justify="center" align="center" w="100%" h="100%">
           <Loader size="xl" />
         </Flex>
       ) : (
-        <MantineImage src={modalImage} alt={modalTitle} fit="contain" />
+        <MantineImage w="100%" h="100%" src={modalImage} alt={modalTitle} fit="contain" />
       )}
     </Modal>
     </>

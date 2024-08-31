@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from 'react';
+import React, { useCallback, useContext } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -15,7 +15,7 @@ import {
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
 import CustomNode from './CustomNode';
-import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
+import { NodeSelectionContext } from '../GlobalContext';
 import { BaseNodeData } from '../types/DataTypes';
 import type { Node, Edge } from '@xyflow/react';
 

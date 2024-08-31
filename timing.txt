@@ -1,0 +1,10 @@
+
+MAX_FILE_SIZE_MB = 0.1mb
+
+Total graph execution took 4.1137 seconds
+
+with lru on db deserialization:
+Total graph execution took 3.4175 seconds
+Total graph execution took 2.4413 seconds
+Total graph execution took 2.4398 seconds
+Total graph execution took 2.4606 seconds

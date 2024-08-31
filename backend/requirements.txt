@@ -1,10 +1,12 @@
 fastapi
 uvicorn[standard]
 devtools
-shortuuid
 requests
 pywebview
 annotated-types
 Pillow
 opencv-python-headless
 cachetools
+python-multipart
+redis
+pytest

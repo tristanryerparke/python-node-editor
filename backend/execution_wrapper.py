@@ -2,8 +2,9 @@ import time
 import json
 import traceback
 from pydantic import BaseModel
+
+from .datatypes.base_node import BaseNode
 from .utils import topological_sort
-from .datatypes.base_node import BaseNode, NodeInput, NodeOutput
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
@@ -59,7 +60,16 @@ class ExecutionWrapper:
         node_instantiation_start = time.time()
         for node in graph_def.nodes:
             id = str(node['id'])
-            # print(f"Instantiating node {id}...")
+
+            # Set input_data to None for connected inputs
+            for edge in graph_def.edges:
+                if edge['target'] == id:
+                    target_handle = edge['targetHandle'].split('-')[-1]
+                    if 'data' in node and 'inputs' in node['data']:
+                        for input in node['data']['inputs']:
+                            if input['label'] == target_handle:
+                                input['input_data'] = None
+
             node_type = node['data']['name']
             namespace = node['data']['namespace']
             NodeClass = next((cls for cls in self.classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
@@ -85,36 +95,17 @@ class ExecutionWrapper:
             node_instance: BaseNode = self.node_instances[str(node_id)]
             print(f"Executing node {node_id} ({node_instance.data.name})...")
             
-            exclude_object = {'data': {
-                'inputs': {'__all__': {'input_data': {'image_array'}}},
-                'outputs': {'__all__': {'output_data': {'image_array'}}}
-            }}
-
-            # print('BEFORE EXECUTION:')
-            # print('INPUTS:')
-            # d(node_instance.data.inputs)
-            # print('OUTPUTS:')
-            # d(node_instance.data.outputs)
-
-            # print('pause')
-            # for i in node_instance.data.inputs:
-            #     d(i)
-            # print('OUTPUTS:')
-            # for o in node_instance.data.outputs:
-            #     d(o)
-
             # clear the node's outputs
             for o in node_instance.data.outputs:
                 o.output_data = None
 
-            
-
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
+
+            # send a status update
+            await self.send_update({"status": "node_update", "node_id": node_id, "node_status": node_instance.data.status})
             
             # Allow other tasks to run
             await asyncio.sleep(0)
-
 
             try:
                 if node_instance.data.streaming:
@@ -126,7 +117,7 @@ class ExecutionWrapper:
                             for key, value in item.items():
                                 if key != 'status':
                                     node_instance.data.outputs[key].output_data = value
-                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
+                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
                             await asyncio.sleep(0)
                         elif item.get('status') == 'complete':
                             print(f"Server: Node {node_id} completed with result {item}")
@@ -142,38 +133,20 @@ class ExecutionWrapper:
                 
                 node_instance.data.status = 'evaluated'
 
-            # Capture and send any errors
+            # capture any errors
             except Exception as e:
                 node_instance.data.status = 'error'
                 node_instance.data.error_output = f"Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
                 print(f"Error executing node {node_id}: {str(e)}")
                 print(f"Traceback:\n{traceback.format_exc()}")
 
-            # print(json_analyze_outputs(node_instance.model_dump_json(exclude=exclude_object)))
-
-            # print('hi')
-
-            # print('BEFORE EXECUTION:')
-            # print('INPUTS:')
-            # d(node_instance.data.inputs)
-            # print('OUTPUTS:')
-            # d(node_instance.data.outputs)
-
-            # print('pause')
-
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json(exclude=exclude_object)})
+            # send a full update
+            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
             
-            # Allow other tasks to run
+            # allow other tasks to run
             await asyncio.sleep(0)
 
-            # Stop execution if node has errored
-            # if node_instance.data.status == 'error':
-            #     print(f"Stopping execution due to error in node {node_id}")
-            #     break
-
-            # d(graph_def.edges)
-
-            # Edge processing
+            # edge processing
             for edge in graph_def.edges:
                 if edge['source'] == node_id:
                     to_node_id = edge['target']

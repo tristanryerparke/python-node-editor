@@ -23,18 +23,23 @@ export interface BaseNodeData {
   definition_path: string;
 }
 
-export interface ImageData {
-  thumbnail: string | null;
+export interface Data {
+  id: string;
+  dtype: 'json' | 'numpy' | 'image' | 'basemodel';
+  data: any;
+  max_file_size_mb: number;
+  class_name: string;
+  cached: boolean;
   description: string | null;
-  image_array: string | null;
+  size_mb: number;
 }
 
 export interface NodeOutputImage extends NodeOutput {
-  output_data: ImageData;
+  output_data: Data;
 }
 
 export interface NodeInputImage extends NodeInput {
-  input_data: ImageData;
+  input_data: Data;
 }
 
 export interface BaseNode {

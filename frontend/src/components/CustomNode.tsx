@@ -2,7 +2,7 @@ import { memo, useCallback, useContext } from 'react';
 import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
 import NodeTopBar from './node-elements/NodeTopBar';
-import { NodeSelectionContext, AutoExecuteContext } from '../GlobalContext';
+import { NodeSelectionContext } from '../GlobalContext';
 import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
 
 import InputField from './node-elements/InputField';
@@ -13,10 +13,8 @@ type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   const reactFlow = useReactFlow();
 
+
   const updateNodeData = useCallback((label: string, value: any) => {
-    console.log('updating node data', label, value);
-
-
     const newData = { ...data };
 
     const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);
@@ -68,8 +66,8 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       p='0'
       radius="md"
       bg="dark.5"
-      miw='10rem'
-      maw='20rem'
+      miw='5rem'
+      maw='18rem'
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -83,7 +81,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       <NodeTopBar id={id} />
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
-      <Flex direction='column' gap='0.5rem' py='0.5rem' px={0} mx={0} w='100%'>
+      <Flex direction='column' gap='0.5rem' py='0.5rem' w='100%'>
         {data.inputs.map((input) => renderInputComponent(input))}
       </Flex>
 
