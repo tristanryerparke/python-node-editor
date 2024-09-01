@@ -1,12 +1,15 @@
 import { useContext } from 'react';
-import { Flex, Group, ActionIcon, Button } from '@mantine/core';
+import { Flex, Group, ActionIcon, Button, FileButton } from '@mantine/core';
 import { IconLayoutSidebarFilled } from '@tabler/icons-react';
 import { PanelsContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
+import { useSaveFlow, useLoadFlow } from '../hooks/useSaveLoadFlow';
 
 function Header() {
   const { setPanels } = useContext(PanelsContext);
   const { execute } = useExecutionManager();
+  const { saveFlow, isSaving } = useSaveFlow();
+  const { loadFlow, isLoading } = useLoadFlow();
 
   const toggleInspector = () => {
     setPanels(prevPanels => ({
@@ -43,6 +46,30 @@ function Header() {
           >
             Execute
           </Button>
+          <Button
+            size='xs'
+            variant='outline'
+            color='blue.4'
+            onClick={saveFlow}
+            loading={isSaving}
+          >
+            Save
+          </Button>
+          <FileButton
+            onChange={(file: File | null) => file && loadFlow(file)}
+            accept="application/json"
+          >
+            {(props) => <Button 
+              size='xs' 
+              variant='outline' 
+              color='blue.4' 
+              loading={isLoading} 
+              {...props}
+            >
+              Load
+            </Button>
+          }
+          </FileButton>
         </Flex>
         <ActionIcon color='dark.2' variant='subtle' onClick={toggleInspector}>
           <IconLayoutSidebarFilled rotate={180} />

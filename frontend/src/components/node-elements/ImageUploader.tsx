@@ -17,8 +17,11 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
   useEffect(() => {
     if (input && isEdgeConnected) {
       setDummyFile(new File([], input.input_data?.description || ''));
+    } else if (input && input.input_data && input.input_data.description) {
+      setFileValue(new File([], input.input_data.description));
     } else {
       setDummyFile(null);
+      setFileValue(null);
     }
   }, [isEdgeConnected, input]);
 
@@ -28,7 +31,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        const jsonRepresentation: Data = {
+        const jsonRepresentation = {
           dtype: 'image',
           data: base64String,
         };
@@ -60,7 +63,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       reader.readAsDataURL(file);
       setFileValue(file);
     } else {
-      onChange(input?.label || '', null);
+      onChange(input?.label || '', {} as Data);
       setFileValue(null);
     }
   }

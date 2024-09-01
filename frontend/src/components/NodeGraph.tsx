@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -19,19 +19,40 @@ import { NodeSelectionContext } from '../GlobalContext';
 import { BaseNodeData } from '../types/DataTypes';
 import type { Node, Edge } from '@xyflow/react';
 
-const initialNodes: Node[] = [];
-const initialEdges: Edge[] = [];
-
 const nodeTypes: NodeTypes = {
   customNode: CustomNode,
 };
 
 const NodeGraph: React.FC = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { screenToFlowPosition } = useReactFlow();
-
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const { screenToFlowPosition, getViewport, setViewport } = useReactFlow();
   const { setSelectedNodeId } = useContext(NodeSelectionContext);
+
+  useEffect(() => {
+    const savedFlow = localStorage.getItem('savedFlow');
+    if (savedFlow) {
+      const { nodes: savedNodes, edges: savedEdges, viewport: savedViewport } = JSON.parse(savedFlow);
+      setNodes(savedNodes);
+      setEdges(savedEdges);
+      if (savedViewport) {
+        setViewport(savedViewport);
+      }
+    }
+  }, [setNodes, setEdges, setViewport]);
+
+  useEffect(() => {
+    const saveFlow = () => {
+      const flow = { 
+        nodes, 
+        edges,
+        viewport: getViewport()
+      };
+      localStorage.setItem('savedFlow', JSON.stringify(flow));
+    };
+    window.addEventListener('beforeunload', saveFlow);
+    return () => window.removeEventListener('beforeunload', saveFlow);
+  }, [nodes, edges, getViewport]);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -46,17 +67,12 @@ const NodeGraph: React.FC = () => {
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
-
       const droppedNodeData: BaseNodeData = JSON.parse(event.dataTransfer.getData('application/reactflow')).data;
-
-
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
-
       const newNode: Node = {
-        
         id: crypto.randomUUID(),
         position: {
           x: position.x - 75,
@@ -65,9 +81,6 @@ const NodeGraph: React.FC = () => {
         type: 'customNode',
         data: {...droppedNodeData},
       };
-
-      // console.log(newNode);
-
       setNodes((nds) => nds.concat(newNode));
     },
     [screenToFlowPosition, setNodes]
@@ -85,7 +98,6 @@ const NodeGraph: React.FC = () => {
     onChange: onSelectionChange,
   });
 
-
   return (
     <Panel id="node-graph" order={1}>
       <ReactFlow
@@ -99,6 +111,9 @@ const NodeGraph: React.FC = () => {
         onDrop={onDrop}
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
+        onMoveEnd={(_, viewport) => {
+          localStorage.setItem('savedViewport', JSON.stringify(viewport));
+        }}
       >
         <Controls />
         <MiniMap />
