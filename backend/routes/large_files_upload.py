@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form
-from ..datatypes.field_data import Data
+from ..datatypes.field import NodeField
 import numpy as np
 from PIL import Image
 import io
@@ -16,11 +16,7 @@ async def handle_large_file(
 
     json_str = file_content.decode('utf-8')
 
-    print('hi')
-    
-
-    data_instance = Data.model_validate_json(json_str)
-    print('hi')
+    data_instance = NodeField.model_validate_json(json_str)
 
     return data_instance.model_dump()
 

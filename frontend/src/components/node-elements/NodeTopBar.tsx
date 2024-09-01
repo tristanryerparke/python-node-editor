@@ -59,7 +59,7 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
         w='200px'
       >
         <Text fw={700} p='0rem' m='0rem' style={{ cursor: 'help' }}>
-          {nodeData.name}
+          {nodeData.display_name}
         </Text>
       </Tooltip>
       <Group m='0.25rem' p={0} gap='0.2rem' justify='flex-end'>

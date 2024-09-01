@@ -13,8 +13,7 @@ from devtools import debug as d
 
 from pydantic import BaseModel, ConfigDict
 
-from .fields import NodeInput, NodeOutput
-
+from .field import NodeField
 from devtools import debug as d
     
 
@@ -39,14 +38,15 @@ class NodePosition(BaseModel):
     y: float
 
 class BaseNodeData(BaseModel):
-    name: str = ''
+    display_name: str = ''
+    class_name: str = ''
     namespace: str = ''
     status: str = ['not evaluated', 'pending', 'executing', 'streaming', 'evaluated', 'error'][0]
     terminal_output: str = ''
     error_output: str = ''
     description: str = ''
-    inputs: List[NodeInput] = []
-    outputs: List[NodeOutput] = []
+    inputs: List[NodeField] = []
+    outputs: List[NodeField] = []
     streaming: bool = False
     definition_path: str = ''
 
@@ -66,8 +66,10 @@ class BaseNode(BaseModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.data.name:
-            self.data.name = self.__class__.__name__
+        if not self.data.class_name:
+            self.data.class_name = self.__class__.__name__
+        if not self.data.display_name:
+            self.data.display_name = self.__class__.__name__.replace('Node', '')
         self.analyze_inputs()
         self.analyze_outputs()
         self.detect_namespace()
@@ -84,8 +86,6 @@ class BaseNode(BaseModel):
                 exec_method = getattr(self.__class__, 'exec_stream')
             else:
                 exec_method = getattr(self.__class__, 'exec')
-
-            # print(f'{self.data.name.upper()} INPUTS:')
 
             input_instances = []
 
@@ -112,11 +112,9 @@ class BaseNode(BaseModel):
             else:
                 exec_method = getattr(self.__class__, 'exec')
 
-            
-
             sig = signature(exec_method)
-            # d(get_origin(sig.return_annotation))
-            if isinstance(sig.return_annotation, NodeOutput):
+
+            if isinstance(sig.return_annotation, NodeField):
                 output_instances = [sig.return_annotation]
             elif get_origin(sig.return_annotation) is tuple:
                 output_instances = list(get_args(sig.return_annotation))
@@ -127,11 +125,6 @@ class BaseNode(BaseModel):
             output_instances = self.data.outputs
         
         self.data.outputs = output_instances
-        
-        # d(self.data.outputs)
-
-
-
 
     @classmethod
     def exec(cls, **kwargs):
@@ -141,13 +134,12 @@ class BaseNode(BaseModel):
     def meta_exec(self):
         # Extract only the 'value' from each input
 
-
         exec_method = getattr(self.__class__, 'exec')
         kwargs = {}
         sig = signature(exec_method)
         
         for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
-            kwargs[name] = inpt.input_data.data   
+            kwargs[name] = inpt
         
         with CaptureOutput() as output:
             result = self.__class__.exec(**kwargs)
@@ -179,7 +171,7 @@ class StreamingBaseNode(BaseNode):
         yield {'default': True}  # exec_stream now yields a dictionary
     
     def meta_exec(self):
-        exec_inputs = {k: v.input_data for k, v in self.data.inputs.items()}
+        exec_inputs = {k: v.data for k, v in self.data.inputs.items()}
 
         with CaptureOutput() as output:
             for result in self.__class__.exec_stream(**exec_inputs):

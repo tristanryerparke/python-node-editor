@@ -1,34 +1,33 @@
-import { NodeOutput, Data } from '../../types/DataTypes';
+import { NodeField } from '../../types/DataTypes';
 import { TextInput, Flex, Tooltip, Text } from '@mantine/core';
 import { Handle, Position } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
 
 export interface OutputFieldProps {
   nodeId: string;
-  output: NodeOutput;
+  outputField: NodeField;
 }
-
-export default function OutputField({ nodeId, output }: OutputFieldProps) {
-  const handleId = `${nodeId}-output-${output.label}`
+  
+export default function OutputField({ nodeId, outputField }: OutputFieldProps) {
+  const handleId = `${nodeId}-output-${outputField.label}`
   const theme = useMantineTheme();
 
   const renderOutput = () => {
-    switch (output.type) {
+    switch (outputField.dtype) {
       case 'number':
       case 'string':
         return <TextInput
           className='input-as-text-display'
           disabled
           w='100%'
-          value={output.output_data?.data ?? ''}
+          value={outputField.data ?? ''}
         />;
       case 'image':
-        const image = output.output_data as Data | null;
         return <TextInput
           className='input-as-text-display'
           disabled
           w='100%'
-          value={image?.description ?? ''}
+          value={outputField.description ?? ''}
         />;
       default:
         return null;
@@ -39,9 +38,9 @@ export default function OutputField({ nodeId, output }: OutputFieldProps) {
     <Flex style={{position: 'relative'}} px='0.5rem' my='auto' align='center' justify='space-between' w='100%'>
       {renderOutput()}
       
-      <Tooltip offset={15} floatingStrategy='fixed' label={output.type} color='dark.3' position='right' withArrow arrowSize={8}>
+      <Tooltip offset={15} floatingStrategy='fixed' label={outputField.dtype} color='dark.3' position='right' withArrow arrowSize={8}>
         <Flex>
-          <Text px="0.5rem">{output.label}</Text>
+          <Text px="0.5rem">{outputField.label}</Text>
           <Handle
             type="source"
             id={handleId}

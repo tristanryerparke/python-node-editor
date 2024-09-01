@@ -1,7 +1,7 @@
 import time
 import json
 import traceback
-import cProfile
+# import cProfile
 from pydantic import BaseModel
 
 from .datatypes.base_node import BaseNode
@@ -9,16 +9,6 @@ from .utils import topological_sort
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
-
-def json_analyze_outputs(json_string: str):
-    output_0 = json.loads(json_string)['data']['outputs'][0]['output_data']
-    if output_0:
-        output_components = output_0.items()
-        print(f"output_0 components:")
-        for value, component in output_components:
-            print(f'{value}: {len(component)}')
-    else:
-        print(f'output_0 had type {type(output_0)}')
 
 class GraphDef(BaseModel):
     nodes: list
@@ -49,8 +39,8 @@ class ExecutionWrapper:
             print(f"Websocket not set, cannot send message: {message}")
 
     async def execute_graph(self, graph_def: GraphDef):
-        profiler = cProfile.Profile()
-        profiler.enable()
+        # profiler = cProfile.Profile()
+        # profiler.enable()
         start_time = time.time()
         self.node_instances = {}
 
@@ -64,16 +54,16 @@ class ExecutionWrapper:
         for node in graph_def.nodes:
             id = str(node['id'])
 
-            # Set input_data to None for connected inputs
+            # Set data to None for connected inputs
             for edge in graph_def.edges:
                 if edge['target'] == id:
                     target_handle = edge['targetHandle'].split('-')[-1]
                     if 'data' in node and 'inputs' in node['data']:
                         for input in node['data']['inputs']:
                             if input['label'] == target_handle:
-                                input['input_data'] = None
+                                input['data'] = None
 
-            node_type = node['data']['name']
+            node_type = node['data']['class_name']
             namespace = node['data']['namespace']
             NodeClass = next((cls for cls in self.classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
             if NodeClass:
@@ -96,11 +86,11 @@ class ExecutionWrapper:
             node_start = time.time()
             self.current_node = node_id
             node_instance: BaseNode = self.node_instances[str(node_id)]
-            print(f"Executing node {node_id} ({node_instance.data.name})...")
+            print(f"Executing node {node_id} ({node_instance.data.display_name})...")
             
             # clear the node's outputs
             for o in node_instance.data.outputs:
-                o.output_data = None
+                o.data = None
 
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
 
@@ -156,12 +146,12 @@ class ExecutionWrapper:
                     from_port = edge['sourceHandle'].split('-')[-1]
                     to_port = edge['targetHandle'].split('-')[-1]
                     
-                    source_output = next((output for output in self.node_instances[edge['source']].data.outputs if output.label == from_port), None)
-                    target_input = next((input for input in self.node_instances[to_node_id].data.inputs if input.label == to_port), None)
+                    source_output_field = next((output for output in self.node_instances[edge['source']].data.outputs if output.label == from_port), None)
+                    target_input_field = next((input for input in self.node_instances[to_node_id].data.inputs if input.label == to_port), None)
                     
-                    if source_output and target_input:
-                        target_input.input_data = source_output.output_data
-                        print(f"Edge processing: {edge['source']}({self.node_instances[edge['source']].data.name}):{from_port} -> {edge['target']}({self.node_instances[edge['target']].data.name}):{to_port}")
+                    if source_output_field and target_input_field:
+                        target_input_field.data = source_output_field.data
+                        print(f"Edge processing: {edge['source']}({self.node_instances[edge['source']].data.display_name}):{from_port} -> {edge['target']}({self.node_instances[edge['target']].data.display_name}):{to_port}")
                     else:
                         print(f"Warning: Could not find matching ports for edge {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
 
@@ -181,5 +171,5 @@ class ExecutionWrapper:
             await self.websocket.close()
             self.websocket = None
 
-        profiler.disable()
-        profiler.dump_stats("execution_profile.pstat")
+        # profiler.disable()
+        # profiler.dump_stats("execution_profile.pstat")

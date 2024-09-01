@@ -27,7 +27,7 @@ function NodePicker() {
   };
 
   const filteredCategories = Object.entries(nodeCategories).reduce((acc, [category, nodes]) => {
-    const filteredNodes = nodes.filter(node => node.data.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredNodes = nodes.filter(node => node.data.display_name.toLowerCase().includes(searchTerm.toLowerCase()));
     if (category.toLowerCase().includes(searchTerm.toLowerCase()) || filteredNodes.length > 0) {
       acc[category] = filteredNodes;
     }
@@ -74,7 +74,7 @@ function NodePicker() {
                       bg='dark.5'
                       style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
                     >
-                      <Text size='sm' fw={700}>{`${node.data.name.replace('Node', '')}`}</Text>
+                      <Text size='sm' fw={700}>{`${node.data.display_name}`}</Text>
                     </Flex>
                   </Tooltip>
                 ))}

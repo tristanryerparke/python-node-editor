@@ -19,7 +19,7 @@ import { useContext } from 'react';
 import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../utils/Colors';
-import type { BaseNodeData, NodeInput, NodeOutput, Data } from '../types/DataTypes';
+import type { BaseNodeData, NodeField } from '../types/DataTypes';
 import { useState, useCallback } from 'react';
 
 function InspectorPanel() {
@@ -52,15 +52,12 @@ function InspectorPanel() {
     open();
     setModalTitle(label);
     try {
-      const item = inputOrOutput === 'input' 
+      const fieldItem = inputOrOutput === 'input' 
         ? selectedNodeData.inputs.find(input => input.label === label)
         : selectedNodeData.outputs.find(output => output.label === label);
       
-      const dataObject = inputOrOutput === 'input' 
-        ? (item as NodeInput).input_data 
-        : (item as NodeOutput).output_data;
-      if (dataObject && dataObject.id) {
-        const response = await fetch(`http://localhost:8000/data/${dataObject.id}?dtype=${dataObject.dtype}`);
+      if (fieldItem && fieldItem.id) {
+        const response = await fetch(`http://localhost:8000/full_data/${fieldItem.id}?dtype=${fieldItem.dtype}`);
         if (!response.ok) {
           throw new Error('Failed to fetch image data');
         }
@@ -77,24 +74,20 @@ function InspectorPanel() {
     }
   }, [open, selectedNodeData]);
 
-  const renderImageItem = (item: NodeInput | NodeOutput, inputOrOutput: 'input' | 'output') => {
-    
-    const dataWithImage = (inputOrOutput === 'input' 
-      ? (item as NodeInput).input_data
-      : (item as NodeOutput).output_data) as Data;
+  const renderImageItem = (fieldItem: NodeField, inputOrOutput: 'input' | 'output') => {
 
 
     return (
-      <Flex direction="column" key={item.label} w="100%" pb='0.5rem'>
-        <Text fw={700} span>{item.label}:</Text> <Text span>{dataWithImage.description}</Text>
-        {dataWithImage.data && typeof dataWithImage.data === 'string' && (
-          <MantineImage fit="contain" src={`data:image/jpeg;base64,${dataWithImage.data}`} alt={`${item.label} preview`} w="100%" h="100%" />
+      <Flex direction="column" key={fieldItem.label} w="100%" pb='0.5rem'>
+        <Text fw={700} span>{fieldItem.label}:</Text> <Text span>{fieldItem.description}</Text>
+        {fieldItem.data && typeof fieldItem.data === 'string' && (
+          <MantineImage fit="contain" src={`data:image/jpeg;base64,${fieldItem.data}`} alt={`${fieldItem.label} preview`} w="100%" h="100%" />
         )}
         <ActionIcon 
           style={{ position: 'relative', top: -30, right: -2 }} 
           variant="subtle" 
           color="dark.3"
-          onClick={() => selectedNode && openModal(inputOrOutput, item.label)}
+          onClick={() => selectedNode && openModal(inputOrOutput, fieldItem.label)}
         >
           <IconEye />
         </ActionIcon>
@@ -102,32 +95,36 @@ function InspectorPanel() {
     );
   };
 
-  const renderInputs = (inputs: NodeInput[]) => (
+  const renderInputs = (inputs: NodeField[]) => (
     <Flex w="100%" direction="column">
       <Title order={4}>Inputs:</Title>
       {inputs.map((input) => {
-        if (input.type === 'image' && input.input_data) {
+        if (input.dtype === 'image' && input.data) {
           return renderImageItem(input, 'input');
         }
         return (
           <Text key={input.label}>
-            <Text fw={700} span>{input.label}:</Text> <Text span>{String(input.input_data?.data)} (Type: {input.type}) </Text>
+            <Text fw={700} span>{input.label} </Text>
+            <Text span>({input.dtype}) : </Text>
+            <Text span>{String(input.data ?? '')} </Text>
           </Text>
         );
       })}
     </Flex>
   );
 
-  const renderOutputs = (outputs: NodeOutput[]) => (
+  const renderOutputs = (outputs: NodeField[]) => (
     <Box mt="md" w="100%">
       <Title order={4}>Outputs:</Title>
       {outputs.map((output) => {
-        if (output.type === 'image' && output.output_data) {
+        if (output.dtype === 'image' && output.data) {
           return renderImageItem(output, 'output');
         }
         return (
           <Text key={output.label}>
-            <Text fw={700} span>{output.label}</Text>: {String(output.output_data?.data)} (Type: {output.type})
+            <Text fw={700} span>{output.label} </Text>
+            <Text span>({output.dtype}) : </Text>
+            <Text span>{String(output.data ?? '')} </Text>
           </Text>
         );
       })}
@@ -199,7 +196,7 @@ function InspectorPanel() {
             {selectedNode ? (
               <>
                 <Flex direction="row" align="center" justify="space-between">
-                  <Title order={3}>{`Node: ${selectedNodeData.name}`}</Title>
+                  <Title order={3}>{`Node: ${selectedNodeData.display_name}`}</Title>
                   <Badge color={getStatusColor(selectedNodeData.status, theme)}>
                     {selectedNodeData.status}
                   </Badge>

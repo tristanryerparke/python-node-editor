@@ -8,7 +8,6 @@ from typing import Any
 
 LARGE_DATA_CACHE = {}
 
-
 def image_to_base64(img: np.ndarray) -> str:
     '''converts a numpy array to a base64 encoded string'''
     img = Image.fromarray(img.astype(np.uint8))
@@ -26,8 +25,12 @@ def base64_to_image(base64_str: str) -> np.ndarray:
 
 def prep_data_for_frontend_serialization(dtype: str, data: Any) -> str:
     '''catches and converts non-serializable small data types before sending to frontend'''
-    if dtype == 'json':
-        return data  # json doesn't need preprocessing
+
+    if isinstance(data, type(None)):
+        return data
+    
+    if dtype == 'json' or dtype == 'string' or dtype == 'number':
+        return data
 
     elif dtype == 'numpy':
         return data.tolist()  # convert numpy array to list
@@ -43,7 +46,11 @@ def prep_data_for_frontend_serialization(dtype: str, data: Any) -> str:
 
 def prep_data_for_frontend_deserialization(dtype: str, data: Any) -> Any:
     '''re-instantiates non-serializable data types when receiving small data from frontend'''
-    if dtype == 'json':
+    
+    if isinstance(data, type(None)):
+        return data
+    
+    elif dtype == 'json' or dtype == 'string' or dtype == 'number':
         return data  # json doesn't need preprocessing
 
     elif dtype == 'numpy':
