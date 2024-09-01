@@ -46,7 +46,7 @@ def find_and_load_classes(directory: str):
                     continue
 
             display_name = getattr(module, 'DISPLAY_NAME', module_name)
-            all_classes[display_name] = classes
+            all_classes[display_name.replace('Node', '')] = classes
 
     return all_classes
 

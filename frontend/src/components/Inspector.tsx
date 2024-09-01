@@ -199,7 +199,7 @@ function InspectorPanel() {
             {selectedNode ? (
               <>
                 <Flex direction="row" align="center" justify="space-between">
-                  <Title order={3}>{`Node: ${selectedNodeData.name.replace('Node', '')}`}</Title>
+                  <Title order={3}>{`Node: ${selectedNodeData.name}`}</Title>
                   <Badge color={getStatusColor(selectedNodeData.status, theme)}>
                     {selectedNodeData.status}
                   </Badge>
