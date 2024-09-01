@@ -8,24 +8,22 @@ export function useSaveFlow() {
     const saveFlow = useCallback(async () => {
         setIsSaving(true);
         try {
-            // find data that should be embedded and store it in the flow object
             const flow: any = reactFlow.toObject();
             flow.embedded_data = {};
             for (const node of flow.nodes) {
                 node.data.status = 'not evaluated';
                 if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
-                    for (const input of node.data.inputs) {
-                        const handleId = `${node.id}-input-${input.label}`;
+                    for (const inputField of node.data.inputs) {
+                        const handleId = `${node.id}-input-${inputField.label}`;
                         const isEdgeConnected = flow.edges.some((edge: Edge) => edge.target === node.id && edge.targetHandle === handleId);
                         
-                        if (!isEdgeConnected && input.input_data && input.input_data.cached) {
+                        if (!isEdgeConnected && inputField.data && inputField.cached) {
                             console.log('found input to cache');
                             try {
-                                const response = await fetch(`http://localhost:8000/data/${input.input_data.id}?dtype=${input.input_data.dtype}`);
+                                const response = await fetch(`http://localhost:8000/data/${inputField.id}?dtype=${inputField.dtype}`);
                                 if (response.ok) {
-                                    
                                     const fullData = await response.text();
-                                    flow.embedded_data[input.input_data.id] = fullData.replace(/"/g, '');
+                                    flow.embedded_data[inputField.id] = fullData.replace(/"/g, '');
                                 }
                             } catch (error) {
                                 console.error('Error fetching full data:', error);
@@ -65,16 +63,18 @@ export function useLoadFlow() {
                     for (const node of flow.nodes) {
                         node.data.status = 'not evaluated';
                         if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
-                            for (const input of node.data.inputs) {
-                                const handleId = `${node.id}-input-${input.label}`;
+                            for (const inputField of node.data.inputs) {
+                                const handleId = `${node.id}-input-${inputField.label}`;
                                 const isEdgeConnected = flow.edges.some((edge: any) => edge.target === node.id && edge.targetHandle === handleId);
                                 
-                                if (!isEdgeConnected && input.input_data && input.input_data.cached) {
-                                    // prep the data to be sent to the backend
+                                if (!isEdgeConnected && inputField.data && inputField.cached) {
+                                    // we can't use a copy here because it caused issues when instatiating data on the backend
                                     const jsonRepresentation = {
-                                        dtype: input.input_data.dtype,
-                                        data: flow.embedded_data[input.input_data.id],
-                                        id: input.input_data.id
+                                        dtype: inputField.dtype,
+                                        data: flow.embedded_data[inputField.id],
+                                        id: inputField.id,
+                                        label: inputField.label,
+                                        field_type: inputField.field_type,
                                     };
                                     const formData = new FormData();
                                     const blob = new Blob([JSON.stringify(jsonRepresentation)], { type: 'application/json' });
@@ -82,7 +82,6 @@ export function useLoadFlow() {
                                     formData.append('original_filename', 'embedded_data');
                                     formData.append('file_extension', 'json');
                                     
-                                    // send the large data to the backend and replace the cached data with the full data
                                     try {
                                         const response = await fetch('http://localhost:8000/large_file_upload', {
                                             method: 'POST',
@@ -90,7 +89,7 @@ export function useLoadFlow() {
                                         });
                                         if (response.ok) {
                                             const data = await response.json();
-                                            input.input_data.data = data;
+                                            inputField.data = data;
                                         }
                                     } catch (error) {
                                         console.error('Error fetching full data:', error);
@@ -104,7 +103,6 @@ export function useLoadFlow() {
                 reactFlow.setNodes(flow.nodes);
                 reactFlow.setEdges(flow.edges);
                 
-                // Set the viewport if it exists in the loaded flow
                 if (flow.viewport) {
                     reactFlow.setViewport(flow.viewport);
                 }

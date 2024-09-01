@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Tuple
 from ..datatypes.base_node import BaseNode
-from ..datatypes.fields import NodeInput, NodeOutput
+from ..datatypes.field import NodeField
 
 MAXSIZE = 10
 
@@ -12,19 +12,19 @@ class ReplaceNode(BaseNode):
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls,
-        text: NodeInput(label='text', type='string', value=""),
-        old: NodeInput(label='old', type='string', value=""),
-        new: NodeInput(label='new', type='string', value="")
-    ) -> NodeOutput(label='replace_result', type='string'):
-        return NodeOutput(label='replace_result', type='string', value=text.replace(old, new))
+        text: NodeField(field_type='input', label='text', dtype='string', data=""),
+        old: NodeField(field_type='input', label='old', dtype='string', data=""),
+        new: NodeField(field_type='input', label='new', dtype='string', data="")
+    ) -> NodeField(field_type='output', label='replace_result', dtype='string'):
+        return NodeField(field_type='output', label='replace_result', dtype='string', data=text.data.replace(old.data, new.data))
 
 class JoinNode(BaseNode):
     @classmethod
     @lru_cache(maxsize=MAXSIZE)
     def exec(
         cls,
-        separator: NodeInput(label='separator', type='string', value=""),
-        a: NodeInput(label='a', type='string', value=""),
-        b: NodeInput(label='b', type='string', value="")
-    ) -> NodeOutput(label='join_result', type='string'):
-        return NodeOutput(label='join_result', type='string', value=separator.join([a, b]))
+        separator: NodeField(field_type='input', label='separator', dtype='string', data=""),
+        a: NodeField(field_type='input', label='a', dtype='string', data=""),
+        b: NodeField(field_type='input', label='b', dtype='string', data="")
+    ) -> NodeField(field_type='output', label='join_result', dtype='string'):
+        return NodeField(field_type='output', label='join_result', dtype='string', data=separator.data.join([a.data, b.data]))

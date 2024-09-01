@@ -1,43 +1,42 @@
 import { useState, useEffect } from "react";
 import { FileInput, Loader } from "@mantine/core";
-import { Data, NodeInputImage } from '../../types/DataTypes';
 import { IconUpload, IconX } from "@tabler/icons-react";
+import { NodeField } from "../../types/DataTypes";
 
 export interface ImageUploaderProps {
-  input: NodeInputImage | null;
+  inputField: NodeField | null;
   isEdgeConnected: boolean;
-  onChange: (label: string, value: Data) => void;
+  onChange: (id: string, value: NodeField) => void;
 }
 
-function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
+function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProps) {
   const [fileValue, setFileValue] = useState<File | null>(null);
   const [dummyFile, setDummyFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (input && isEdgeConnected) {
-      setDummyFile(new File([], input.input_data?.description || ''));
-    } else if (input && input.input_data && input.input_data.description) {
-      setFileValue(new File([], input.input_data.description));
+    if (inputField && isEdgeConnected) {
+      setDummyFile(new File([], inputField.description || ''));
+    } else if (inputField && inputField.data && inputField.description) {
+      setFileValue(new File([], inputField.description));
     } else {
       setDummyFile(null);
       setFileValue(null);
     }
-  }, [isEdgeConnected, input]);
+  }, [isEdgeConnected, inputField]);
 
   function handleUpload(file: File | null) {
-    if (file && input) {
+
+    if (file && inputField) {
+      console.log('Uploading image');
       setIsLoading(true);
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        const jsonRepresentation = {
-          dtype: 'image',
-          data: base64String,
-        };
+        const updatedInputField = { ...inputField, data: base64String };
 
         const formData = new FormData();
-        const blob = new Blob([JSON.stringify(jsonRepresentation)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(updatedInputField)], { type: 'application/json' });
         formData.append('file', blob, 'large_data.json');
         formData.append('original_filename', file.name);
         formData.append('file_extension', file.name.split('.').pop() || '');
@@ -50,7 +49,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
 
           if (response.ok) {
             const result = await response.json();
-            onChange(input.label, result);
+            onChange(inputField.id, result as NodeField);
           } else {
             console.error('Failed to upload large file');
           }
@@ -63,7 +62,7 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       reader.readAsDataURL(file);
       setFileValue(file);
     } else {
-      onChange(input?.label || '', {} as Data);
+      onChange(inputField?.id || '', { data: '' } as NodeField);
       setFileValue(null);
     }
   }
@@ -76,16 +75,16 @@ function ImageInput({input, isEdgeConnected, onChange}: ImageUploaderProps) {
       w='100%'
       rightSection={<IconX
         size={20} style={{cursor: 'pointer'}}
-        onClick={() => {handleUpload(null)}}
+        onClick={() => { handleUpload(null) }}
         opacity={isEdgeConnected || !fileValue ? 0 : 1}
       />}
       disabled={isEdgeConnected}
       value={isEdgeConnected ? dummyFile : fileValue}
       placeholder={isEdgeConnected ? "Connected" : "Upload image"}
       style={{overflow: 'hidden'}}
-      onChange={(file) => file && handleUpload(file)}
+      onChange={(file) => handleUpload(file)}
     />
-  ) 
+  )
 }
 
 export default ImageInput;

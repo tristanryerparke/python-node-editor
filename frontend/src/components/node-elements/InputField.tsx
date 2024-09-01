@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { NodeInput, Data } from '../../types/DataTypes';
+import { NodeField } from '../../types/DataTypes';
 import { NumberInput, TextInput, Flex, Tooltip, Text } from '@mantine/core';
 import { Handle, Position, useEdges } from '@xyflow/react';
 import { useMantineTheme } from '@mantine/core';
@@ -7,62 +7,53 @@ import ImageInput from './ImageUploader';
 
 export interface InputFieldProps {
   nodeId: string;
-  input: NodeInput;
-  onChange: (label: string, value: Data) => void;
+  inputField: NodeField;
+  onChange: (label: string, value: any) => void;
 }
 
-export default function InputField({ nodeId, input, onChange }: InputFieldProps) {
+export default function InputField({ nodeId, inputField, onChange }: InputFieldProps) {
   const theme = useMantineTheme();
 
-  const handleId = `${nodeId}-input-${input.label}`
+  const handleId = `${nodeId}-input-${inputField.label}`
 
+  // watch for connected edges
   const edges = useEdges()
   const inputEdge = edges.find(edge => edge.target === nodeId && edge.targetHandle === handleId)
   const isEdgeConnected = !!inputEdge
-
   const prevIsEdgeConnectedRef = useRef(isEdgeConnected);
-
   useEffect(() => {
     if (isEdgeConnected && !prevIsEdgeConnectedRef.current) {
-      // console.log('Rising edge: Connection established');
-      onChange(input.label, {} as Data)
-      // Handle rising edge event
+      onChange(inputField.id, { data: '' });
     } else if (!isEdgeConnected && prevIsEdgeConnectedRef.current) {
-      // console.log('Falling edge: Connection lost');
-      onChange(input.label, {} as Data)
+      onChange(inputField.id, { data: '' });
     }
     prevIsEdgeConnectedRef.current = isEdgeConnected;
-  }, [input.label, isEdgeConnected, onChange]);
+  }, [inputField.id, isEdgeConnected, onChange]);
 
 
   const renderInput = () => {
-    switch (input.type) {
-      
-      // Number input
+    switch (inputField.dtype) {
       case 'number':
         return <NumberInput
           w='100%'
-          value={input.input_data?.data ?? ''}
+          value={inputField.data}
           disabled={isEdgeConnected}
-          onChange={(value) => onChange(input.label, { ...input.input_data, data: value } as Data)}
+          onChange={(value) => onChange(inputField.id, { data: value })}
         />;
 
-      // Text input
       case 'string':
         return <TextInput
           w='100%'
-          value={input.input_data?.data ?? ''}
+          value={inputField.data}
           disabled={isEdgeConnected}
-          onChange={(e) => onChange(input.label, { ...input.input_data, data: e.currentTarget.value } as Data)}
+          onChange={(e) => onChange(inputField.id, { data: e.currentTarget.value })}
         />;
 
       case 'image':
-        // console.log(input)
         return <ImageInput
-          input={input}
+          inputField={inputField}
           isEdgeConnected={isEdgeConnected}
-          // disabled={isEdgeConnected}
-          onChange={onChange}
+          onChange={(id, value) => onChange(id, value)}
         />
 
       default:
@@ -72,7 +63,7 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
 
   return (
     <Flex style={{position: 'relative'}} px='0.5rem' my='auto' align='center' justify='space-between' w='100%'>
-      <Tooltip offset={15} floatingStrategy='fixed' label={input.type} color='dark.3' position='left' withArrow arrowSize={8}>
+      <Tooltip offset={15} floatingStrategy='fixed' label={inputField.dtype} color='dark.3' position='left' withArrow arrowSize={8}>
         <Flex style={{flexGrow: 0}}>
         <Handle
             type="target"
@@ -88,7 +79,7 @@ export default function InputField({ nodeId, input, onChange }: InputFieldProps)
             }}
           />
 
-        <Text px="0.5rem">{input.label}</Text>
+        <Text px="0.5rem">{inputField.label}</Text>
         </Flex>
       </Tooltip>
       {renderInput()}

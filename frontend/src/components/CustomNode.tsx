@@ -3,7 +3,7 @@ import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
 import NodeTopBar from './node-elements/NodeTopBar';
 import { NodeSelectionContext } from '../GlobalContext';
-import { BaseNodeData, NodeInput, NodeOutput } from '../types/DataTypes';
+import { BaseNodeData, NodeField } from '../types/DataTypes';
 
 import InputField from './node-elements/InputField';
 import OutputField from './node-elements/OutputField';
@@ -13,38 +13,39 @@ type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   const reactFlow = useReactFlow();
 
-
-  const updateNodeData = useCallback((label: string, value: any) => {
+  // For when the user changes the value of an input field
+  // Updates the field data based on the id and clears node outputs
+  const updateNodeData = useCallback((fieldId: string, value: Partial<NodeField>) => {
     const newData = { ...data };
+    // console.log('Updating node data:', fieldId, value);
 
-    const inputIndex = newData.inputs.findIndex((input: NodeInput) => input.label === label);
+    const inputIndex = newData.inputs.findIndex((input: NodeField) => input.id === fieldId);
     if (inputIndex !== -1) {
-      newData.inputs[inputIndex].input_data = value;
+      newData.inputs[inputIndex] = { ...newData.inputs[inputIndex], ...value };
     }
 
-    newData.outputs = newData.outputs.map(output => ({ ...output, output_data: null }));
+    newData.outputs = newData.outputs.map(output => ({ ...output, data: null }));
     newData.status = 'not evaluated';
 
     reactFlow.setNodes((nds) =>
       nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
     );
+  }, [data, reactFlow]);
 
-  }, [data, reactFlow, id]);
-
-  const renderInputComponent = (input: NodeInput) => (
+  const renderInputComponent = (inputField: NodeField) => (
     <InputField 
-      key={`${id}-input-${input.label}`}
+      key={`${id}-input-${inputField.label}`}
       nodeId={id} 
-      input={input} 
+      inputField={inputField} 
       onChange={updateNodeData}
     />
   );
 
-  const renderOutputComponent = (output: NodeOutput) => (
+  const renderOutputComponent = (outputField: NodeField) => (
     <OutputField
-      key={`${id}-output-${output.label}`}
+      key={`${id}-output-${outputField.label}`}
       nodeId={id} 
-      output={output} 
+      outputField={outputField} 
     />
   );
 
@@ -82,7 +83,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
 
       <Flex direction='column' gap='0.5rem' py='0.5rem' w='100%'>
-        {data.inputs.map((input) => renderInputComponent(input))}
+        {data.inputs.map((inputField) => renderInputComponent(inputField))}
       </Flex>
 
       <Divider orientation='horizontal' color='dark.3' w='100%'/>

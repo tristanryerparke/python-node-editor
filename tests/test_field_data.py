@@ -16,7 +16,7 @@ from pydantic import (
 from devtools import debug as d
 
 
-from backend.datatypes.field_data import Data
+from backend.datatypes.field import Data
 from backend.datatypes.field_data_utils import get_string_size_mb, image_to_base64
 
 
