@@ -16,7 +16,7 @@ from pydantic import (
 from devtools import debug as d
 
 
-from backend.datatypes.field import Data
+from backend.datatypes.field import NodeField
 from backend.datatypes.field_data_utils import get_string_size_mb, image_to_base64
 
 
@@ -26,9 +26,9 @@ def test_serialize_and_deserialize():
     MAX_SIZE = 0.1
 
     # create two data instances, one large and one small
-    large_data = Data(dtype='json', data='AAA'*100000,
+    large_data = NodeField(dtype='json', data='AAA'*100000,
                       max_file_size_mb=MAX_SIZE)
-    small_data = Data(dtype='json', data='BBB', max_file_size_mb=MAX_SIZE)
+    small_data = NodeField(dtype='json', data='BBB', max_file_size_mb=MAX_SIZE)
 
     # cached should be true for large data, false for small data
     assert large_data.cached == True
@@ -52,8 +52,8 @@ def test_serialize_and_deserialize():
     assert '...' in large_data_serialized_dict['data']
     assert not '...' in small_data_serialized_dict['data']
 
-    large_data_deserialized = Data.model_validate_json(large_data_json)
-    small_data_deserialized = Data.model_validate_json(small_data_json)
+    large_data_deserialized = NodeField.model_validate_json(large_data_json)
+    small_data_deserialized = NodeField.model_validate_json(small_data_json)
 
     # after deserialization, both cached and un-cached data should be complete
     assert large_data_deserialized.data == large_data.data
@@ -74,18 +74,18 @@ def test_different_basic_data_types():
 
     small_data_inst_with_different_types = [
         # small data
-        Data(dtype='json', data='this is some test string data',
+        NodeField(dtype='json', data='this is some test string data',
              max_file_size_mb=MAX_SIZE),  # string
-        Data(dtype='json', data=1234567890, max_file_size_mb=MAX_SIZE),  # int
-        Data(dtype='json', data=123.456, max_file_size_mb=MAX_SIZE),  # float
-        Data(dtype='json', data=True, max_file_size_mb=MAX_SIZE),  # bool
-        Data(dtype='json', data=None, max_file_size_mb=MAX_SIZE),  # None
-        Data(dtype='json', data=[1, 2],
+        NodeField(dtype='json', data=1234567890, max_file_size_mb=MAX_SIZE),  # int
+        NodeField(dtype='json', data=123.456, max_file_size_mb=MAX_SIZE),  # float
+        NodeField(dtype='json', data=True, max_file_size_mb=MAX_SIZE),  # bool
+        NodeField(dtype='json', data=None, max_file_size_mb=MAX_SIZE),  # None
+        NodeField(dtype='json', data=[1, 2],
              max_file_size_mb=MAX_SIZE),  # list of ints
-        Data(dtype='json', data={'a': 1, 'b': 2},
+        NodeField(dtype='json', data={'a': 1, 'b': 2},
              max_file_size_mb=MAX_SIZE),  # dict with ints
         # nested list with differing data
-        Data(dtype='json', data=[['a', 'b'], 2], max_file_size_mb=MAX_SIZE),
+        NodeField(dtype='json', data=[['a', 'b'], 2], max_file_size_mb=MAX_SIZE),
     ]
 
     # serialize and deserialize each
@@ -99,17 +99,17 @@ def test_different_basic_data_types():
         # check that the size of the json string is within the max size too
         assert get_string_size_mb(di_json) <= MAX_SIZE
 
-        di_deserialized = Data.model_validate_json(di_json)
+        di_deserialized = NodeField.model_validate_json(di_json)
 
         # check that the data was not disturbed
         assert di.data == di_deserialized.data
 
     large_data_inst_with_different_types = [
         # nested list with differing data
-        Data(dtype='json', data=[['a', 'b'] * \
+        NodeField(dtype='json', data=[['a', 'b'] * \
              100000, 2], max_file_size_mb=MAX_SIZE),
         # nested list with differing data
-        Data(dtype='json', data=[
+        NodeField(dtype='json', data=[
              ['a', {'b': 20}] * 100000, None], max_file_size_mb=MAX_SIZE),
     ]
 
@@ -124,7 +124,7 @@ def test_different_basic_data_types():
         # check that the size of the json string is within the max size too
         assert get_string_size_mb(di_json) <= MAX_SIZE
 
-        di_deserialized = Data.model_validate_json(di_json)
+        di_deserialized = NodeField.model_validate_json(di_json)
 
         # # check that the data was not disturbed
         assert di.data == di_deserialized.data
@@ -139,7 +139,7 @@ def test_as_if_coming_from_frontend():
         'dtype': 'json'
     })
 
-    datamodel = Data.model_validate_json(data_from_frontend)
+    datamodel = NodeField.model_validate_json(data_from_frontend)
 
     assert datamodel.cached == True
 
@@ -154,8 +154,8 @@ def test_numpy():
     '''tests direct creation and ser/deser of numpy arrays'''
     max_size = 0.1
 
-    small_numpy = Data(dtype='numpy', data=np.ones((10, 10)))
-    big_numpy = Data(dtype='numpy', data=np.ones(
+    small_numpy = NodeField(dtype='numpy', data=np.ones((10, 10)))
+    big_numpy = NodeField(dtype='numpy', data=np.ones(
         (1000, 1000)), max_file_size_mb=max_size)
 
     assert small_numpy.cached == False
@@ -168,8 +168,8 @@ def test_numpy():
     assert get_string_size_mb(small_numpy_json) <= max_size
     assert get_string_size_mb(big_numpy_json) <= max_size
 
-    small_numpy_deserialized = Data.model_validate_json(small_numpy_json)
-    big_numpy_deserialized = Data.model_validate_json(big_numpy_json)
+    small_numpy_deserialized = NodeField.model_validate_json(small_numpy_json)
+    big_numpy_deserialized = NodeField.model_validate_json(big_numpy_json)
 
     # check that the data was not disturbed
     assert small_numpy.data.all() == small_numpy_deserialized.data.all()
@@ -184,7 +184,7 @@ def test_numpy_from_frontend():
         "dtype" : "numpy"
     }'''
 
-    datamodel = Data.model_validate_json(data_from_frontend)
+    datamodel = NodeField.model_validate_json(data_from_frontend)
 
     assert datamodel.cached == False
     assert type(datamodel.data) == np.ndarray
@@ -199,9 +199,9 @@ def test_image():
     small_img = np.array(Image.new('RGB', (100, 100), color=(255, 255, 255)))
     big_img = np.array(Image.open('monkey_1mb.png'))
 
-    small_image = Data(dtype='image', data=small_img,
+    small_image = NodeField(dtype='image', data=small_img,
                        max_file_size_mb=max_size)
-    big_image = Data(dtype='image', data=big_img, max_file_size_mb=max_size)
+    big_image = NodeField(dtype='image', data=big_img, max_file_size_mb=max_size)
 
     assert small_image.cached == False
     assert big_image.cached == True
@@ -212,8 +212,8 @@ def test_image():
     assert get_string_size_mb(small_image_json) <= max_size
     assert get_string_size_mb(big_image_json) <= max_size
 
-    small_image_deserialized = Data.model_validate_json(small_image_json)
-    big_image_deserialized = Data.model_validate_json(big_image_json)
+    small_image_deserialized = NodeField.model_validate_json(small_image_json)
+    big_image_deserialized = NodeField.model_validate_json(big_image_json)
 
     assert small_image.data.all() == small_image_deserialized.data.all()
     assert big_image.data.all() == big_image_deserialized.data.all()
@@ -236,7 +236,7 @@ def test_image_from_frontend():
         'max_file_size_mb': max_file_size
     })
 
-    datamodel = Data.model_validate_json(dict_from_frontend)
+    datamodel = NodeField.model_validate_json(dict_from_frontend)
 
     # show the image
     # Image.fromarray(datamodel.data).show()
@@ -249,7 +249,7 @@ def test_image_from_frontend():
 
     assert get_string_size_mb(datamodel_json) <= max_file_size
 
-    datamodel_re = Data.model_validate_json(datamodel_json)
+    datamodel_re = NodeField.model_validate_json(datamodel_json)
 
     # check that the data was not disturbed
     assert datamodel.data.all() == datamodel_re.data.all()
@@ -282,14 +282,14 @@ def test_nested_classes():
         eggs: list[Egg]
 
     # register the parent classes with the Data class
-    Data.class_options = {'Chicken': Chicken}
+    NodeField.class_options = {'Chicken': Chicken}
 
     c = Chicken(name='Bantam', eggs=[
         Egg(color='brown'*300000, diameter=2.5),
         Egg(color='white', diameter=2.75)
     ])
 
-    data_with_chicken = Data(
+    data_with_chicken = NodeField(
         dtype='basemodel',
         data=c,
         max_file_size_mb=0.1,
@@ -299,7 +299,7 @@ def test_nested_classes():
 
     # serialize and deserialize
     data_with_chicken_json = data_with_chicken.model_dump_json()
-    data_with_chicken_re = Data.model_validate_json(data_with_chicken_json)
+    data_with_chicken_re = NodeField.model_validate_json(data_with_chicken_json)
 
     assert data_with_chicken.data.name == data_with_chicken_re.data.name
     assert data_with_chicken.data.eggs[0].color == data_with_chicken_re.data.eggs[0].color
@@ -314,11 +314,11 @@ def test_data_inside_other_class():
     max_size = 0.1
 
     class DataContainer(BaseModel):
-        data_inside: Data
+        data_inside: NodeField
 
-    dc_lg = DataContainer(data_inside=Data(
+    dc_lg = DataContainer(data_inside=NodeField(
         dtype='json', data='AAA'*100000, max_file_size_mb=0.1))
-    dc_sm = DataContainer(data_inside=Data(
+    dc_sm = DataContainer(data_inside=NodeField(
         dtype='json', data='BBB', max_file_size_mb=0.1))
 
     dc_lg_json = dc_lg.model_dump_json()
@@ -370,13 +370,13 @@ def test_data_nested_with_numpy_internals():
     assert dc_sm.np_data.all() == dc_sm_re.np_data.all()
     assert dc_lg.np_data.all() == dc_lg_re.np_data.all()
 
-    Data.class_options = {'DataContainer': DataContainer}
+    NodeField.class_options = {'DataContainer': DataContainer}
 
     max_size = 0.1
 
-    sm_data_with_numpy_child = Data(
+    sm_data_with_numpy_child = NodeField(
         dtype='basemodel', data=dc_sm, max_file_size_mb=max_size)
-    lg_data_with_numpy_child = Data(
+    lg_data_with_numpy_child = NodeField(
         dtype='basemodel', data=dc_lg, max_file_size_mb=max_size)
 
     assert sm_data_with_numpy_child.cached == False
@@ -389,9 +389,9 @@ def test_data_nested_with_numpy_internals():
     d(json.loads(sm_data_with_numpy_child_json))
     d(json.loads(lg_data_with_numpy_child_json))
 
-    sm_data_with_numpy_child_re = Data.model_validate_json(
+    sm_data_with_numpy_child_re = NodeField.model_validate_json(
         sm_data_with_numpy_child_json)
-    lg_data_with_numpy_child_re = Data.model_validate_json(
+    lg_data_with_numpy_child_re = NodeField.model_validate_json(
         lg_data_with_numpy_child_json)
 
     assert sm_data_with_numpy_child.data.np_data.all(
