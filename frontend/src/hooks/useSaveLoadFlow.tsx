@@ -1,4 +1,4 @@
-import { useReactFlow } from '@xyflow/react';
+import { useReactFlow, type Edge } from '@xyflow/react';
 import { useCallback, useState } from 'react';
 
 export function useSaveFlow() {
@@ -8,15 +8,15 @@ export function useSaveFlow() {
     const saveFlow = useCallback(async () => {
         setIsSaving(true);
         try {
-            const flow = reactFlow.toObject();
+            // find data that should be embedded and store it in the flow object
+            const flow: any = reactFlow.toObject();
             flow.embedded_data = {};
-            
             for (const node of flow.nodes) {
                 node.data.status = 'not evaluated';
                 if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
                     for (const input of node.data.inputs) {
                         const handleId = `${node.id}-input-${input.label}`;
-                        const isEdgeConnected = flow.edges.some(edge => edge.target === node.id && edge.targetHandle === handleId);
+                        const isEdgeConnected = flow.edges.some((edge: Edge) => edge.target === node.id && edge.targetHandle === handleId);
                         
                         if (!isEdgeConnected && input.input_data && input.input_data.cached) {
                             console.log('found input to cache');
@@ -67,7 +67,7 @@ export function useLoadFlow() {
                         if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
                             for (const input of node.data.inputs) {
                                 const handleId = `${node.id}-input-${input.label}`;
-                                const isEdgeConnected = flow.edges.some(edge => edge.target === node.id && edge.targetHandle === handleId);
+                                const isEdgeConnected = flow.edges.some((edge: any) => edge.target === node.id && edge.targetHandle === handleId);
                                 
                                 if (!isEdgeConnected && input.input_data && input.input_data.cached) {
                                     // prep the data to be sent to the backend

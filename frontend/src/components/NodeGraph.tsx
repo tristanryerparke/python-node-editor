@@ -1,33 +1,54 @@
-import React, { useCallback, useContext, useEffect } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
   ReactFlow,
   MiniMap,
   Controls,
   Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  useReactFlow,
-  type NodeTypes,
-  useOnSelectionChange,
   BackgroundVariant,
+  addEdge,
+  applyNodeChanges,
+  applyEdgeChanges,
+  
+  type Node,
+  type Edge,
+  type NodeTypes,
+  type OnConnect,
+  type OnNodesChange,
+  type OnEdgesChange,
+  useOnSelectionChange,
+  useReactFlow,
+  
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
 import CustomNode from './CustomNode';
 import { NodeSelectionContext } from '../GlobalContext';
 import { BaseNodeData } from '../types/DataTypes';
-import type { Node, Edge } from '@xyflow/react';
 
 const nodeTypes: NodeTypes = {
   customNode: CustomNode,
 };
 
 const NodeGraph: React.FC = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+
+  // const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  // const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition, getViewport, setViewport } = useReactFlow();
   const { setSelectedNodeId } = useContext(NodeSelectionContext);
+
+  const onNodesChange: OnNodesChange = useCallback(
+    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [setNodes],
+  );
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [setEdges],
+  );
+  const onConnect: OnConnect = useCallback(
+    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    [setEdges],
+  );
 
   useEffect(() => {
     const savedFlow = localStorage.getItem('savedFlow');
@@ -54,11 +75,6 @@ const NodeGraph: React.FC = () => {
     return () => window.removeEventListener('beforeunload', saveFlow);
   }, [nodes, edges, getViewport]);
 
-  const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
-
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -81,7 +97,7 @@ const NodeGraph: React.FC = () => {
         type: 'customNode',
         data: {...droppedNodeData},
       };
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) => [...nds, newNode as Node]);
     },
     [screenToFlowPosition, setNodes]
   );
