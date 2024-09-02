@@ -4,7 +4,7 @@ import traceback
 # import cProfile
 from pydantic import BaseModel
 
-from .datatypes.base_node import BaseNode
+from .datatypes.base_node import BaseNode, StreamingBaseNode
 from .utils import topological_sort
 from fastapi import WebSocket
 import asyncio
@@ -95,28 +95,28 @@ class ExecutionWrapper:
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
 
             # send a status update
-            await self.send_update({"status": "node_update", "node_id": node_id, "node_status": node_instance.data.status})
-            
+            await self.send_update({"event": "node_data_update", "node_id": node_id, "updates": {
+                "status": node_instance.data.status,
+                "terminal_output": node_instance.data.terminal_output,
+                "error_output": node_instance.data.error_output,
+            }})
+
             # Allow other tasks to run
             await asyncio.sleep(0)
 
             try:
                 if node_instance.data.streaming:
+                    node_instance: StreamingBaseNode
+                    node_instance.data.terminal_output = ''
+                    node_instance.data.error_output = ''
+
                     for item in node_instance.meta_exec():
-                        self.current_stream.append(item)
-                        print(f"Server: Streaming item {item}")
-                        if item.get('status') == 'progress':
-                            print(f"Server: Streaming item {item}")
-                            for key, value in item.items():
-                                if key != 'status':
-                                    node_instance.data.outputs[key].output_data = value
-                            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
+                        if node_instance.streaming_info.get('status') == 'progress':
+                            await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
                             await asyncio.sleep(0)
-                        elif item.get('status') == 'complete':
-                            print(f"Server: Node {node_id} completed with result {item}")
-                            for key, value in item.items():
-                                if key != 'status':
-                                    node_instance.data.outputs[key].output_data = value
+                    if node_instance.streaming_info.get('status') == 'complete':
+                        print(f"Server: Node {node_id} completed with result {item}")
+
                 else:
                     node_instance.meta_exec()
 
@@ -134,7 +134,7 @@ class ExecutionWrapper:
                 print(f"Traceback:\n{traceback.format_exc()}")
 
             # send a full update
-            await self.send_update({"status": "node_update", "node": node_instance.model_dump_json()})
+            await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
             
             # allow other tasks to run
             await asyncio.sleep(0)
@@ -158,7 +158,7 @@ class ExecutionWrapper:
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")
 
-        await self.send_update({"status": "finished"})
+        await self.send_update({"event": "execution_finished"})
 
         self.current_node = None
         self.current_stream = []

@@ -95,8 +95,16 @@ def create_thumbnail(data, max_file_size_mb):
 def get_string_size_mb(s: str) -> float:
     return len(s.encode('utf-8')) / (1024 * 1024)
 
+def expire_old_cache():
+    '''removes old cache data from disk'''
+    with shelve.open(DISK_CACHE_FILE) as db:
+        for key in db:
+            if datetime.now() - datetime.fromisoformat(db[key]['timestamp']) > DISK_CACHE_EXPIRY:
+                del db[key]
+
 def save_cache_to_disk():
     '''saves the large data cache to disk'''
+    expire_old_cache()
     with shelve.open(DISK_CACHE_FILE) as db:
         for key, value in LARGE_DATA_CACHE.items():
             db[key] = {
@@ -104,13 +112,6 @@ def save_cache_to_disk():
                 'dtype': value['dtype'],
                 'timestamp': datetime.now().isoformat()
             }
-
-def expire_old_cache():
-    '''removes old cache data from disk'''
-    with shelve.open(DISK_CACHE_FILE) as db:
-        for key in db:
-            if datetime.now() - datetime.fromisoformat(db[key]['timestamp']) > DISK_CACHE_EXPIRY:
-                del db[key]
 
 def get_or_load_from_cache(id):
     '''loads data from cache if it exists, otherwise loads from disk'''

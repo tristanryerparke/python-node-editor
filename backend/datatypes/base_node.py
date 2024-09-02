@@ -1,4 +1,3 @@
-
 from typing import Generic, NamedTuple, Tuple
 import numpy as np
 import time
@@ -24,11 +23,21 @@ class CaptureOutput:
 
     def __enter__(self):
         self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
-        sys.stdout, sys.stderr = self.stdout, self.stderr
+        sys.stdout = self
+        sys.stderr = self
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout, sys.stderr = self.old_stdout, self.old_stderr
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
+
+    def write(self, message):
+        self.old_stdout.write(message)
+        self.stdout.write(message)
+
+    def flush(self):
+        self.old_stdout.flush()
+        self.stdout.flush()
 
     def get_output(self):
         return self.stdout.getvalue(), self.stderr.getvalue()
@@ -115,22 +124,18 @@ class BaseNode(BaseModel):
             sig = signature(exec_method)
 
             if isinstance(sig.return_annotation, NodeField):
-                output_instances = [sig.return_annotation]
+                self.data.outputs = [sig.return_annotation]
             elif get_origin(sig.return_annotation) is tuple:
-                output_instances = list(get_args(sig.return_annotation))
+                self.data.outputs = list(get_args(sig.return_annotation))
             else:
-                output_instances = list(sig.return_annotation)
-        
-        else:
-            output_instances = self.data.outputs
-        
-        self.data.outputs = output_instances
+                self.data.outputs = list(sig.return_annotation)
+         
 
     @classmethod
     def exec(cls, **kwargs):
         print('you ran the dummy exec method of BaseNodeData')
         return ({'default': True},)
-
+    
     def meta_exec(self):
         # Extract only the 'value' from each input
 
@@ -159,8 +164,11 @@ class BaseNode(BaseModel):
 
 
 
+from collections.abc import Generator
+
 class StreamingBaseNode(BaseNode):
     data: BaseNodeData = BaseNodeData(streaming=True)
+    streaming_info: Dict[str, Any] = {}
 
     @classmethod
     def exec_stream(cls, **kwargs):
@@ -169,18 +177,50 @@ class StreamingBaseNode(BaseNode):
             yield {'status': 'progress', 'value': f'progress: {i}'}
             time.sleep(1)
         yield {'default': True}  # exec_stream now yields a dictionary
+
+    def analyze_outputs(self):
+        if len(self.data.outputs) == 0:
+
+            if self.data.streaming:
+                exec_method = getattr(self.__class__, 'exec_stream')
+            else:
+                exec_method = getattr(self.__class__, 'exec')
+
+            sig = signature(exec_method)
+
+            func_outputs = get_args(get_args(sig.return_annotation)[0])
+            # streaming_data = func_outputs[0]
+
+            self.data.outputs = func_outputs[1:]
+
+
     
     def meta_exec(self):
-        exec_inputs = {k: v.data for k, v in self.data.inputs.items()}
+
+        exec_method = getattr(self.__class__, 'exec_stream')
+        kwargs = {}
+        sig = signature(exec_method)
+
+        for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
+            kwargs[name] = inpt
 
         with CaptureOutput() as output:
-            for result in self.__class__.exec_stream(**exec_inputs):
-                for key, value in result.items():
-                    self.data.outputs[key].output_data = value
-                yield result
-
-        stdout, stderr = output.get_output()
-        self.data.terminal_output = stdout
-        self.data.error_output = stderr
+            for result in exec_method(**kwargs):
+                self.streaming_info = result[0]
+                self.data.outputs = [result[1]]
+                stdout, stderr = output.get_output()
+                self.data.terminal_output += stdout
+                self.data.error_output += stderr
+                output.stdout = StringIO()  # Reset stdout capture
+                output.stderr = StringIO()  # Reset stderr capture
+                yield [result[1]]
 
         self.data.status = 'evaluated'
+
+        if isinstance(result, tuple):
+            result = list(result)
+        else:
+            result = [result]
+
+        self.data.status = 'evaluated'
+
