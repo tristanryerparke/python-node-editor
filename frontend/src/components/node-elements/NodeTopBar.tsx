@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Group, Text, ActionIcon, useMantineTheme, Tooltip } from '@mantine/core';
+import { Flex,Group, Text, ActionIcon, useMantineTheme, Tooltip, Progress } from '@mantine/core';
 import { useNodesData } from '@xyflow/react';
 import { IconInfoCircle, IconCode, IconLicense, IconRosetteDiscountCheck, IconX } from '@tabler/icons-react';
 import { InspectorContext, NodeSelectionContext, PanelsContext } from '../../GlobalContext';
@@ -49,55 +49,63 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   const isNodeLocked = isLocked && lockedNodeId === id;
 
   return (
-    <Group w='100%' justify='space-between' pl='0.5rem'>
-      <Tooltip
-        label={nodeData.description || 'No Description'}
-        color='dark.3'
-        withArrow
-        arrowSize={8}
-        multiline
-        w='200px'
-      >
-        <Text fw={700} p='0rem' m='0rem' style={{ cursor: 'help' }}>
-          {nodeData.display_name}
-        </Text>
-      </Tooltip>
-      <Group m='0.25rem' p={0} gap='0.2rem' justify='flex-end'>
-        {(nodeData.streaming) && (
-          <Tooltip label="Streaming Node" color='dark.3' withArrow arrowSize={8}>
-            <IconLicense color='var(--mantine-color-indigo-5)' size={20} />
+    <Flex direction='column' p={0} m={0} gap='0rem' w='100%' align='center' justify='center'>
+      <Group w='100%' justify='space-between' pl='0.5rem' mb={0}>
+        <Tooltip
+          label={nodeData.description || 'No Description'}
+          color='dark.3'
+          withArrow
+          arrowSize={8}
+          multiline
+          w='200px'
+        >
+          <Text fw={700} p='0rem' m='0rem' style={{ cursor: 'help' }}>
+            {nodeData.display_name}
+          </Text>
+        </Tooltip>
+        <Group m='0.25rem' p={0} gap='0.2rem' justify='flex-end'>
+          {(nodeData.streaming) && (
+            <Tooltip label="Streaming Node" color='dark.3' withArrow arrowSize={8}>
+              <IconLicense color='var(--mantine-color-indigo-5)' size={20} />
+            </Tooltip>
+          )}
+          <Tooltip label="View Source Code" color='dark.3' withArrow arrowSize={8}>
+            <ActionIcon variant='subtle' size='sm' color='dark.2' radius='xl' onClick={handleCodeClick}>
+              <IconCode />
+            </ActionIcon>
           </Tooltip>
-        )}
-        <Tooltip label="View Source Code" color='dark.3' withArrow arrowSize={8}>
-          <ActionIcon variant='subtle' size='sm' color='dark.2' radius='xl' onClick={handleCodeClick}>
-            <IconCode />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label={isNodeLocked ? "Unlock Inspector" : "Lock Inspector to Node"} color='dark.3' withArrow arrowSize={8}>
-          <ActionIcon 
-            variant='subtle' 
-            size='sm' 
-            color={isNodeLocked ? 'red.5' : 'dark.2'} 
-            radius='xl' 
-            onClick={handleInfoClick}
-          >
-            <IconInfoCircle />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label={`Status: ${nodeData.status}`} color='dark.3' withArrow>
-          <ActionIcon variant='subtle' size='sm' color={statusColor} radius='xl' loading={nodeData.status === 'executing' || nodeData.status === 'streaming'}>
-            {nodeData.status === 'error' ? (
-              <IconX color={statusColor} size={20} />
-            ) : (
-              <IconRosetteDiscountCheck 
-                color={statusColor}
-                size={20} 
-              />
-            )}
-          </ActionIcon>
-        </Tooltip>
+          <Tooltip label={isNodeLocked ? "Unlock Inspector" : "Lock Inspector to Node"} color='dark.3' withArrow arrowSize={8}>
+            <ActionIcon 
+              variant='subtle' 
+              size='sm' 
+              color={isNodeLocked ? 'red.5' : 'dark.2'} 
+              radius='xl' 
+              onClick={handleInfoClick}
+            >
+              <IconInfoCircle />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={`Status: ${nodeData.status}`} color='dark.3' withArrow>
+            <ActionIcon variant='subtle' size='sm' color={statusColor} radius='xl' loading={nodeData.status === 'executing' || nodeData.status === 'streaming'}>
+              {nodeData.status === 'error' ? (
+                <IconX color={statusColor} size={20} />
+              ) : (
+                <IconRosetteDiscountCheck 
+                  color={statusColor}
+                  size={20} 
+                />
+              )}
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+        
       </Group>
-    </Group>
+      <Group w='100%' justify='center' px='0.5rem'>
+        {nodeData.streaming && nodeData.progress !== undefined && (
+            <Progress value={nodeData.progress * 100} size='xs' w='100%' color="indigo.5" mt={0}mb='0.25rem'/>
+          )}
+      </Group>
+    </Flex>
   );
 };
 

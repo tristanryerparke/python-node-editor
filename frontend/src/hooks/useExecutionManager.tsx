@@ -41,23 +41,21 @@ export function useExecutionManager() {
 
       websocketRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.status === 'node_update') {
-          const { node_id, node_status, node } = data;
-          if (node) {
-            const updatedNode = JSON.parse(node);
-            reactFlow.setNodes(nds => 
-              nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
-            );
+        if (data.event === 'node_data_update') {
+          const { node_id, updates } = data;
+          reactFlow.setNodes(nds => 
+            nds.map(n => n.id === node_id ? { ...n, data: { ...n.data, ...updates } } : n)
+          );
+        } else if (data.event === 'full_node_update') {
+          const { node } = data;
+          const updatedNode = JSON.parse(node);
+          if (updatedNode.data.streaming) {
+            console.log('progress', updatedNode.data.progress)
           }
-          if (node_status) {
-            reactFlow.setNodes(nds => 
-              nds.map(n => n.id === node_id ? { ...n, data: { ...n.data, status: node_status } } : n)
-            );
-          }
-          if (node_status === 'error') {
-            resetPendingNodes();
-          }
-        } else if (data.status === 'finished') {
+          reactFlow.setNodes(nds => 
+            nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
+          );
+        } else if (data.event === 'execution_finished') {
           resetPendingNodes();
           setIsExecuting(false);
         }
