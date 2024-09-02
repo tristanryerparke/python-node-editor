@@ -13,10 +13,11 @@ from pydantic import (
 
 from .field_data_utils import (
     truncate_repr,
-    prep_data_for_frontend_serialization,
-    prep_data_for_frontend_deserialization,
+    field_data_serlialization_prep,
+    field_data_deserilaization_prep,
     create_thumbnail,
     LARGE_DATA_CACHE,
+    get_or_load_from_cache,
 )
 
 MAX_FILE_SIZE_MB = 0.1
@@ -38,14 +39,14 @@ class NodeField(BaseModel):
     def serialize_data(self, data: Any, _info: Any) -> Any:
         '''return a truncated repr of the data if big (cached), otherwise return the data'''
         if self.cached:
-            LARGE_DATA_CACHE[self.id] = data
+            LARGE_DATA_CACHE[self.id] = {'dtype':self.dtype, 'data': data}
             print(f"Stored data in LARGE_DATA_CACHE for id: {self.id}")
             if self.dtype == 'image':
                 return create_thumbnail(data, self.max_file_size_mb)
             else:
                 return truncate_repr(data)
         else:
-            return prep_data_for_frontend_serialization(self.dtype, data)
+            return field_data_serlialization_prep(self.dtype, data)
     
     @computed_field(alias='cached', title='Flag for large data cached in db', repr=True)
     @property
@@ -94,18 +95,19 @@ class NodeField(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def load_cached_data(cls, values: dict):
-        '''loads data from cache if the id is in the cache, and replaces the data attribute with the deserialized data'''
         if values.get('cached', False):
-            if values['id'] in LARGE_DATA_CACHE:
-                values['data'] = LARGE_DATA_CACHE[values['id']]
-                print(f"Loaded data from LARGE_DATA_CACHE for id: {values['id']}")
+            data = get_or_load_from_cache(values['id'])
+            if data is not None:
+                values['data'] = data
+                print(f"Loaded data for id: {values['id']}")
+            else:
+                print(f"Failed to load data for id: {values['id']}")
         else:
             if values.get('data', None) is not None:
-                values['data'] = prep_data_for_frontend_deserialization(values['dtype'], values['data'])
+                values['data'] = field_data_deserilaization_prep(values['dtype'], values['data'])
             if values['dtype'] == 'basemodel':
                 if isinstance(values['data'], dict):
                     values['data'] = cls.class_options[values['data']['class_name']].model_validate(values['data'])
-        # add the class name to the values
         values['class_name'] = cls.__name__
         return values
 

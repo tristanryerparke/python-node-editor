@@ -2,11 +2,16 @@ import io
 import json
 import base64
 import reprlib
+import shelve
 import numpy as np
 from PIL import Image
 from typing import Any
+import os
+from datetime import datetime, timedelta
 
 LARGE_DATA_CACHE = {}
+DISK_CACHE_FILE = "large_data_cache"
+DISK_CACHE_EXPIRY = timedelta(hours=2)
 
 def image_to_base64(img: np.ndarray) -> str:
     '''converts a numpy array to a base64 encoded string'''
@@ -23,7 +28,7 @@ def base64_to_image(base64_str: str) -> np.ndarray:
     img_data = base64.b64decode(base64_str)
     return np.array(Image.open(io.BytesIO(img_data)))
 
-def prep_data_for_frontend_serialization(dtype: str, data: Any) -> str:
+def field_data_serlialization_prep(dtype: str, data: Any) -> str:
     '''catches and converts non-serializable small data types before sending to frontend'''
 
     if isinstance(data, type(None)):
@@ -44,7 +49,7 @@ def prep_data_for_frontend_serialization(dtype: str, data: Any) -> str:
     else:
         raise TypeError('unsupported dtype for frontend serialization')
 
-def prep_data_for_frontend_deserialization(dtype: str, data: Any) -> Any:
+def field_data_deserilaization_prep(dtype: str, data: Any) -> Any:
     '''re-instantiates non-serializable data types when receiving small data from frontend'''
     
     if isinstance(data, type(None)):
@@ -89,3 +94,35 @@ def create_thumbnail(data, max_file_size_mb):
 
 def get_string_size_mb(s: str) -> float:
     return len(s.encode('utf-8')) / (1024 * 1024)
+
+def save_cache_to_disk():
+    '''saves the large data cache to disk'''
+    with shelve.open(DISK_CACHE_FILE) as db:
+        for key, value in LARGE_DATA_CACHE.items():
+            db[key] = {
+                'data': field_data_serlialization_prep(value['dtype'], value['data']),
+                'dtype': value['dtype'],
+                'timestamp': datetime.now().isoformat()
+            }
+
+def expire_old_cache():
+    '''removes old cache data from disk'''
+    with shelve.open(DISK_CACHE_FILE) as db:
+        for key in db:
+            if datetime.now() - datetime.fromisoformat(db[key]['timestamp']) > DISK_CACHE_EXPIRY:
+                del db[key]
+
+def get_or_load_from_cache(id):
+    '''loads data from cache if it exists, otherwise loads from disk'''
+    if id in LARGE_DATA_CACHE:
+        return LARGE_DATA_CACHE[id]['data']
+    else:
+        expire_old_cache()
+        with shelve.open(DISK_CACHE_FILE) as db:
+            if id in db:
+                value = db[id]
+                if datetime.now() - datetime.fromisoformat(value['timestamp']) < DISK_CACHE_EXPIRY:
+                    data = field_data_deserilaization_prep(value['dtype'], value['data'])
+                    LARGE_DATA_CACHE[id] = {'data': data, 'dtype': value['dtype']}
+                    return data
+    return None

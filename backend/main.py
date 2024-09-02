@@ -1,17 +1,33 @@
 import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import APIRouter, WebSocket
 from starlette.websockets import WebSocketState, WebSocketDisconnect
+import json
+import os
+from datetime import datetime, timedelta
 
 from .routes.full_data import full_data_list_router
 from .routes.large_files_upload import large_files_router
 from .execution_wrapper import ExecutionWrapper
 from .utils import find_and_load_classes
 from .datatypes.base_node import BaseNode
+from .datatypes.field_data_utils import save_cache_to_disk
 
+CACHE_SAVE_INTERVAL_MINS = 1
 
-app = FastAPI()
+# 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    cache_save_task = asyncio.create_task(periodic_cache_save())
+    yield
+    # Shutdown
+    cache_save_task.cancel()
+    await cache_save_task
+    save_cache_to_disk()
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,6 +42,12 @@ app.include_router(large_files_router)
 
 EXECUTION_WRAPPER = ExecutionWrapper()
 EXECUTION_WRAPPER.classes_dict = find_and_load_classes("backend/nodes")
+
+async def periodic_cache_save():
+    while True:
+        await asyncio.sleep(CACHE_SAVE_INTERVAL_MINS * 60)
+        save_cache_to_disk()
+        print("Cache saved")
 
 @app.websocket("/execute")
 async def websocket_endpoint(websocket: WebSocket):
@@ -58,7 +80,6 @@ def get_all_nodes():
         nodes_dict[key] = category_list
 
     return nodes_dict
-
 
 if __name__ == "__main__":
     import uvicorn
