@@ -148,43 +148,14 @@ from collections.abc import Generator
 
 class StreamingBaseNode(BaseNode):
     data: StreamingNodeData = StreamingNodeData(streaming=True)
-
-    def analyze_outputs(self):
-        if len(self.data.outputs) == 0:
-
-            if self.data.streaming:
-                exec_method = getattr(self.__class__, 'exec_stream')
-            else:
-                exec_method = getattr(self.__class__, 'exec')
-
-            sig = signature(exec_method)
-
-            func_outputs = get_args(get_args(sig.return_annotation)[0])
-        
-
-            outputs = get_args(func_outputs[1:][0])[3]
-
-            print(type(outputs))
-
-            if isinstance(outputs, NodeField):
-                self.data.outputs = [outputs]
-                
-            else:
-                self.data.outputs = list(get_args(outputs))
-                
-
     
-    def meta_exec(self):
+    def meta_exec_stream(self):
+        
+        kwargs = {inp.label: inp.data for inp in self.data.inputs}
 
-        exec_method = getattr(self.__class__, 'exec_stream')
-        kwargs = {}
-        sig = signature(exec_method)
-
-        for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
-            kwargs[name] = inpt
 
         with CaptureOutput() as output:
-            for result in exec_method(**kwargs):
+            for result in self.__class__.exec_stream(**kwargs):
                 self.data.progress = result.get('progress', 0)
                 self.data.outputs = result.get('outputs', self.data.outputs)
                 stdout, stderr = output.get_output()
@@ -193,13 +164,6 @@ class StreamingBaseNode(BaseNode):
                 output.stdout = StringIO()  # Reset stdout capture
                 output.stderr = StringIO()  # Reset stderr capture
                 yield result
-
-        self.data.status = 'evaluated'
-
-        if isinstance(result, tuple):
-            result = list(result)
-        else:
-            result = [result]
 
         self.data.status = 'evaluated'
 

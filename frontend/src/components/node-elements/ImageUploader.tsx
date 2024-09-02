@@ -33,7 +33,8 @@ function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProp
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        const updatedInputField = { ...inputField, data: base64String };
+        const { cached, id, ...rest } = inputField;
+        const updatedInputField = { ...rest, data: base64String };
 
         const formData = new FormData();
         const blob = new Blob([JSON.stringify(updatedInputField)], { type: 'application/json' });
@@ -49,6 +50,7 @@ function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProp
 
           if (response.ok) {
             const result = await response.json();
+            console.log('Uploaded large file:', result.id);
             onChange(inputField.id, result as NodeField);
           } else {
             console.error('Failed to upload large file');
