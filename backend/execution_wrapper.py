@@ -111,11 +111,8 @@ class ExecutionWrapper:
                     node_instance.data.error_output = ''
 
                     for item in node_instance.meta_exec():
-                        if node_instance.streaming_info.get('status') == 'progress':
-                            await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
-                            await asyncio.sleep(0)
-                    if node_instance.streaming_info.get('status') == 'complete':
-                        print(f"Server: Node {node_id} completed with result {item}")
+                        await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
+                        await asyncio.sleep(0)
 
                 else:
                     node_instance.meta_exec()

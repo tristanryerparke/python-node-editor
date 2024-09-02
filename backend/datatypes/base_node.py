@@ -59,6 +59,9 @@ class BaseNodeData(BaseModel):
     streaming: bool = False
     definition_path: str = ''
 
+class StreamingNodeData(BaseNodeData):
+    progress: float = 0
+
 
 def image_to_base64(im: np.ndarray) -> str:
     buffered = BytesIO()
@@ -167,16 +170,7 @@ class BaseNode(BaseModel):
 from collections.abc import Generator
 
 class StreamingBaseNode(BaseNode):
-    data: BaseNodeData = BaseNodeData(streaming=True)
-    streaming_info: Dict[str, Any] = {}
-
-    @classmethod
-    def exec_stream(cls, **kwargs):
-        print('you ran the dummy exec_stream method of StreamingBaseNodeData')
-        for i in range(10):
-            yield {'status': 'progress', 'value': f'progress: {i}'}
-            time.sleep(1)
-        yield {'default': True}  # exec_stream now yields a dictionary
+    data: StreamingNodeData = StreamingNodeData(streaming=True)
 
     def analyze_outputs(self):
         if len(self.data.outputs) == 0:
@@ -189,10 +183,19 @@ class StreamingBaseNode(BaseNode):
             sig = signature(exec_method)
 
             func_outputs = get_args(get_args(sig.return_annotation)[0])
-            # streaming_data = func_outputs[0]
+        
 
-            self.data.outputs = func_outputs[1:]
+            outputs = get_args(func_outputs[1:][0])[3]
 
+            print(type(outputs))
+
+            if isinstance(outputs, NodeField):
+                self.data.outputs = [outputs]
+                
+            else:
+                self.data.outputs = list(get_args(outputs))
+                
+            d(self.data.outputs)
 
     
     def meta_exec(self):
@@ -206,14 +209,14 @@ class StreamingBaseNode(BaseNode):
 
         with CaptureOutput() as output:
             for result in exec_method(**kwargs):
-                self.streaming_info = result[0]
-                self.data.outputs = [result[1]]
+                self.data.progress = result.get('progress', 0)
+                self.data.outputs = result.get('outputs', self.data.outputs)
                 stdout, stderr = output.get_output()
                 self.data.terminal_output += stdout
                 self.data.error_output += stderr
                 output.stdout = StringIO()  # Reset stdout capture
                 output.stderr = StringIO()  # Reset stderr capture
-                yield [result[1]]
+                yield result
 
         self.data.status = 'evaluated'
 

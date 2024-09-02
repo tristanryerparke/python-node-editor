@@ -47,8 +47,11 @@ export function useExecutionManager() {
             nds.map(n => n.id === node_id ? { ...n, data: { ...n.data, ...updates } } : n)
           );
         } else if (data.event === 'full_node_update') {
-          const { node_id, node } = data;
+          const { node } = data;
           const updatedNode = JSON.parse(node);
+          if (updatedNode.data.streaming) {
+            console.log('progress', updatedNode.data.progress)
+          }
           reactFlow.setNodes(nds => 
             nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
           );
