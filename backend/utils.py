@@ -39,8 +39,7 @@ def find_and_load_classes(directory: str):
                 try:
                     source_file = inspect.getsourcefile(obj)
                     start_line = inspect.getsourcelines(obj)[1]
-                    definition_path = f"{source_file}:{start_line}"
-                    obj.definition_path = definition_path
+                    obj.definition_path = f"{source_file}:{start_line}"
                 except OSError:
                     print(f"Error getting source file for {obj.__name__}")
                     continue

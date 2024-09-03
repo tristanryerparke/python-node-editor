@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 import io
 import json
+from ..datatypes.field_data_utils import save_cache_to_disk
+
 large_files_router = APIRouter()
 
 @large_files_router.post("/large_file_upload")
@@ -18,6 +20,7 @@ async def handle_large_file(
 
     data_instance = NodeField.model_validate_json(json_str)
 
+    save_cache_to_disk()
     return data_instance.model_dump()
 
 

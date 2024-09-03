@@ -59,7 +59,7 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
           multiline
           w='200px'
         >
-          <Text fw={700} p='0rem' m='0rem' style={{ cursor: 'help' }}>
+          <Text fw={700} p='0rem' m='0rem' >
             {nodeData.display_name}
           </Text>
         </Tooltip>

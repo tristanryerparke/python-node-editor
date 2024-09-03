@@ -95,13 +95,14 @@ class NodeField(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def load_cached_data(cls, values: dict):
-        if values.get('cached', False):
-            data = get_or_load_from_cache(values['id'])
-            if data is not None:
-                values['data'] = data
-                print(f"Loaded data for id: {values['id']}")
+        if values.get('field_type', 'input') == 'output':
+            values['data'] = None
+
+        elif values.get('cached', False):
+            if values['id'] in LARGE_DATA_CACHE:
+                values['data'] = LARGE_DATA_CACHE[values['id']]['data']
             else:
-                print(f"Failed to load data for id: {values['id']}")
+                values['data'] = get_or_load_from_cache(values['id'])
         else:
             if values.get('data', None) is not None:
                 values['data'] = field_data_deserilaization_prep(values['dtype'], values['data'])

@@ -63,6 +63,11 @@ class ExecutionWrapper:
                             if input['label'] == target_handle:
                                 input['data'] = None
 
+            # Set outputs to None
+            if 'data' in node and 'outputs' in node['data']:
+                for output in node['data']['outputs']:
+                    output['data'] = None
+
             node_type = node['data']['class_name']
             namespace = node['data']['namespace']
             NodeClass = next((cls for cls in self.classes_dict.get(namespace, []) if cls.__name__ == node_type), None)
@@ -110,7 +115,7 @@ class ExecutionWrapper:
                     node_instance.data.terminal_output = ''
                     node_instance.data.error_output = ''
 
-                    for item in node_instance.meta_exec():
+                    for item in node_instance.meta_exec_stream():
                         await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
                         await asyncio.sleep(0)
 

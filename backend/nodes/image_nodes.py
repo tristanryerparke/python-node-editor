@@ -6,45 +6,53 @@ from PIL import Image, ImageFilter
 from devtools import debug as d
 
 from ..datatypes.field import NodeField
-from ..datatypes.base_node import BaseNode
+from ..datatypes.base_node import BaseNode, node_definition
 
-MAXSIZE = 10
 
 DISPLAY_NAME = "Image"
 
 class ImageFromUrlNode(BaseNode):
     @classmethod
-    def exec(
-        cls, 
-        url: NodeField(field_type='input', label='URL', dtype='string', data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true')
-    ) -> NodeField(field_type='output', label='Image', dtype='image'):
-        url: str = url.data
-        
-        image_url = ImageUrl(url)
+    @node_definition(
+        inputs=[
+            NodeField(field_type='input', label='URL', dtype='string', data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true')
+        ],
+        outputs=[
+            NodeField(field_type='output', label='Image', dtype='image')
+        ]
+    )
+    def exec(cls, URL: str) -> np.ndarray:
+        image_url = ImageUrl(URL)
         image_tensor = np.array(image_url.load())
-        return NodeField(field_type='output', label='Image', dtype='image', data=image_tensor)
+        return image_tensor
 
 class BlurImageNode(BaseNode):
     @classmethod
-    def exec(
-        cls,
-        image: NodeField(field_type='input', label='A', dtype='image'),
-        radius: NodeField(field_type='input', label='B', dtype='number', data=5)
-    ) -> NodeField(field_type='output', label='Blurred Image', dtype='image'):
-        image: np.ndarray = image.data
-        radius: float = radius.data
-
-
+    @node_definition(
+        inputs=[
+            NodeField(field_type='input', label='image', dtype='image'),
+            NodeField(field_type='input', label='radius', dtype='number', data=5)
+        ],
+        outputs=[
+            NodeField(field_type='output', label='Blurred Image', dtype='image')
+        ]
+    )
+    def exec(cls, image: np.ndarray, radius: float) -> np.ndarray:
         img = Image.fromarray(image.astype(np.uint8))
         img = img.filter(ImageFilter.GaussianBlur(radius=radius))
-        return NodeField(field_type='output', label='Blurred Image', dtype='image', data=np.array(img))
+        return np.array(img)
 
 class FlipHorizontallyNode(BaseNode):
     @classmethod
-    def exec(
-        cls,
-        image: NodeField(field_type='input', label='Image', dtype='image')
-    ) -> NodeField(field_type='output', label='Flipped Image', dtype='image'):
-        img = Image.fromarray(image.data.astype(np.uint8))
+    @node_definition(
+        inputs=[
+            NodeField(field_type='input', label='image', dtype='image')
+        ],
+        outputs=[
+            NodeField(field_type='output', label='flipped_image', dtype='image')
+        ]
+    )
+    def exec(cls, image: np.ndarray) -> np.ndarray:
+        img = Image.fromarray(image.astype(np.uint8))
         flipped_img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-        return NodeField(field_type='output', label='Flipped Image', dtype='image', data=np.array(flipped_img))
+        return np.array(flipped_img)

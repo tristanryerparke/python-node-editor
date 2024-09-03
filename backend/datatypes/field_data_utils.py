@@ -97,33 +97,51 @@ def get_string_size_mb(s: str) -> float:
 
 def expire_old_cache():
     '''removes old cache data from disk'''
-    with shelve.open(DISK_CACHE_FILE) as db:
-        for key in db:
-            if datetime.now() - datetime.fromisoformat(db[key]['timestamp']) > DISK_CACHE_EXPIRY:
+    try:
+        with shelve.open(DISK_CACHE_FILE) as db:
+            keys_to_delete = []
+            for key in db:
+                if datetime.now() - datetime.fromisoformat(db[key]['timestamp']) > DISK_CACHE_EXPIRY:
+                    keys_to_delete.append(key)
+            for key in keys_to_delete:
                 del db[key]
+    except Exception as e:
+        print(f"Error expiring old cache: {e}")
+        if os.path.exists(DISK_CACHE_FILE):
+            os.remove(DISK_CACHE_FILE)
 
 def save_cache_to_disk():
     '''saves the large data cache to disk'''
-    expire_old_cache()
-    with shelve.open(DISK_CACHE_FILE) as db:
-        for key, value in LARGE_DATA_CACHE.items():
-            db[key] = {
-                'data': field_data_serlialization_prep(value['dtype'], value['data']),
-                'dtype': value['dtype'],
-                'timestamp': datetime.now().isoformat()
-            }
-
-def get_or_load_from_cache(id):
-    '''loads data from cache if it exists, otherwise loads from disk'''
-    if id in LARGE_DATA_CACHE:
-        return LARGE_DATA_CACHE[id]['data']
-    else:
+    try:
         expire_old_cache()
         with shelve.open(DISK_CACHE_FILE) as db:
-            if id in db:
-                value = db[id]
-                if datetime.now() - datetime.fromisoformat(value['timestamp']) < DISK_CACHE_EXPIRY:
-                    data = field_data_deserilaization_prep(value['dtype'], value['data'])
-                    LARGE_DATA_CACHE[id] = {'data': data, 'dtype': value['dtype']}
-                    return data
+            for key, value in LARGE_DATA_CACHE.items():
+                db[key] = {
+                    'data': field_data_serlialization_prep(value['dtype'], value['data']),
+                    'dtype': value['dtype'],
+                    'timestamp': datetime.now().isoformat()
+                }
+    except Exception as e:
+        print(f"Error saving cache to disk: {e}")
+        if os.path.exists(DISK_CACHE_FILE):
+            os.remove(DISK_CACHE_FILE)
+
+def get_or_load_from_cache(id: str):
+    '''loads data from cache if it exists, otherwise loads from disk'''
+    try:
+        expire_old_cache()
+        with shelve.open(DISK_CACHE_FILE) as db:
+                if id in db:
+                    value = db[id]
+                    if datetime.now() - datetime.fromisoformat(value['timestamp']) < DISK_CACHE_EXPIRY:
+                        data = field_data_deserilaization_prep(value['dtype'], value['data'])
+                        print(f'Loading {id} from disk cache')
+                        LARGE_DATA_CACHE[id] = {'data': data, 'dtype': value['dtype']}
+                        return data
+    except Exception as e:
+        print(f"Error loading {id} from disk cache: {e}")
+        if os.path.exists(DISK_CACHE_FILE):
+            os.remove(DISK_CACHE_FILE)
     return None
+
+#Stored data in LARGE_DATA_CACHE for id: 97ebcdde-004e-4593-b2dc-740ea33b6997

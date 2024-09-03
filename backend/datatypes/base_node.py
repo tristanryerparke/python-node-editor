@@ -14,6 +14,18 @@ from pydantic import BaseModel, ConfigDict
 
 from .field import NodeField
 from devtools import debug as d
+
+def node_definition(inputs: list[NodeField], outputs: list[NodeField]):
+    '''decorator to define the inputs and outputs of a node'''
+    def decorator(func):
+        func._inputs = inputs
+        func._outputs = outputs
+        def wrapper(cls, **kwargs):
+            return func(cls, **kwargs)
+        wrapper._inputs = inputs
+        wrapper._outputs = outputs
+        return wrapper
+    return decorator
     
 
 class CaptureOutput:
@@ -95,44 +107,16 @@ class BaseNode(BaseModel):
         
         if len(self.data.inputs) == 0:
             if self.data.streaming:
-                exec_method = getattr(self.__class__, 'exec_stream')
+                self.data.inputs = getattr(self.__class__, 'exec_stream')._inputs
             else:
-                exec_method = getattr(self.__class__, 'exec')
-
-            input_instances = []
-
-            sig = signature(exec_method)
-            for name, param in sig.parameters.items():
-                if name != 'cls':
-                    # d(param.annotation)
-                    names = [i.label for i in self.data.inputs]
-                    if name not in names:
-                        input_instances.append(param.annotation)
-
-        else:
-            input_instances = self.data.inputs
-
-
-        self.data.inputs = input_instances
-
+                self.data.inputs = getattr(self.__class__, 'exec')._inputs
 
     def analyze_outputs(self):
         if len(self.data.outputs) == 0:
-
             if self.data.streaming:
-                exec_method = getattr(self.__class__, 'exec_stream')
+                self.data.outputs = getattr(self.__class__, 'exec_stream')._outputs
             else:
-                exec_method = getattr(self.__class__, 'exec')
-
-            sig = signature(exec_method)
-
-            if isinstance(sig.return_annotation, NodeField):
-                self.data.outputs = [sig.return_annotation]
-            elif get_origin(sig.return_annotation) is tuple:
-                self.data.outputs = list(get_args(sig.return_annotation))
-            else:
-                self.data.outputs = list(sig.return_annotation)
-         
+                self.data.outputs = getattr(self.__class__, 'exec')._outputs
 
     @classmethod
     def exec(cls, **kwargs):
@@ -140,15 +124,9 @@ class BaseNode(BaseModel):
         return ({'default': True},)
     
     def meta_exec(self):
-        # Extract only the 'value' from each input
 
-        exec_method = getattr(self.__class__, 'exec')
-        kwargs = {}
-        sig = signature(exec_method)
-        
-        for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
-            kwargs[name] = inpt
-        
+        kwargs = {inp.label: inp.data for inp in self.data.inputs}
+
         with CaptureOutput() as output:
             result = self.__class__.exec(**kwargs)
 
@@ -156,12 +134,11 @@ class BaseNode(BaseModel):
         self.data.terminal_output = stdout
         self.data.error_output = stderr
 
-        if isinstance(result, tuple):
-            result = list(result)
+        if len(self.data.outputs) == 1:
+            self.data.outputs[0].data = result
         else:
-            result = [result]
-
-        self.data.outputs = result
+            for outp, res in zip(self.data.outputs, result):
+                outp.data = res
 
         self.data.status = 'evaluated'
 
@@ -171,44 +148,14 @@ from collections.abc import Generator
 
 class StreamingBaseNode(BaseNode):
     data: StreamingNodeData = StreamingNodeData(streaming=True)
-
-    def analyze_outputs(self):
-        if len(self.data.outputs) == 0:
-
-            if self.data.streaming:
-                exec_method = getattr(self.__class__, 'exec_stream')
-            else:
-                exec_method = getattr(self.__class__, 'exec')
-
-            sig = signature(exec_method)
-
-            func_outputs = get_args(get_args(sig.return_annotation)[0])
-        
-
-            outputs = get_args(func_outputs[1:][0])[3]
-
-            print(type(outputs))
-
-            if isinstance(outputs, NodeField):
-                self.data.outputs = [outputs]
-                
-            else:
-                self.data.outputs = list(get_args(outputs))
-                
-            d(self.data.outputs)
-
     
-    def meta_exec(self):
+    def meta_exec_stream(self):
+        
+        kwargs = {inp.label: inp.data for inp in self.data.inputs}
 
-        exec_method = getattr(self.__class__, 'exec_stream')
-        kwargs = {}
-        sig = signature(exec_method)
-
-        for name, inpt in zip(sig.parameters.keys(), self.data.inputs):
-            kwargs[name] = inpt
 
         with CaptureOutput() as output:
-            for result in exec_method(**kwargs):
+            for result in self.__class__.exec_stream(**kwargs):
                 self.data.progress = result.get('progress', 0)
                 self.data.outputs = result.get('outputs', self.data.outputs)
                 stdout, stderr = output.get_output()
@@ -217,13 +164,6 @@ class StreamingBaseNode(BaseNode):
                 output.stdout = StringIO()  # Reset stdout capture
                 output.stderr = StringIO()  # Reset stderr capture
                 yield result
-
-        self.data.status = 'evaluated'
-
-        if isinstance(result, tuple):
-            result = list(result)
-        else:
-            result = [result]
 
         self.data.status = 'evaluated'
 
