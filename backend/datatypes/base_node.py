@@ -157,7 +157,9 @@ class StreamingBaseNode(BaseNode):
         with CaptureOutput() as output:
             for result in self.__class__.exec_stream(**kwargs):
                 self.data.progress = result.get('progress', 0)
-                self.data.outputs = result.get('outputs', self.data.outputs)
+                outputs = result.get('outputs', [])
+                for outp, res in zip(self.data.outputs, outputs):
+                    outp.data = res
                 stdout, stderr = output.get_output()
                 self.data.terminal_output += stdout
                 self.data.error_output += stderr

@@ -34,10 +34,10 @@ class TestStreamingAddNode(StreamingBaseNode):
     ]:
         for i in range(5):
             # yield {'progress': i/5, 'outputs': [NodeField(field_type='output', label='result', dtype='number', data=i)]}
-            yield {'progress': i/5}
+            yield {'progress': i/5, 'outputs': [i]}
             time.sleep(1)
             print(f'this status update came from inside the node: {i}')
-        yield {'progress': 1, 'outputs': [NodeField(field_type='output', label='result', dtype='number', data=a + b)]}
+        yield {'progress': 1, 'outputs': [a + b]}
 
 class TestStreamingSplitNode(StreamingBaseNode):
     description: str = "Test node for streaming that splits a number into two numbers"
@@ -72,7 +72,7 @@ class TestStreamingSplitNode(StreamingBaseNode):
         yield {
             'progress': 1,
             'outputs': [
-                NodeField(field_type='output', label='split_t', dtype='number', data=number * t),
-                NodeField(field_type='output', label='split_1_minus_t', dtype='number', data=number * (1 - t))
+                number * t,
+                number * (1 - t)
             ]
         }
