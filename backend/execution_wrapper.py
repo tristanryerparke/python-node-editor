@@ -28,6 +28,7 @@ class ExecutionWrapper:
         self.node_instances = {}
         self.websocket: WebSocket | None = None
         self.classes_dict = None
+        self.cancel_flag = False
 
     def set_websocket(self, websocket: WebSocket | None):
         self.websocket = websocket
@@ -42,6 +43,12 @@ class ExecutionWrapper:
             print(f"Websocket not set, cannot send message: {message}")
 
     async def execute_graph(self, graph_def: GraphDef):
+        async def check_cancel_flag():
+            await asyncio.sleep(0)
+            if self.cancel_flag:
+                raise ExecutionCancelled("Execution was cancelled")
+
+
         # profiler = cProfile.Profile()
         # profiler.enable()
         start_time = time.time()
@@ -52,6 +59,7 @@ class ExecutionWrapper:
         
         print(f"Starting graph execution... {len(graph_def.nodes)} nodes, {len(graph_def.edges)} edges")
         
+        await check_cancel_flag()
         # Node instantiation
         node_instantiation_start = time.time()
         for node in graph_def.nodes:
@@ -88,6 +96,8 @@ class ExecutionWrapper:
         sort_end = time.time()
         print(f"Topological sort took {sort_end - sort_start:.4f} seconds")
 
+        await check_cancel_flag()
+
         # Node execution
         execution_start = time.time()
         for node_id in sorted_nodes:
@@ -109,10 +119,6 @@ class ExecutionWrapper:
                 "error_output": node_instance.data.error_output,
             }})
 
-            if asyncio.current_task().cancelled():
-                print("Execution was cancelled!!!!!!")
-                raise ExecutionCancelled("Execution was cancelled")
-
             # Allow other tasks to run
             await asyncio.sleep(0)
 
@@ -125,9 +131,7 @@ class ExecutionWrapper:
                     for item in node_instance.meta_exec_stream():
                         await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
                         await asyncio.sleep(0)
-                        if asyncio.current_task().cancelled():
-                            print("Execution was cancelled!!!!!!")
-                            raise ExecutionCancelled("Execution was cancelled")
+                        await check_cancel_flag()
 
                 else:
                     node_instance.meta_exec()
@@ -138,7 +142,9 @@ class ExecutionWrapper:
                 
                 node_instance.data.status = 'evaluated'
 
-            # capture any errors
+                await check_cancel_flag()
+
+
             except Exception as e:
                 node_instance.data.status = 'error'
                 node_instance.data.error_output = f"Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
@@ -170,7 +176,6 @@ class ExecutionWrapper:
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")
 
-        await self.send_update({"event": "execution_finished"})
 
         self.current_node = None
         self.current_stream = []
@@ -180,6 +185,10 @@ class ExecutionWrapper:
         print(f"Total graph execution took {total_time:.4f} seconds")
 
         if self.websocket:
+            if self.cancel_flag:
+                await self.websocket.send_json({"event": "execution_cancelled"})
+            else:
+                await self.websocket.send_json({"event": "execution_finished"})
             await self.websocket.close()
             self.websocket = None
 

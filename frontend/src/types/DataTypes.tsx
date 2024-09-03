@@ -10,6 +10,7 @@ export interface BaseNodeData {
   outputs: NodeField[];
   streaming: boolean;
   definition_path: string;
+  progress: number;
 }
 
 export interface NodeField {

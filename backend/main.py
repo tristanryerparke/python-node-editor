@@ -59,14 +59,12 @@ async def websocket_endpoint(websocket: WebSocket):
             if websocket.client_state == WebSocketState.CONNECTED:
                 data = await websocket.receive_json()
                 if data.get("action") == "execute":
+                    EXECUTION_WRAPPER.cancel_flag = False
                     task = asyncio.create_task(EXECUTION_WRAPPER.execute_graph(data["graph_def"]))
                     tasks.append(task)
                     await websocket.send_json({"event": 'execution_started'})
                 elif data.get("action") == "cancel":
-                    for task in tasks:
-                        task.cancel()
-                    tasks.clear()
-                    # await websocket.send_json({"message": "execution_cancelled"})
+                    EXECUTION_WRAPPER.cancel_flag = True
     except WebSocketDisconnect:
         pass
     finally:

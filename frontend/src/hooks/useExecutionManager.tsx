@@ -4,7 +4,6 @@ import type { Node, Edge } from '@xyflow/react';
 
 export function useExecutionManager() {
   const websocketRef = useRef<WebSocket | null>(null);
-  const autoExecuteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -26,9 +25,17 @@ export function useExecutionManager() {
     if (nodesRef.current.length === 0) return;
     setIsExecuting(true);
 
+    // set all nodes to pending and reset progress on streaming nodes
     nodesRef.current.forEach(node => {
       reactFlow.setNodes(nds => 
-        nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, status: 'pending' } } : n)
+        nds.map(n => n.id === node.id ? {
+          ...n,
+          data: {
+            ...n.data,
+            status: 'pending',
+            progress: n.data.streaming ? 0 : n.data.progress
+          }
+        } : n)
       );
     });
 
@@ -40,6 +47,7 @@ export function useExecutionManager() {
       };
 
       websocketRef.current.onmessage = (event) => {
+        
         const data = JSON.parse(event.data);
         if (data.event === 'node_data_update') {
           const { node_id, updates } = data;
@@ -59,7 +67,7 @@ export function useExecutionManager() {
         } else if (data.event === 'execution_finished') {
           resetPendingNodes();
           setIsExecuting(false);
-        } else if (data.message === "execution_cancelled") {
+        } else if (data.event === "execution_cancelled") {
           setIsExecuting(false);
           setIsCancelling(false);
           resetPendingNodes();
@@ -107,9 +115,6 @@ export function useExecutionManager() {
     return () => {
       if (websocketRef.current) {
         websocketRef.current.close();
-      }
-      if (autoExecuteTimeoutRef.current) {
-        clearTimeout(autoExecuteTimeoutRef.current);
       }
     };
   }, []);
