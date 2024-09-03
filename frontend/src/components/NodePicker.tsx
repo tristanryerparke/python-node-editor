@@ -18,11 +18,11 @@ function NodePicker() {
 
         // Create a set of valid node types
         const validNodeTypes = new Set(
-          Object.values(data).flatMap(nodes => nodes.map(node => node.data.type))
+          Object.values(data).flatMap(nodes => nodes.map(node => node.data.class_name))
         );
 
         // Filter out nodes that are no longer valid
-        setNodes(nodes => nodes.filter(node => validNodeTypes.has(node.type)));
+        setNodes(nodes => nodes.filter(node => validNodeTypes.has(node.data.class_name as string)));
 
         // Remove edges connected to deleted nodes
         setEdges(edges => edges.filter(edge => 
