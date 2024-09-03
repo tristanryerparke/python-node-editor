@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { PanelGroup } from 'react-resizable-panels';
 import NodeGraph from './components/NodeGraph';
 import Header from './components/Header';
-import Inspector from './components/Inspector';
+import Inspector from './components/inspector-elements/Inspector';
 import NodePicker from './components/NodePicker';
 
 import { PanelsContext, NodeSelectionContext, AutoExecuteContext, InspectorContext } from './GlobalContext';

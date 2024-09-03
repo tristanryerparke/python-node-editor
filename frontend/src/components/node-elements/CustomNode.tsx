@@ -1,12 +1,12 @@
 import { memo, useCallback, useContext } from 'react';
 import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
-import NodeTopBar from './node-elements/NodeTopBar';
-import { NodeSelectionContext } from '../GlobalContext';
-import { BaseNodeData, NodeField } from '../types/DataTypes';
+import NodeTopBar from './NodeTopBar';
+import { NodeSelectionContext } from '../../GlobalContext';
+import { BaseNodeData, NodeField } from '../../types/DataTypes';
 
-import InputField from './node-elements/InputField';
-import OutputField from './node-elements/OutputField';
+import InputField from './InputField';
+import OutputField from './OutputField';
 
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 

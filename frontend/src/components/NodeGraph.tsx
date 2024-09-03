@@ -20,7 +20,7 @@ import {
   
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
-import CustomNode from './CustomNode';
+import CustomNode from './node-elements/CustomNode';
 import { NodeSelectionContext } from '../GlobalContext';
 import { BaseNodeData } from '../types/DataTypes';
 

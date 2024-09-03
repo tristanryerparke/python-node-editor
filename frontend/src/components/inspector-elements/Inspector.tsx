@@ -12,14 +12,16 @@ import {
   Image as MantineImage ,
   Modal,
   Loader,
+  Accordion,
+  Table
 } from '@mantine/core'  
 import { useDisclosure } from '@mantine/hooks';
 import { IconLockOpen, IconLockFilled, IconEye } from '@tabler/icons-react';
 import { useContext } from 'react';
-import { NodeSelectionContext, InspectorContext } from '../GlobalContext';
+import { NodeSelectionContext, InspectorContext } from '../../GlobalContext';
 import { useNodes } from '@xyflow/react';
-import { getStatusColor } from '../utils/Colors';
-import type { BaseNodeData, NodeField } from '../types/DataTypes';
+import { getStatusColor } from '../../utils/Colors';
+import type { BaseNodeData, NodeField } from '../../types/DataTypes';
 import { useState, useCallback } from 'react';
 
 function InspectorPanel() {
@@ -96,61 +98,95 @@ function InspectorPanel() {
   };
 
   const renderInputs = (inputs: NodeField[]) => (
-    <Flex w="100%" direction="column">
-      <Title order={4}>Inputs:</Title>
-      {inputs.map((input) => {
-        if (input.dtype === 'image' && input.data) {
-          return renderImageItem(input, 'input');
-        }
-        return (
-          <Text key={input.label}>
-            <Text fw={700} span>{input.label} </Text>
-            <Text span>({input.dtype}) : </Text>
-            <Text span>{String(input.data ?? '')} </Text>
-          </Text>
-        );
-      })}
-    </Flex>
+    <Accordion.Item value="inputs" p={0} m={0}>
+      <Accordion.Control px='0.5rem' py={0} h='2rem'>
+        <Title order={4}>Inputs</Title>
+      </Accordion.Control>
+      <Accordion.Panel p={0} m={0}>
+        <Table withColumnBorders>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Name</Table.Th>
+              <Table.Th>Type</Table.Th>
+              <Table.Th>Value</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {inputs.map((input) => (
+              <Table.Tr key={input.label}>
+                <Table.Td>{input.label}</Table.Td>
+                <Table.Td>{input.dtype}</Table.Td>
+                <Table.Td>
+                  {input.dtype === 'image' && input.data ? (
+                    renderImageItem(input, 'input')
+                  ) : (
+                    String(input.data ?? '')
+                  )}
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Accordion.Panel>
+    </Accordion.Item>
   );
 
   const renderOutputs = (outputs: NodeField[]) => (
-    <Box mt="md" w="100%">
-      <Title order={4}>Outputs:</Title>
-      {outputs.map((output) => {
-        if (output.dtype === 'image' && output.data) {
-          return renderImageItem(output, 'output');
-        }
-        return (
-          <Text key={output.label}>
-            <Text fw={700} span>{output.label} </Text>
-            <Text span>({output.dtype}) : </Text>
-            <Text span>{String(output.data ?? '')} </Text>
+    <Accordion.Item value="outputs" p={0} m={0}>
+      <Accordion.Control px='0.5rem' py={0} h='2rem'>
+        <Title order={4}>Outputs</Title>
+      </Accordion.Control>
+      <Accordion.Panel p='0rem' m='0rem'>
+        <Table withColumnBorders>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Name</Table.Th>
+              <Table.Th>Type</Table.Th>
+              <Table.Th>Value</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {outputs.map((output) => (
+              <Table.Tr key={output.label}>
+                <Table.Td>{output.label}</Table.Td>
+                <Table.Td>{output.dtype}</Table.Td>
+                <Table.Td>
+                  {output.dtype === 'image' && output.data ? (
+                    renderImageItem(output, 'output')
+                  ) : (
+                    String(output.data ?? '')
+                  )}
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Accordion.Panel>
+    </Accordion.Item>
+  );
+
+  const renderTerminalAndErrorOutput = (stdout: string, error: string) => (
+    <Accordion.Item value="terminal" p={0} m={0}>
+      <Accordion.Control px='0.5rem' py={0} h='2rem'>
+        <Title order={4}>Terminal Output</Title>
+      </Accordion.Control>
+      <Accordion.Panel p={0} m={0}>
+        {(stdout || error) && (
+          <ScrollArea h={150} mt="xs">
+            <Text style={{ whiteSpace: 'pre-wrap' }}>
+            {stdout}
+            {error && (
+              <>
+                {stdout && '\n'}
+                <span style={{ color: theme.colors.red[6] }}>{error}</span>
+              </>
+            )}
           </Text>
-        );
-      })}
-    </Box>
-  );
-
-  const renderTerminalOutput = (stdout: string) => (
-    stdout && (
-      <Box mt="md" w="100%">
-        <Title order={4}>Terminal Output:</Title>
-        <ScrollArea h={150} mt="xs">
-          <Text style={{ whiteSpace: 'pre-wrap' }}>{stdout}</Text>
-        </ScrollArea>
-      </Box>
-    )
-  );
-
-  const renderErrorOutput = (error: string) => (
-    error && (
-      <Box mt="md" w="100%">
-        <Title order={4}>Error:</Title>
-        <ScrollArea h={150} mt="xs">
-          <Text style={{ whiteSpace: 'pre-wrap', color: theme.colors.red[6] }}>{error}</Text>
-        </ScrollArea>
-      </Box>
-    )
+          </ScrollArea>
+        )}
+      </Accordion.Panel>
+    </Accordion.Item>
+  
   );
 
   return (
@@ -190,23 +226,25 @@ function InspectorPanel() {
         </ActionIcon>
       </Flex>
       <Divider orientation='horizontal' color='dark.3' w='100%'/>
-      <Flex direction="row" w="100%" h="100%" m={0} p='0.5rem' gap='0.5rem' style={{ overflowY: 'auto' }}>
+      <Flex direction="row" w="100%" h="100%" m={0} p={0}gap='0.5rem' style={{ overflowY: 'auto' }}>
 
           <Flex direction="column" m={0} p={0} w="100%" >
             {selectedNode ? (
               <>
-                <Flex direction="row" align="center" justify="space-between">
+                <Flex direction="row" align="center" justify="space-between" p='0.5rem'>
                   <Title order={3}>{`Node: ${selectedNodeData.display_name}`}</Title>
                   <Badge color={getStatusColor(selectedNodeData.status, theme)}>
                     {selectedNodeData.status}
                   </Badge>
                 </Flex>
-                <Text size="xs" mb="md">{`ID: ${selectedNode.id}`}</Text>
-                <Flex direction="column" w="100%">
-                {renderInputs(selectedNodeData.inputs)}
-                {renderOutputs(selectedNodeData.outputs)}
-                {renderTerminalOutput(selectedNodeData.terminal_output)}
-                {renderErrorOutput(selectedNodeData.error_output)}
+                <Text px='0.5rem' size="xs" pb='0.25rem'>{`ID: ${selectedNode.id}`}</Text>
+                <Divider orientation='horizontal' color='dark.3' w='100%'/>
+                <Flex direction="column" w="100%" p={0} m={0}>
+                  <Accordion multiple={true} p={0} m={0}>
+                    {renderInputs(selectedNodeData.inputs)}
+                    {renderOutputs(selectedNodeData.outputs)}
+                    {renderTerminalAndErrorOutput(selectedNodeData.terminal_output, selectedNodeData.error_output)}
+                  </Accordion>
                 </Flex>
               </>
             ) : (
