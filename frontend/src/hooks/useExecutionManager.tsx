@@ -8,6 +8,7 @@ export function useExecutionManager() {
   const nodesRef = useRef<Node[]>([]);
   const edgesRef = useRef<Edge[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const nodes = useNodes();
   const edges = useEdges();
@@ -25,7 +26,6 @@ export function useExecutionManager() {
     if (nodesRef.current.length === 0) return;
     setIsExecuting(true);
 
-    // Update all nodes to 'pending' status
     nodesRef.current.forEach(node => {
       reactFlow.setNodes(nds => 
         nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, status: 'pending' } } : n)
@@ -49,15 +49,20 @@ export function useExecutionManager() {
         } else if (data.event === 'full_node_update') {
           const { node } = data;
           const updatedNode = JSON.parse(node);
-          if (updatedNode.data.streaming) {
-            console.log('progress', updatedNode.data.progress)
-          }
+          // console.log('updatedNode', updatedNode)
+          // if (updatedNode.data.streaming) {
+          //   console.log('progress', updatedNode.data.progress)
+          // }
           reactFlow.setNodes(nds => 
             nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
           );
         } else if (data.event === 'execution_finished') {
           resetPendingNodes();
           setIsExecuting(false);
+        } else if (data.message === "execution_cancelled") {
+          setIsExecuting(false);
+          setIsCancelling(false);
+          resetPendingNodes();
         }
       };
 
@@ -83,6 +88,11 @@ export function useExecutionManager() {
     console.log(graph_def)
   }, []);
 
+  const cancel = useCallback(() => {
+    setIsCancelling(true);
+    websocketRef.current?.send(JSON.stringify({ action: 'cancel' }));
+  }, []);
+
   const resetPendingNodes = useCallback(() => {
     reactFlow.setNodes(nds => 
       nds.map(node => 
@@ -104,5 +114,5 @@ export function useExecutionManager() {
     };
   }, []);
 
-  return { execute, isExecuting };
+  return { execute, cancel, isExecuting, isCancelling };
 }

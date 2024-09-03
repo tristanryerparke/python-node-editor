@@ -7,7 +7,7 @@ import { useSaveFlow, useLoadFlow } from '../hooks/useSaveLoadFlow';
 
 function Header() {
   const { setPanels } = useContext(PanelsContext);
-  const { execute } = useExecutionManager();
+  const { execute, cancel, isExecuting, isCancelling } = useExecutionManager();
   const { saveFlow, isSaving } = useSaveFlow();
   const { loadFlow, isLoading } = useLoadFlow();
 
@@ -43,8 +43,20 @@ function Header() {
             variant='outline' 
             color='green.4' 
             onClick={execute}
+            disabled={isExecuting}
+            loading={isExecuting && !isCancelling}
           >
             Execute
+          </Button>
+          <Button
+            size='xs'
+            variant='outline'
+            color='red.4'
+            onClick={cancel}
+            disabled={!isExecuting || isCancelling}
+            loading={isCancelling}
+          >
+            Cancel
           </Button>
           <Button
             size='xs'
@@ -67,8 +79,7 @@ function Header() {
               {...props}
             >
               Load
-            </Button>
-          }
+            </Button>}
           </FileButton>
         </Flex>
         <ActionIcon color='dark.2' variant='subtle' onClick={toggleInspector}>

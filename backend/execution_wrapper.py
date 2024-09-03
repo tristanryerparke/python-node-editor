@@ -10,6 +10,9 @@ from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
 
+class ExecutionCancelled(Exception):
+    pass
+
 class GraphDef(BaseModel):
     nodes: list
     edges: list
@@ -106,6 +109,10 @@ class ExecutionWrapper:
                 "error_output": node_instance.data.error_output,
             }})
 
+            if asyncio.current_task().cancelled():
+                print("Execution was cancelled!!!!!!")
+                raise ExecutionCancelled("Execution was cancelled")
+
             # Allow other tasks to run
             await asyncio.sleep(0)
 
@@ -118,6 +125,9 @@ class ExecutionWrapper:
                     for item in node_instance.meta_exec_stream():
                         await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
                         await asyncio.sleep(0)
+                        if asyncio.current_task().cancelled():
+                            print("Execution was cancelled!!!!!!")
+                            raise ExecutionCancelled("Execution was cancelled")
 
                 else:
                     node_instance.meta_exec()
@@ -156,7 +166,7 @@ class ExecutionWrapper:
                         print(f"Edge processing: {edge['source']}({self.node_instances[edge['source']].data.display_name}):{from_port} -> {edge['target']}({self.node_instances[edge['target']].data.display_name}):{to_port}")
                     else:
                         print(f"Warning: Could not find matching ports for edge {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
-
+            
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")
 

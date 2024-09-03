@@ -53,13 +53,20 @@ async def periodic_cache_save():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     EXECUTION_WRAPPER.set_websocket(websocket)
+    tasks = []
     try:
         while True:
             if websocket.client_state == WebSocketState.CONNECTED:
                 data = await websocket.receive_json()
                 if data.get("action") == "execute":
-                    asyncio.create_task(EXECUTION_WRAPPER.execute_graph(data["graph_def"]))
-                    await websocket.send_json({"message": "Execution started"})
+                    task = asyncio.create_task(EXECUTION_WRAPPER.execute_graph(data["graph_def"]))
+                    tasks.append(task)
+                    await websocket.send_json({"event": 'execution_started'})
+                elif data.get("action") == "cancel":
+                    for task in tasks:
+                        task.cancel()
+                    tasks.clear()
+                    # await websocket.send_json({"message": "execution_cancelled"})
     except WebSocketDisconnect:
         pass
     finally:
