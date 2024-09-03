@@ -5,6 +5,7 @@ import inspect
 import json
 import base64
 import reprlib
+import traceback
 
 
 from collections import deque
@@ -32,19 +33,23 @@ def find_and_load_classes(directory: str):
                 print(f"Error loading module {module_path}")
                 continue
 
-            classes = [obj for name, obj in inspect.getmembers(module) if inspect.isclass(
-                obj) and issubclass(obj, BaseNode) and obj != BaseNode and obj != StreamingBaseNode]
-
-            for obj in classes:
-                try:
-                    source_file = inspect.getsourcefile(obj)
-                    start_line = inspect.getsourcelines(obj)[1]
-                    obj.definition_path = f"{source_file}:{start_line}"
-                except OSError:
-                    print(f"Error getting source file for {obj.__name__}")
-                    continue
+            classes = []
+            for name, obj in inspect.getmembers(module):
+                if inspect.isclass(obj) and issubclass(obj, BaseNode) and obj != BaseNode and obj != StreamingBaseNode:
+                    try:
+                        source_file = inspect.getsourcefile(obj)
+                        start_line = inspect.getsourcelines(obj)[1]
+                        obj.definition_path = f"{source_file}:{start_line}"
+                        classes.append(obj)
+                    except (OSError, TypeError) as e:
+                        print(f"Error getting source file for {obj.__name__}: {e}")
+                        continue
 
             display_name = getattr(module, 'DISPLAY_NAME', module_name)
+            if display_name == 'Test':
+                print(classes)
+                print('hi')
+
             all_classes[display_name] = classes
 
     return all_classes

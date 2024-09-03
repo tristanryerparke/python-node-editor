@@ -81,8 +81,8 @@ def field_data_deserilaization_prep(dtype: str, data: Any) -> Any:
 def truncate_repr(obj):
     '''truncates the repr of large objects to keep the data payload small'''
     r = reprlib.Repr()
-    r.maxstring = 50  # max characters for strings
-    r.maxother = 50   # max characters for other repr
+    r.maxstring = 200  # max characters for strings
+    r.maxother = 200   # max characters for other repr
     return r.repr(obj).strip("'")
 
 def create_thumbnail(data, max_file_size_mb):

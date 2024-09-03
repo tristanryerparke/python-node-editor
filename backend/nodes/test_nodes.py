@@ -1,6 +1,6 @@
 from typing import Tuple, Union, Dict, Generator, List
-# add base_node file to path
 from functools import lru_cache
+from pydantic import BaseModel, model_validator
 import sys
 import time
 sys.path.append('./')
@@ -76,3 +76,46 @@ class TestStreamingSplitNode(StreamingBaseNode):
                 number * (1 - t)
             ]
         }
+
+# class NamedBaseModel(BaseModel):
+#     class_name: str
+
+#     @model_validator(mode='before')
+#     @classmethod
+#     def load_cached_data(cls, values):
+#         values['class_name'] = cls.__name__
+#         return values
+    
+# class Egg(NamedBaseModel):
+#     color: str
+#     diameter: float
+
+# class Chicken(NamedBaseModel):
+#     name: str
+#     eggs: list[Egg]
+
+# NodeField.class_options = {'Chicken': Chicken}
+
+# c1 = Chicken(name='Bantam', eggs=[
+#     Egg(color='brown', diameter=2.5),
+#     Egg(color='white', diameter=2.75)
+# ])
+
+# c2 = Chicken(name='Polly', eggs=[
+#     Egg(color='blue', diameter=2.5),
+#     Egg(color='green', diameter=2.75)
+# ])
+
+# class ChickenNameComboNode(BaseNode):
+#     @classmethod
+#     @node_definition(
+#         inputs=[
+#             NodeField(label='A', dtype='basemodel', data=c1),
+#             NodeField(label='B', dtype='basemodel', data=c2)
+#         ],
+#         outputs=[
+#             NodeField(label='name_combo', dtype='string')
+#         ]
+#     )
+#     def exec(cls, A: Chicken, B: Chicken):
+#         return f'{A.name} + {B.name}'
