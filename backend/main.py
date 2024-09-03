@@ -52,7 +52,6 @@ async def periodic_cache_save():
 @app.websocket("/execute")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    EXECUTION_WRAPPER.classes_dict = find_and_load_classes("backend/nodes")
     EXECUTION_WRAPPER.set_websocket(websocket)
     tasks = []
     try:

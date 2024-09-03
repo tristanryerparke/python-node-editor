@@ -1,21 +1,37 @@
 import { Flex, Text, Divider, ActionIcon, TextInput, ScrollArea, Tooltip } from '@mantine/core';
 import { IconReload, IconSearch } from '@tabler/icons-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BaseNode, NodeCategories } from '../types/DataTypes';
+import { useReactFlow } from '@xyflow/react';
 
 function NodePicker() {
+  const { getNodes, setNodes, setEdges } = useReactFlow();
   const [nodeCategories, setNodeCategories] = useState<NodeCategories>({});
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchNodes = () => {
+  const fetchNodes = useCallback(() => {
     fetch('http://localhost:8000/all_nodes')
       .then((response) => response.json())
       .then((data: NodeCategories) => {
         setNodeCategories(data);
         console.log('Fetched node data:', data);
+
+        // Create a set of valid node types
+        const validNodeTypes = new Set(
+          Object.values(data).flatMap(nodes => nodes.map(node => node.data.type))
+        );
+
+        // Filter out nodes that are no longer valid
+        setNodes(nodes => nodes.filter(node => validNodeTypes.has(node.type)));
+
+        // Remove edges connected to deleted nodes
+        setEdges(edges => edges.filter(edge => 
+          getNodes().some(node => node.id === edge.source) &&
+          getNodes().some(node => node.id === edge.target)
+        ));
       })
       .catch((error) => console.error('Error fetching node data:', error));
-  };
+  }, [setNodeCategories, setNodes, setEdges, getNodes]);
 
   useEffect(() => {
     fetchNodes();
