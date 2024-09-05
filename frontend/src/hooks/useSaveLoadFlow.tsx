@@ -7,7 +7,6 @@ export function useSaveFlow() {
     const reactFlow = useReactFlow();
     const [isSaving, setIsSaving] = useState(false);
     const { filename } = useContext(FlowMetadataContext);
-    console.log('new filename', filename);
 
     const saveFlow = useCallback(async () => {
         setIsSaving(true);

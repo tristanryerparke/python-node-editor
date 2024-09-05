@@ -80,13 +80,14 @@ export function useExecutionManager() {
             nds.map(n => n.id === node_id ? { ...n, data: { ...n.data, ...updates } } : n)
           );
         } else if (data.event === 'full_node_update') {
+          console.log('data', data)
           const { node } = data;
           const updatedNode = JSON.parse(node);
           reactFlow.setNodes(nds => 
             nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
           );
         } else if (data.event === 'full_graph_update') {
-          const { nodes: updatedNodes } = data;
+          const { all_nodes: updatedNodes } = data;
           reactFlow.setNodes(nds => 
             nds.map(existingNode => {
               const updatedNode = updatedNodes.find((n: Node) => n.id === existingNode.id);

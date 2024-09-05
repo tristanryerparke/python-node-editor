@@ -69,7 +69,6 @@ def get_all_nodes():
     for key, value in EXECUTION_WRAPPER.classes_dict.items():
         category_list = []
         for node_class in value:
-            print(f'loading {node_class}')
             instance: BaseNode = node_class(id='')
             category_list.append(instance.model_dump())
         nodes_dict[key] = category_list
