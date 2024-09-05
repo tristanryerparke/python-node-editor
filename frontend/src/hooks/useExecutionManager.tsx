@@ -1,32 +1,52 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
-import { useNodes, useEdges, useReactFlow } from '@xyflow/react';
-import type { Node, Edge } from '@xyflow/react';
+import { useRef, useEffect, useCallback, useState, useContext } from 'react';
+import { useNodes, useReactFlow } from '@xyflow/react';
+import type { Node, ReactFlowJsonObject } from '@xyflow/react';
+import { FlowMetadataContext } from '../GlobalContext';
+import { FlowFileObject } from '../types/DataTypes';
 
 export function useExecutionManager() {
   const websocketRef = useRef<WebSocket | null>(null);
-  const nodesRef = useRef<Node[]>([]);
-  const edgesRef = useRef<Edge[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const { filename } = useContext(FlowMetadataContext);
 
   const nodes = useNodes();
-  const edges = useEdges();
   const reactFlow = useReactFlow();
 
-  useEffect(() => {
-    nodesRef.current = nodes;
-  }, [nodes]);
+  const resetPendingNodes = useCallback(() => {
+    reactFlow.setNodes(nds => 
+      nds.map(node => 
+        node.data.status === 'pending' 
+          ? { ...node, data: { ...node.data, status: 'not evaluated' } } 
+          : node
+      )
+    );
+  }, [reactFlow]);
 
-  useEffect(() => {
-    edgesRef.current = edges;
-  }, [edges]);
+  const sendExecuteMessage = useCallback((quiet: boolean = false) => {
+    // Create the file and send it
+    const rawFlow: ReactFlowJsonObject = reactFlow.toObject();
+    const flow_file: FlowFileObject = {
+      ...rawFlow,
+      embedded_data: {},
+      metadata: {
+        filename: filename
+      }
+    }
+    const send_data = {
+      action: 'execute',
+      flow_file: flow_file,
+      quiet: quiet
+    };
+    websocketRef.current?.send(JSON.stringify(send_data));
+    console.log(send_data)
+  }, [reactFlow, filename]);
 
-  const execute = useCallback(() => {
-    if (nodesRef.current.length === 0) return;
-    setIsExecuting(true);
+  const execute = useCallback((quiet: boolean = false) => {
+    if (nodes.length === 0) return;
 
     // set all nodes to pending and reset progress on streaming nodes
-    nodesRef.current.forEach(node => {
+    nodes.forEach(node => {
       reactFlow.setNodes(nds => 
         nds.map(n => n.id === node.id ? {
           ...n,
@@ -39,11 +59,16 @@ export function useExecutionManager() {
       );
     });
 
+    if (!quiet) {
+      console.log('Executing flow')
+    }
+
     if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
       websocketRef.current = new WebSocket('ws://localhost:8000/execute');
       websocketRef.current.onopen = () => {
         console.log('WebSocket connection established');
-        sendExecuteMessage();
+        setIsExecuting(true); 
+        sendExecuteMessage(quiet);
       };
 
       websocketRef.current.onmessage = (event) => {
@@ -57,12 +82,18 @@ export function useExecutionManager() {
         } else if (data.event === 'full_node_update') {
           const { node } = data;
           const updatedNode = JSON.parse(node);
-          // console.log('updatedNode', updatedNode)
-          // if (updatedNode.data.streaming) {
-          //   console.log('progress', updatedNode.data.progress)
-          // }
           reactFlow.setNodes(nds => 
             nds.map(n => n.id === updatedNode.id ? { ...n, data: updatedNode.data } : n)
+          );
+        } else if (data.event === 'full_graph_update') {
+          const { nodes: updatedNodes } = data;
+          reactFlow.setNodes(nds => 
+            nds.map(existingNode => {
+              const updatedNode = updatedNodes.find((n: Node) => n.id === existingNode.id);
+              return updatedNode 
+                ? { ...existingNode, data: updatedNode.data }
+                : existingNode;
+            })
           );
         } else if (data.event === 'execution_finished') {
           resetPendingNodes();
@@ -76,40 +107,22 @@ export function useExecutionManager() {
 
       websocketRef.current.onerror = (error) => {
         console.error('WebSocket error:', error);
+        setIsExecuting(false);
       };
       websocketRef.current.onclose = () => {
         console.log('WebSocket connection closed');
         websocketRef.current = null;
+        setIsExecuting(false);
       };
-    } else {
-      sendExecuteMessage();
     }
-  }, [reactFlow]);
+  }, [nodes, reactFlow, resetPendingNodes, sendExecuteMessage]);
 
-  const sendExecuteMessage = useCallback(() => {
-    const graph_def = { nodes: nodesRef.current, edges: edgesRef.current };
-    
-    websocketRef.current?.send(JSON.stringify({
-      action: 'execute',
-      graph_def: graph_def
-    }));
-    console.log(graph_def)
-  }, []);
+
 
   const cancel = useCallback(() => {
     setIsCancelling(true);
     websocketRef.current?.send(JSON.stringify({ action: 'cancel' }));
   }, []);
-
-  const resetPendingNodes = useCallback(() => {
-    reactFlow.setNodes(nds => 
-      nds.map(node => 
-        node.data.status === 'pending' 
-          ? { ...node, data: { ...node.data, status: 'not evaluated' } } 
-          : node
-      )
-    );
-  }, [reactFlow]);
 
   useEffect(() => {
     return () => {

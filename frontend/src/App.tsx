@@ -10,8 +10,7 @@ import NodeGraph from './components/NodeGraph';
 import Header from './components/Header';
 import Inspector from './components/inspector-elements/Inspector';
 import NodePicker from './components/NodePicker';
-
-import { PanelsContext, NodeSelectionContext, AutoExecuteContext, InspectorContext } from './GlobalContext';
+import { PanelsContext, InspectorContext, FlowMetadataContext } from './GlobalContext';
 
 // Styles
 import '@mantine/core/styles.css';
@@ -30,34 +29,38 @@ function App() {
 
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [autoExecute, setAutoExecute] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockedNodeId, setLockedNodeId] = useState<string | null>(null);
+  const [filename, setFilename] = useState<string>('Untitled');
 
 
   return (
     <PanelsContext.Provider value={{ panels, setPanels }}>
-      <NodeSelectionContext.Provider value={{ selectedNodeId, setSelectedNodeId }}>
-        <InspectorContext.Provider value={{ isLocked, setIsLocked, lockedNodeId, setLockedNodeId }}>
-          <AutoExecuteContext.Provider value={{ autoExecute, setAutoExecute }}>
-            <MantineProvider defaultColorScheme="dark">
-              <ReactFlowProvider>
-                <Flex className="App">
-                  <Header  />
-                  <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
-                  
-                    {panels.showNodePicker && (<NodePicker />)}
-                    <NodeGraph />
-                    {panels.showInspector && (<Inspector />)}
+      <InspectorContext.Provider value={{
+        isLocked, 
+        setIsLocked, 
+        lockedNodeId, 
+        setLockedNodeId, 
+        selectedNodeId, 
+        setSelectedNodeId 
+      }}>
+        <FlowMetadataContext.Provider value={{ filename, setFilename }}>
+          <MantineProvider defaultColorScheme="dark">
+            <ReactFlowProvider>
+              <Flex className="App">
+                <Header  />
+                <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
+                
+                  {panels.showNodePicker && (<NodePicker />)}
+                  <NodeGraph />
+                  {panels.showInspector && (<Inspector />)}
 
-                  </PanelGroup>
-                </Flex>
-              </ReactFlowProvider>
-            </MantineProvider>
-          
-          </AutoExecuteContext.Provider>
-        </InspectorContext.Provider>
-      </NodeSelectionContext.Provider>
+                </PanelGroup>
+              </Flex>
+            </ReactFlowProvider>
+          </MantineProvider>
+        </FlowMetadataContext.Provider>
+      </InspectorContext.Provider>
     </PanelsContext.Provider>
   );
 }

@@ -17,7 +17,6 @@ from .field_data_utils import (
     field_data_deserilaization_prep,
     create_thumbnail,
     LARGE_DATA_CACHE,
-    get_or_load_from_cache,
 )
 
 MAX_FILE_SIZE_MB = 0.1
@@ -101,8 +100,6 @@ class NodeField(BaseModel):
         elif values.get('cached', False):
             if values['id'] in LARGE_DATA_CACHE:
                 values['data'] = LARGE_DATA_CACHE[values['id']]['data']
-            else:
-                values['data'] = get_or_load_from_cache(values['id'])
         else:
             if values.get('data', None) is not None:
                 values['data'] = field_data_deserilaization_prep(values['dtype'], values['data'])

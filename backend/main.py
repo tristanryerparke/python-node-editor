@@ -13,21 +13,11 @@ from .routes.large_files_upload import large_files_router
 from .execution_wrapper import ExecutionWrapper
 from .utils import find_and_load_classes
 from .datatypes.base_node import BaseNode
-from .datatypes.field_data_utils import save_cache_to_disk
 
 CACHE_SAVE_INTERVAL_MINS = 1
 
-# 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    cache_save_task = asyncio.create_task(periodic_cache_save())
-    yield
-    # Shutdown
-    cache_save_task.cancel()
-    await cache_save_task
-    save_cache_to_disk()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,12 +33,6 @@ app.include_router(large_files_router)
 EXECUTION_WRAPPER = ExecutionWrapper()
 EXECUTION_WRAPPER.classes_dict = find_and_load_classes("backend/nodes")
 
-async def periodic_cache_save():
-    while True:
-        await asyncio.sleep(CACHE_SAVE_INTERVAL_MINS * 60)
-        save_cache_to_disk()
-        print("Cache saved")
-
 @app.websocket("/execute")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -60,7 +44,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 data = await websocket.receive_json()
                 if data.get("action") == "execute":
                     EXECUTION_WRAPPER.cancel_flag = False
-                    task = asyncio.create_task(EXECUTION_WRAPPER.execute_graph(data["graph_def"]))
+                    flow_file = data["flow_file"]
+                    print(f'Executing {flow_file["metadata"]["filename"]}')
+                    task = asyncio.create_task(EXECUTION_WRAPPER.execute_graph(
+                        flow_file, 
+                        data["quiet"]
+                    ))
                     tasks.append(task)
                     await websocket.send_json({"event": 'execution_started'})
                 elif data.get("action") == "cancel":

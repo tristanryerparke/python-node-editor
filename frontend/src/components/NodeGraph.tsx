@@ -21,7 +21,7 @@ import {
 } from '@xyflow/react';
 import { Panel } from 'react-resizable-panels';
 import CustomNode from './node-elements/CustomNode';
-import { NodeSelectionContext } from '../GlobalContext';
+import { InspectorContext } from '../GlobalContext';
 import { BaseNodeData } from '../types/DataTypes';
 
 const nodeTypes: NodeTypes = {
@@ -32,10 +32,8 @@ const NodeGraph: React.FC = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
 
-  // const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  // const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition, getViewport, setViewport } = useReactFlow();
-  const { setSelectedNodeId } = useContext(NodeSelectionContext);
+  const { setSelectedNodeId } = useContext(InspectorContext);
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -132,7 +130,7 @@ const NodeGraph: React.FC = () => {
         }}
       >
         <Controls />
-        <MiniMap />
+        <MiniMap position='bottom-right'/>
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
     </Panel>

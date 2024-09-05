@@ -1,15 +1,27 @@
-import { useReactFlow, type Edge } from '@xyflow/react';
-import { useCallback, useState } from 'react';
+import { useReactFlow, type Edge, type ReactFlowJsonObject } from '@xyflow/react';
+import { useCallback, useState, useContext } from 'react';
+import { FlowFileObject } from '../types/DataTypes';
+import { FlowMetadataContext } from '../GlobalContext';
 
 export function useSaveFlow() {
     const reactFlow = useReactFlow();
     const [isSaving, setIsSaving] = useState(false);
+    const { filename } = useContext(FlowMetadataContext);
+    console.log('new filename', filename);
 
     const saveFlow = useCallback(async () => {
         setIsSaving(true);
         try {
-            const flow: any = reactFlow.toObject();
-            flow.embedded_data = {};
+            // create the file and populate the embedded data attribute
+            const rawFlow: ReactFlowJsonObject = reactFlow.toObject();
+            const flow: FlowFileObject = {
+                ...rawFlow,
+                embedded_data: {},
+                metadata: {
+                    filename: filename,
+                }
+            };
+            console.log('flow', flow);
             for (const node of flow.nodes) {
                 node.data.status = 'not evaluated';
                 if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
@@ -20,7 +32,7 @@ export function useSaveFlow() {
                         if (!isEdgeConnected && inputField.data && inputField.cached) {
                             console.log('found input to cache');
                             try {
-                                const response = await fetch(`http://localhost:8000/data/${inputField.id}?dtype=${inputField.dtype}`);
+                                const response = await fetch(`http://localhost:8000/full_data/${inputField.id}?dtype=${inputField.dtype}`);
                                 if (response.ok) {
                                     const fullData = await response.text();
                                     flow.embedded_data[inputField.id] = fullData.replace(/"/g, '');
@@ -37,13 +49,13 @@ export function useSaveFlow() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'flow.json';
+            a.download = `${filename}.json`;
             a.click();
             URL.revokeObjectURL(url);
         } finally {
             setIsSaving(false);
         }
-    }, [reactFlow]);
+    }, [reactFlow, filename]);
 
     return { saveFlow, isSaving };
 }
@@ -65,7 +77,7 @@ export function useLoadFlow() {
                         if (node.data && node.data.inputs && Array.isArray(node.data.inputs)) {
                             for (const inputField of node.data.inputs) {
                                 const handleId = `${node.id}-input-${inputField.label}`;
-                                const isEdgeConnected = flow.edges.some((edge: any) => edge.target === node.id && edge.targetHandle === handleId);
+                                const isEdgeConnected = flow.edges.some((edge: Edge) => edge.target === node.id && edge.targetHandle === handleId);
                                 
                                 if (!isEdgeConnected && inputField.data && inputField.cached) {
                                     // we can't use a copy here because it caused issues when instatiating data on the backend

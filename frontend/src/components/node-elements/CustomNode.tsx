@@ -2,7 +2,7 @@ import { memo, useCallback, useContext } from 'react';
 import { Node, NodeProps, useReactFlow } from '@xyflow/react';
 import { Paper, Divider, Flex } from '@mantine/core';
 import NodeTopBar from './NodeTopBar';
-import { NodeSelectionContext } from '../../GlobalContext';
+import { InspectorContext } from '../../GlobalContext';
 import { BaseNodeData, NodeField } from '../../types/DataTypes';
 
 import InputField from './InputField';
@@ -30,7 +30,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
     reactFlow.setNodes((nds) =>
       nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
     );
-  }, [data, reactFlow]);
+  }, [data, reactFlow, id]);
 
   const renderInputComponent = (inputField: NodeField) => (
     <InputField 
@@ -49,7 +49,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
     />
   );
 
-  const { selectedNodeId } = useContext(NodeSelectionContext);
+  const { selectedNodeId } = useContext(InspectorContext);
 
   const getBorderStyle = () => {
     if (data.status === 'executing' ) {

@@ -10,7 +10,6 @@ export const PanelsContext = React.createContext<PanelsContextType>({
   setPanels: () => {},
 });
 
-
 // Selection Context
 interface NodeSelectionContextType {
   selectedNodeId: string | null;
@@ -26,6 +25,8 @@ interface InspectorContextType {
   setIsLocked: React.Dispatch<React.SetStateAction<boolean>>;
   lockedNodeId: string | null;
   setLockedNodeId: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedNodeId: string | null;
+  setSelectedNodeId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export const InspectorContext = React.createContext<InspectorContextType>({
@@ -33,14 +34,16 @@ export const InspectorContext = React.createContext<InspectorContextType>({
   setIsLocked: () => {},
   lockedNodeId: null,
   setLockedNodeId: () => {},
+  selectedNodeId: null,
+  setSelectedNodeId: () => {},
 });
 
-interface AutoExecuteContextType {
-  autoExecute: boolean;
-  setAutoExecute: React.Dispatch<React.SetStateAction<boolean>>;
+interface FlowMetadataContextType {
+  filename: string;
+  setFilename: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export const AutoExecuteContext = React.createContext<AutoExecuteContextType>({
-  autoExecute: false,
-  setAutoExecute: () => {},
+export const FlowMetadataContext = React.createContext<FlowMetadataContextType>({
+  filename: '',
+  setFilename: () => {},
 });

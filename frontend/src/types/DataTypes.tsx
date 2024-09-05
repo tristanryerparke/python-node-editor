@@ -1,3 +1,5 @@
+import { ReactFlowJsonObject } from '@xyflow/react';
+
 export interface BaseNodeData {
   display_name: string;
   class_name: string;
@@ -33,3 +35,11 @@ export interface BaseNode {
 }
 
 export type NodeCategories = Record<string, BaseNode[]>;
+
+
+export interface FlowFileObject extends ReactFlowJsonObject {
+  embedded_data: Record<string, string>;
+  metadata: {
+    filename: string;
+  };
+}

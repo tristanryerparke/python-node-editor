@@ -42,7 +42,10 @@ class ExecutionWrapper:
         else:
             print(f"Websocket not set, cannot send message: {message}")
 
-    async def execute_graph(self, graph_def: GraphDef):
+    async def execute_graph(self, graph_def: GraphDef, quiet: bool = False):
+        print("quiet", quiet)
+        updated_nodes = []
+
         async def check_cancel_flag():
             await asyncio.sleep(0)
             if self.cancel_flag:
@@ -113,11 +116,12 @@ class ExecutionWrapper:
             node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
 
             # send a status update
-            await self.send_update({"event": "node_data_update", "node_id": node_id, "updates": {
-                "status": node_instance.data.status,
-                "terminal_output": node_instance.data.terminal_output,
-                "error_output": node_instance.data.error_output,
-            }})
+            if not quiet:
+                await self.send_update({"event": "node_data_update", "node_id": node_id, "updates": {
+                    "status": node_instance.data.status,
+                    "terminal_output": node_instance.data.terminal_output,
+                    "error_output": node_instance.data.error_output,
+                }})
 
             # Allow other tasks to run
             await asyncio.sleep(0)
@@ -129,7 +133,8 @@ class ExecutionWrapper:
                     node_instance.data.error_output = ''
 
                     for item in node_instance.meta_exec_stream():
-                        await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
+                        if not quiet:
+                            await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
                         await asyncio.sleep(0)
                         await check_cancel_flag()
 
@@ -152,8 +157,11 @@ class ExecutionWrapper:
                 print(f"Traceback:\n{traceback.format_exc()}")
 
             # send a full update
-            await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
-            
+            if not quiet:
+                await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
+            else:
+                updated_nodes.append(node_instance.model_dump())
+
             # allow other tasks to run
             await asyncio.sleep(0)
 
@@ -183,6 +191,9 @@ class ExecutionWrapper:
         end_time = time.time()
         total_time = end_time - start_time
         print(f"Total graph execution took {total_time:.4f} seconds")
+
+        if quiet:
+            await self.send_update({"event": "full_graph_update", "all_nodes": updated_nodes})
 
         if self.websocket:
             if self.cancel_flag:

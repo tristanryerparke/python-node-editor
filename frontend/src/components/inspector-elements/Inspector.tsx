@@ -3,7 +3,6 @@ import {
   Flex, 
   Text, 
   Title, 
-  Box, 
   Badge, 
   useMantineTheme, 
   ScrollArea, 
@@ -18,15 +17,14 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { IconLockOpen, IconLockFilled, IconEye } from '@tabler/icons-react';
 import { useContext } from 'react';
-import { NodeSelectionContext, InspectorContext } from '../../GlobalContext';
+import { InspectorContext } from '../../GlobalContext';
 import { useNodes } from '@xyflow/react';
 import { getStatusColor } from '../../utils/Colors';
 import type { BaseNodeData, NodeField } from '../../types/DataTypes';
 import { useState, useCallback } from 'react';
 
 function InspectorPanel() {
-  const { selectedNodeId } = useContext(NodeSelectionContext);
-  const { isLocked, setIsLocked, lockedNodeId, setLockedNodeId } = useContext(InspectorContext);
+  const { isLocked, setIsLocked, lockedNodeId, setLockedNodeId, selectedNodeId } = useContext(InspectorContext);
   const theme = useMantineTheme();
 
   const toggleLock = () => {
@@ -196,7 +194,7 @@ function InspectorPanel() {
       id="inspector" 
       order={2} 
       defaultSize={25}
-      maxSize={75}
+      maxSize={45}
       minSize={20}
       style={{ 
         display: 'flex', 
@@ -240,7 +238,7 @@ function InspectorPanel() {
                 <Text px='0.5rem' size="xs" pb='0.25rem'>{`ID: ${selectedNode.id}`}</Text>
                 <Divider orientation='horizontal' color='dark.3' w='100%'/>
                 <Flex direction="column" w="100%" p={0} m={0}>
-                  <Accordion multiple={true} p={0} m={0}>
+                  <Accordion multiple={true} defaultValue={['inputs', 'outputs', 'terminal']} p={0} m={0}>
                     {renderInputs(selectedNodeData.inputs)}
                     {renderOutputs(selectedNodeData.outputs)}
                     {renderTerminalAndErrorOutput(selectedNodeData.terminal_output, selectedNodeData.error_output)}
@@ -248,7 +246,9 @@ function InspectorPanel() {
                 </Flex>
               </>
             ) : (
-              <Text>No node selected</Text>
+              <Flex direction="column" align="center" justify="center" w="100%" h="100%">
+                <Text>No node selected</Text>
+              </Flex>
             )}
           </Flex>
       </Flex>
