@@ -152,8 +152,5 @@ cython_debug/
 #.idea/
 
 
-large_data_cache.db
-large_data_cache.db
-large_data_cache.db
-large_data_cache.db
-*.db
+
+autosave

@@ -1,15 +1,16 @@
 import { useRef, useEffect, useCallback, useState, useContext } from 'react';
 import { useNodes, useReactFlow } from '@xyflow/react';
 import type { Node, ReactFlowJsonObject } from '@xyflow/react';
-import { FlowMetadataContext } from '../GlobalContext';
+import { AppContext, FlowMetadataContext } from '../GlobalContext';
 import { FlowFileObject } from '../types/DataTypes';
+
 
 export function useExecutionManager() {
   const websocketRef = useRef<WebSocket | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const { filename } = useContext(FlowMetadataContext);
-
+  const { setLastAutosaved } = useContext(AppContext);
   const nodes = useNodes();
   const reactFlow = useReactFlow();
 
@@ -99,6 +100,7 @@ export function useExecutionManager() {
         } else if (data.event === 'execution_finished') {
           resetPendingNodes();
           setIsExecuting(false);
+          setLastAutosaved(new Date());
         } else if (data.event === "execution_cancelled") {
           setIsExecuting(false);
           setIsCancelling(false);

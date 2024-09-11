@@ -46,9 +46,7 @@ def find_and_load_classes(directory: str):
                         continue
 
             display_name = getattr(module, 'DISPLAY_NAME', module_name)
-            if display_name == 'Test':
-                print(classes)
-                print('hi')
+
 
             all_classes[display_name] = classes
 
@@ -87,3 +85,9 @@ def topological_sort(graph_def: dict):
                 queue.append(neighbor)
 
     return sorted_nodes
+
+
+def autosave(graph_def: dict):
+    filename = graph_def['metadata']['filename']
+    with open(f'autosave/{filename}_autosave.json', 'w') as f:
+        json.dump(graph_def, f)

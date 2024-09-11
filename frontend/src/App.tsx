@@ -10,7 +10,7 @@ import NodeGraph from './components/NodeGraph';
 import Header from './components/Header';
 import Inspector from './components/inspector-elements/Inspector';
 import NodePicker from './components/NodePicker';
-import { PanelsContext, InspectorContext, FlowMetadataContext } from './GlobalContext';
+import { AppContext, InspectorContext, FlowMetadataContext } from './GlobalContext';
 
 // Styles
 import '@mantine/core/styles.css';
@@ -32,10 +32,11 @@ function App() {
   const [isLocked, setIsLocked] = useState(false);
   const [lockedNodeId, setLockedNodeId] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>('Untitled');
+  const [lastAutosaved, setLastAutosaved] = useState<Date | null>(null);
 
 
   return (
-    <PanelsContext.Provider value={{ panels, setPanels }}>
+    <AppContext.Provider value={{ panels, setPanels, lastAutosaved, setLastAutosaved }}>
       <InspectorContext.Provider value={{
         isLocked, 
         setIsLocked, 
@@ -61,7 +62,7 @@ function App() {
           </MantineProvider>
         </FlowMetadataContext.Provider>
       </InspectorContext.Provider>
-    </PanelsContext.Provider>
+    </AppContext.Provider>
   );
 }
 

@@ -5,7 +5,7 @@ import traceback
 from pydantic import BaseModel
 
 from .datatypes.base_node import BaseNode, StreamingBaseNode
-from .utils import topological_sort
+from .utils import topological_sort, autosave
 from fastapi import WebSocket
 import asyncio
 from devtools import debug as d
@@ -42,7 +42,9 @@ class ExecutionWrapper:
         else:
             print(f"Websocket not set, cannot send message: {message}")
 
-    async def execute_graph(self, graph_def: GraphDef, quiet: bool = False):
+    async def execute_graph(self, graph_def: dict, quiet: bool = False):
+        autosave(graph_def)
+        
         print("quiet", quiet)
         updated_nodes = []
 

@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 
 from .routes.full_data import full_data_list_router
 from .routes.large_files_upload import large_files_router
+from .routes.autosave import autosave_router
 from .execution_wrapper import ExecutionWrapper
 from .utils import find_and_load_classes
 from .datatypes.base_node import BaseNode
@@ -21,14 +22,16 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 app.include_router(full_data_list_router)
 app.include_router(large_files_router)
+app.include_router(autosave_router)
 
 EXECUTION_WRAPPER = ExecutionWrapper()
 EXECUTION_WRAPPER.classes_dict = find_and_load_classes("backend/nodes")

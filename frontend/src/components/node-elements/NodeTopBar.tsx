@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Flex,Group, Text, ActionIcon, useMantineTheme, Tooltip, Progress } from '@mantine/core';
 import { useNodesData } from '@xyflow/react';
 import { IconInfoCircle, IconCode, IconLicense, IconRosetteDiscountCheck, IconX } from '@tabler/icons-react';
-import { InspectorContext, NodeSelectionContext, PanelsContext } from '../../GlobalContext';
+import { AppContext, InspectorContext } from '../../GlobalContext';
 import { getStatusColor } from '../../utils/Colors';
 import type { BaseNodeData } from '../../types/DataTypes';
 
@@ -15,9 +15,8 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   const theme = useMantineTheme();
   const node = useNodesData(id)!;
   const nodeData = node.data as unknown as BaseNodeData;
-  const { isLocked, lockedNodeId, setIsLocked, setLockedNodeId } = useContext(InspectorContext);
-  const { setSelectedNodeId } = useContext(NodeSelectionContext);
-  const { panels, setPanels } = useContext(PanelsContext);
+  const { isLocked, lockedNodeId, setIsLocked, setLockedNodeId, setSelectedNodeId } = useContext(InspectorContext);
+  const { panels, setPanels } = useContext(AppContext);
 
   const statusColor = getStatusColor(nodeData.status, theme);
 

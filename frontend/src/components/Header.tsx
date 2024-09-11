@@ -10,7 +10,7 @@ import { Flex,
   TextInput
 } from '@mantine/core';
 import { IconLayoutSidebarFilled, IconChevronDown } from '@tabler/icons-react';
-import { PanelsContext } from '../GlobalContext';
+import { AppContext } from '../GlobalContext';
 import { useExecutionManager } from '../hooks/useExecutionManager';
 import { useSaveFlow, useLoadFlow } from '../hooks/useSaveLoadFlow';
 import { useNodes } from '@xyflow/react';
@@ -60,7 +60,7 @@ function EditableTitle( { filename, setFilename }: { filename: string, setFilena
 
 
 function Header() {
-  const { setPanels } = useContext(PanelsContext);
+  const { setPanels } = useContext(AppContext);
   const { execute, cancel, isExecuting, isCancelling } = useExecutionManager();
   const { saveFlow, isSaving } = useSaveFlow();
   const { loadFlow, isLoading } = useLoadFlow();

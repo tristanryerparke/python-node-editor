@@ -1,24 +1,19 @@
 import React from 'react';
 
-interface PanelsContextType {
+interface AppContextType {
   panels: { showInspector: boolean; showNodePicker: boolean };
+  lastAutosaved: Date | null;
   setPanels: React.Dispatch<React.SetStateAction<{ showInspector: boolean; showNodePicker: boolean }>>;
+  setLastAutosaved: React.Dispatch<React.SetStateAction<Date | null>>;
 }
 
-export const PanelsContext = React.createContext<PanelsContextType>({
+export const AppContext = React.createContext<AppContextType>({
   panels: { showInspector: false, showNodePicker: true },
+  lastAutosaved: null,
   setPanels: () => {},
+  setLastAutosaved: () => {},
 });
 
-// Selection Context
-interface NodeSelectionContextType {
-  selectedNodeId: string | null;
-  setSelectedNodeId: React.Dispatch<React.SetStateAction<string | null>>;
-}
-export const NodeSelectionContext = React.createContext<NodeSelectionContextType>({
-  selectedNodeId: null,
-  setSelectedNodeId: () => {},
-});
 
 interface InspectorContextType {
   isLocked: boolean;
