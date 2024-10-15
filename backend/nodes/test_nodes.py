@@ -44,12 +44,12 @@ class TestStreamingSplitNode(StreamingBaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(field_type='input', label='number', dtype='number', data=1),
-            NodeField(field_type='input', label='t', dtype='number', data=0.5)
+            NodeField(label='number', dtype='number', data=1),
+            NodeField(label='t', dtype='number', data=0.5)
         ],
         outputs=[
-            NodeField(field_type='output', label='split_t', dtype='number'),
-            NodeField(field_type='output', label='split_1_minus_t', dtype='number')
+            NodeField(label='split_t', dtype='number'),
+            NodeField(label='split_1_minus_t', dtype='number')
         ]
     )
     def exec_stream(
@@ -76,25 +76,55 @@ class TestStreamingSplitNode(StreamingBaseNode):
                 number * (1 - t)
             ]
         }
+        
 
-# class NamedBaseModel(BaseModel):
-#     class_name: str
+class NamedBaseModel(BaseModel):
+    class_name: str
 
-#     @model_validator(mode='before')
-#     @classmethod
-#     def load_cached_data(cls, values):
-#         values['class_name'] = cls.__name__
-#         return values
+    @model_validator(mode='before')
+    @classmethod
+    def load_cached_data(cls, values):
+        values['class_name'] = cls.__name__
+        return values
     
-# class Egg(NamedBaseModel):
-#     color: str
-#     diameter: float
+class Egg(NamedBaseModel):
+    color: str
+    diameter: float
+
+NodeField.class_options = {'Egg': Egg}
+
+default_str = '''{
+    "class_name": "Egg",
+    "color": "brown",
+    "diameter": 2.5
+}'''
+
+
+class JsonToEggNode(BaseNode):
+    @classmethod
+    @node_definition(
+        inputs=[
+            NodeField(user_label='Egg as Json', label='egg_json', dtype='string', data=default_str)
+        ],
+        outputs=[
+            NodeField(label='Egg', dtype='basemodel')
+        ]
+    )
+    def exec(cls, egg_json: str):
+        return Egg.model_validate_json(egg_json)
+    
+
+
+
+
+
+    
+
 
 # class Chicken(NamedBaseModel):
 #     name: str
 #     eggs: list[Egg]
 
-# NodeField.class_options = {'Chicken': Chicken}
 
 # c1 = Chicken(name='Bantam', eggs=[
 #     Egg(color='brown', diameter=2.5),

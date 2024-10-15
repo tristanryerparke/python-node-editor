@@ -177,6 +177,7 @@ const NodeGraph: React.FC = () => {
           onMoveEnd={(_, viewport) => {
             localStorage.setItem('savedViewport', JSON.stringify(viewport));
           }}
+          panOnScroll
         >
           <Controls />
           <MiniMap position='bottom-right' style={{bottom: '1rem'}}/>

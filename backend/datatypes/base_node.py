@@ -18,6 +18,12 @@ from devtools import debug as d
 def node_definition(inputs: list[NodeField], outputs: list[NodeField]):
     '''decorator to define the inputs and outputs of a node'''
     def decorator(func):
+        nonlocal inputs
+        nonlocal outputs
+        for inp in inputs:
+            inp.field_type = 'input'
+        for outp in outputs:
+            outp.field_type = 'output'
         func._inputs = inputs
         func._outputs = outputs
         def wrapper(cls, **kwargs):

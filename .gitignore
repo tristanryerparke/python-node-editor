@@ -154,3 +154,6 @@ cython_debug/
 
 
 autosave
+*.db
+*.db-shm
+*.db-wal

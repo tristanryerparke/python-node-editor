@@ -48,8 +48,8 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
   const isNodeLocked = isLocked && lockedNodeId === id;
 
   return (
-    <Flex direction='column' p={0} m={0} gap='0rem' w='100%' align='center' justify='center'>
-      <Group w='100%' justify='space-between' pl='0.5rem' mb={0}>
+    <Flex direction='column' p={0} m={0} gap='0rem' w='100%' align='center' justify='center' >
+      <Flex w='100%' justify='space-between' align='center' px='0.5rem' mb={0}>
         <Tooltip
           label={nodeData.description || 'No Description'}
           color='dark.3'
@@ -58,11 +58,15 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
           multiline
           w='200px'
         >
-          <Text fw={700} p='0rem' m='0rem' >
+          <Text fw={700} p='0rem' m='0rem' style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
             {nodeData.display_name}
           </Text>
         </Tooltip>
-        <Group m='0.25rem' p={0} gap='0.2rem' justify='flex-end'>
+        <Flex my='0.25rem' mx={0}p={0} gap='0.2rem' justify='flex-end'>
           {(nodeData.streaming) && (
             <Tooltip label="Streaming Node" color='dark.3' withArrow arrowSize={8}>
               <IconLicense color='var(--mantine-color-indigo-5)' size={20} />
@@ -96,9 +100,9 @@ const NodeTopBar: React.FC<NodeTopBarProps> = ({ id }) => {
               )}
             </ActionIcon>
           </Tooltip>
-        </Group>
+        </Flex>
         
-      </Group>
+      </Flex>
       <Group w='100%' justify='center' px='0.5rem'>
         {nodeData.streaming && nodeData.progress !== undefined && (
             <Progress value={nodeData.progress * 100} size='xs' w='100%' color="indigo.5" mt={0}mb='0.25rem'/>

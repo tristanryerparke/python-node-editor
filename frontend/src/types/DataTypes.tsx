@@ -19,6 +19,7 @@ export interface NodeField {
   id: string;
   dtype: 'number' | 'string' | 'numpy' | 'image' | 'basemodel';
   data: any;
+  metadata: Record<string, unknown>;
   max_file_size_mb: number;
   class_name: string;
   cached: boolean;
@@ -26,6 +27,7 @@ export interface NodeField {
   size_mb: number;
   field_type: 'input' | 'output';
   label: string;
+  user_label: string;
 }
 
 export interface BaseNode {

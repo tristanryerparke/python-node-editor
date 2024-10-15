@@ -4,36 +4,39 @@ import { IconUpload, IconX } from "@tabler/icons-react";
 import { NodeField } from "../../types/DataTypes";
 
 export interface ImageUploaderProps {
-  inputField: NodeField | null;
+  field: NodeField | null;
   isEdgeConnected: boolean;
-  onChange: (id: string, value: NodeField) => void;
+
+  onChange: (field: NodeField, data: string) => void;
+  expanded: boolean;
 }
 
-function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProps) {
+function ImageInput({ field, isEdgeConnected, onChange, expanded }: ImageUploaderProps) {
   const [fileValue, setFileValue] = useState<File | null>(null);
   const [dummyFile, setDummyFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (inputField && isEdgeConnected) {
-      setDummyFile(new File([], inputField.description || ''));
-    } else if (inputField && inputField.data && inputField.description) {
-      setFileValue(new File([], inputField.description));
+    if (field && isEdgeConnected) {
+      setDummyFile(new File([], field.description || ''));
+    } else if (field && field.data && field.description) {
+      setFileValue(new File([], field.description));
     } else {
       setDummyFile(null);
       setFileValue(null);
     }
-  }, [isEdgeConnected, inputField]);
+  }, [isEdgeConnected, field]);
 
   function handleUpload(file: File | null) {
+    console.log('Handling upload:', file, field);
 
-    if (file && inputField) {
+    if (file && field) {
       console.log('Uploading image');
       setIsLoading(true);
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        const { cached, id, ...rest } = inputField;
+        const { cached, id, ...rest } = field;
         const updatedInputField = { ...rest, data: base64String };
 
         const formData = new FormData();
@@ -50,8 +53,8 @@ function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProp
 
           if (response.ok) {
             const result = await response.json();
-            console.log('Uploaded large file:', result.id);
-            onChange(inputField.id, result as NodeField);
+            console.log('Uploaded large file:', result);
+            onChange({ ...field, data: result.data }, result.data);
           } else {
             console.error('Failed to upload large file');
           }
@@ -64,7 +67,7 @@ function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProp
       reader.readAsDataURL(file);
       setFileValue(file);
     } else {
-      onChange(inputField?.id || '', { data: '' } as NodeField);
+      onChange(field, '');
       setFileValue(null);
     }
   }
@@ -75,6 +78,7 @@ function ImageInput({ inputField, isEdgeConnected, onChange }: ImageUploaderProp
       accept="image/png,image/jpeg,image/jpg"
       leftSection={isLoading ? <Loader color='dark.3' size={20}/> : <IconUpload size={20} style={{cursor: 'pointer'}}/>}
       w='100%'
+      size='xs'
       rightSection={<IconX
         size={20} style={{cursor: 'pointer'}}
         onClick={() => { handleUpload(null) }}

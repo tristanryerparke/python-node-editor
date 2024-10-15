@@ -26,13 +26,17 @@ class NodeField(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, debug=True)
 
     id: str = PydanticField(default_factory=lambda: str(uuid.uuid4())) # id is for retrieving large data from the db
+    field_type: Literal['input', 'output'] = 'input'
     dtype: Literal['number', 'string', 'json', 'numpy', 'image', 'basemodel'] # dtype helps us know how to save, load, serialize, deserialize
     data: Any = None # front facing data attribute / preview
+    metadata: Any = None
     max_file_size_mb: float = PydanticField(default=MAX_FILE_SIZE_MB)
-    class_name: str
+    # class_name: str
+    label: str
+    user_label: str = ''
+
     class_options: ClassVar[dict] = {}
-    field_type: Literal['input', 'output'] = 'input'
-    label: str = ''
+
 
     @field_serializer('data')
     def serialize_data(self, data: Any, _info: Any) -> Any:
@@ -103,10 +107,12 @@ class NodeField(BaseModel):
         else:
             if values.get('data', None) is not None:
                 values['data'] = field_data_deserilaization_prep(values['dtype'], values['data'])
-            if values['dtype'] == 'basemodel':
-                if isinstance(values['data'], dict):
-                    values['data'] = cls.class_options[values['data']['class_name']].model_validate(values['data'])
+                if values['dtype'] == 'basemodel':
+                    if isinstance(values['data'], dict):
+                        values['data'] = cls.class_options[values['data']['class_name']].model_validate(values['data'])
         values['class_name'] = cls.__name__
+        if values.get('user_label', None) is None:
+            values['user_label'] = values['label']
         return values
 
     def __hash__(self):

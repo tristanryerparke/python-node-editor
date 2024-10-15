@@ -13,8 +13,24 @@ class AddNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(label='A', dtype='number', data=0),
-            NodeField(label='B', dtype='number', data=0)
+            NodeField(
+                label='A', 
+                dtype='number', 
+                data=0,
+                metadata={
+                    'max': 100,
+                    'min': -100
+                }
+            ),
+            NodeField(
+                label='B', 
+                dtype='number', 
+                data=0,
+                metadata={
+                    'max': 100,
+                    'min': -100
+                }
+            )
         ],
         outputs=[
             NodeField(label='Result', dtype='number')
