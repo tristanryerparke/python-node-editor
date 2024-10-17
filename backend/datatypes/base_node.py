@@ -141,14 +141,24 @@ class BaseNode(BaseModel):
         self.data.error_output = stderr
 
         if len(self.data.outputs) == 1:
-            self.data.outputs[0].data = result
+            result = [result]
         else:
-            for outp, res in zip(self.data.outputs, result):
-                outp.data = res
+            results = result
+
+
+        # Create fresh outputs
+        self.data.outputs = [NodeField(
+            field_type='output',
+            label=outp.label,
+            user_label=outp.user_label,
+            dtype=outp.dtype,
+            data=res,
+        ) for outp, res in zip(self.data.outputs, result)]
+
 
         self.data.status = 'evaluated'
 
-
+# NodeField(id='4540c268-5223-4db7-bef6-ba9468ba2c7e', field_type='output', dtype='number', data=0, metadata={}, max_file_size_mb=0.1, label='Result', user_label='Result', cached=False, description='basic data type', size_mb=9.5367431640625e-07)
 
 from collections.abc import Generator
 

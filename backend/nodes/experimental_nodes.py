@@ -3,13 +3,12 @@ from functools import lru_cache
 from pydantic import BaseModel, model_validator
 import sys
 import time
-sys.path.append('./')
-from backend.datatypes.base_node import BaseNode, StreamingBaseNode, node_definition
+from ..datatypes.base_node import BaseNode, StreamingBaseNode, node_definition
 from ..datatypes.field import NodeField
 
 MAXSIZE = 10
 
-DISPLAY_NAME = "Test"
+DISPLAY_NAME = "Experimental"
 
 class TestStreamingAddNode(StreamingBaseNode):
     description: str = "Test node for streaming that adds two numbers"

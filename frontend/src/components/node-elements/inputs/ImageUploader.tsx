@@ -1,31 +1,27 @@
 import { useState, useEffect } from "react";
-import { FileInput, Loader } from "@mantine/core";
+import { FileInput, Flex, Loader, Image, Text } from "@mantine/core";
 import { IconUpload, IconX } from "@tabler/icons-react";
-import { NodeField } from "../../types/DataTypes";
+import { InputFieldDisplayProps } from "../InputFieldDisplay";
 
-export interface ImageUploaderProps {
-  field: NodeField | null;
-  isEdgeConnected: boolean;
 
-  onChange: (field: NodeField, data: string) => void;
-  expanded: boolean;
-}
+function ImageInput({ field, onChange, expanded, disabled }: InputFieldDisplayProps) {
 
-function ImageInput({ field, isEdgeConnected, onChange, expanded }: ImageUploaderProps) {
   const [fileValue, setFileValue] = useState<File | null>(null);
   const [dummyFile, setDummyFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (field && isEdgeConnected) {
-      setDummyFile(new File([], field.description || ''));
-    } else if (field && field.data && field.description) {
-      setFileValue(new File([], field.description));
+    if (field && disabled) {
+      setDummyFile(new File([], field.description ? field.description : ''));
+    // } else if (field && field.data && field.description) {
+    //   setFileValue(new File([], field.description ? field.description : ''));
+    } else if (field && field.data && field.metadata.filename) {
+      setFileValue(new File([], field.metadata.filename as string));
     } else {
       setDummyFile(null);
       setFileValue(null);
     }
-  }, [isEdgeConnected, field]);
+  }, [disabled, field]);
 
   function handleUpload(file: File | null) {
     console.log('Handling upload:', file, field);
@@ -36,8 +32,7 @@ function ImageInput({ field, isEdgeConnected, onChange, expanded }: ImageUploade
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        const { cached, id, ...rest } = field;
-        const updatedInputField = { ...rest, data: base64String };
+        const updatedInputField = { ...field, data: base64String };
 
         const formData = new FormData();
         const blob = new Blob([JSON.stringify(updatedInputField)], { type: 'application/json' });
@@ -53,8 +48,9 @@ function ImageInput({ field, isEdgeConnected, onChange, expanded }: ImageUploade
 
           if (response.ok) {
             const result = await response.json();
+            onChange(result);
             console.log('Uploaded large file:', result);
-            onChange({ ...field, data: result.data }, result.data);
+            setFileValue(new File([], result.metadata.filename));
           } else {
             console.error('Failed to upload large file');
           }
@@ -65,32 +61,52 @@ function ImageInput({ field, isEdgeConnected, onChange, expanded }: ImageUploade
         }
       };
       reader.readAsDataURL(file);
-      setFileValue(file);
     } else {
-      onChange(field, '');
+      onChange(field, '', {});
       setFileValue(null);
     }
   }
 
-  return (
-    <FileInput
-      name="mf"
-      accept="image/png,image/jpeg,image/jpg"
-      leftSection={isLoading ? <Loader color='dark.3' size={20}/> : <IconUpload size={20} style={{cursor: 'pointer'}}/>}
-      w='100%'
-      size='xs'
-      rightSection={<IconX
-        size={20} style={{cursor: 'pointer'}}
-        onClick={() => { handleUpload(null) }}
-        opacity={isEdgeConnected || !fileValue ? 0 : 1}
-      />}
-      disabled={isEdgeConnected}
-      value={isEdgeConnected ? dummyFile : fileValue}
-      placeholder={isEdgeConnected ? "Connected" : "Upload image"}
-      style={{overflow: 'hidden'}}
-      onChange={(file) => handleUpload(file)}
-    />
-  )
+  const renderFilePicker = () => {
+      return (
+        <FileInput
+          name="mf"
+          accept="image/png,image/jpeg,image/jpg"
+          leftSection={isLoading ? <Loader color='dark.3' size={20}/> : <IconUpload size={20} style={{cursor: 'pointer'}}/>}
+          w='100%'
+          size='xs'
+          rightSection={<IconX
+            size={20} style={{cursor: 'pointer'}}
+            onClick={() => { 
+              handleUpload(null);
+              onChange({ ...field, data: null, metadata: {} });
+            }}
+            opacity={disabled || !fileValue ? 0 : 1}
+          />}
+          disabled={disabled}
+          value={disabled ? dummyFile : fileValue}
+          placeholder={disabled ? "Connected" : "Upload image"}
+          style={{overflow: 'hidden'}}
+          onChange={(file) => handleUpload(file)}
+        />
+    )
+  }
+
+  if (!expanded) {
+    return renderFilePicker();
+  } else {
+    return (
+      <Flex w='100%' h='100%' align='center' gap='0.25rem' justify='center' direction='column'>
+        {field.data && (
+          <Image p='1px' w='100%' src={`data:image/jpeg;base64,${field.data}`} style={{borderRadius: '0.25rem'}}/>
+        )}
+        {field.metadata && Object.keys(field.metadata).length > 0 && (
+          <Text size='xs' c='dimmed'>{field.metadata.height} x {field.metadata.width} ({field.metadata.channels} channels)</Text>
+        )}
+        {renderFilePicker()}
+      </Flex>
+    )
+  }
 }
 
 export default ImageInput;

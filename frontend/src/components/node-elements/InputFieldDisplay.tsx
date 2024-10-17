@@ -1,6 +1,5 @@
 import type { NodeField } from "../../types/DataTypes";
 import { Flex, Text, Tooltip, Badge, ActionIcon } from '@mantine/core';
-import { useState } from 'react';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import ImageInput from './inputs/ImageUploader';
 
@@ -8,13 +7,13 @@ import { TextInput, NumberInput } from "./inputs/BasicInputs";
 
 export interface InputFieldDisplayProps {
   field: NodeField;
-  onChange: (field: NodeField, data: unknown, metadata?: Record<string, unknown>) => void;
-  expanded: boolean
+  onChange: (field: NodeField, data?: unknown, metadata?: Record<string, unknown>) => void;
   disabled: boolean
+  expanded: boolean
+  setExpanded: (expanded: boolean) => void
 }
 
-function InputFieldDisplay({ field, onChange, expanded, disabled }: InputFieldDisplayProps) {
-  const [expandedState, setExpandedState] = useState(expanded);
+function InputFieldDisplay({ field, onChange, expanded, setExpanded, disabled }: InputFieldDisplayProps) {
   
   const renderInput = () => {
     switch (field.dtype) {
@@ -22,22 +21,22 @@ function InputFieldDisplay({ field, onChange, expanded, disabled }: InputFieldDi
         return <NumberInput 
           field={field} 
           onChange={onChange} 
-          expanded={expandedState} 
           disabled={disabled}
+          expanded={expanded} 
         />
       case 'string':
         return <TextInput 
           field={field} 
           onChange={onChange} 
-          expanded={expandedState} 
           disabled={disabled}
+          expanded={expanded} 
         />
       case 'image':
         return <ImageInput 
           field={field} 
           onChange={onChange} 
-          expanded={expandedState} 
           disabled={disabled}
+          expanded={expanded} 
         />
       // Add more cases for future data types here
       default:
@@ -62,15 +61,15 @@ function InputFieldDisplay({ field, onChange, expanded, disabled }: InputFieldDi
     return <ActionIcon 
       variant='subtle' 
       color='dark.3' 
-      onClick={() => setExpandedState(!expandedState)}
+      onClick={() => setExpanded(!expanded)}
       size='sm'
     >
-    {expandedState ? <IconChevronDown /> : <IconChevronUp />}
+    {expanded ? <IconChevronDown /> : <IconChevronUp />}
     </ActionIcon>
   }
 
   return (
-    !expandedState ? (
+    !expanded ? (
       <Flex direction='row' h='30px' w='100%' gap='0.25rem' align='center' justify='space-between'>
         {renderLabel()}
         {renderInput()}

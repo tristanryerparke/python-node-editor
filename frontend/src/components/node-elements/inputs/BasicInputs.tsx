@@ -2,6 +2,9 @@ import {
   Flex, 
   Textarea, 
   Slider, 
+  Radio,
+  Group,
+  Text,
   NumberInput as MantineNumberInput, 
   TextInput as MantineTextInput 
 } from "@mantine/core";
@@ -38,14 +41,17 @@ export function TextInput({ field, onChange, expanded, disabled }: InputFieldDis
 }
 
 export function NumberInput({ field, onChange, expanded, disabled }: InputFieldDisplayProps) {
+  const [displayFormat, setDisplayFormat] = useState(field.metadata?.displayFormat as string || 'input');
+  
   const [min, setMin] = useState(field.metadata?.min as number || -10);
   const [max, setMax] = useState(field.metadata?.max as number || 10);
   const [value, setValue] = useState(field.data as number || 0);
 
   useEffect(() => {
-    setMin(field.metadata?.min as number || -10);
-    setMax(field.metadata?.max as number || 10);
-  }, [field.metadata?.min, field.metadata?.max]);
+    setMin(field.metadata.min as number);
+    setMax(field.metadata.max as number);
+    setDisplayFormat(field.metadata.displayFormat as string || 'input');
+  }, [field.metadata.min, field.metadata.max, field.metadata.displayFormat]);
 
   useEffect(() => {
     setValue(Number(field.data) || 0);
@@ -66,17 +72,39 @@ export function NumberInput({ field, onChange, expanded, disabled }: InputFieldD
     onChange(field, value as number, { max: newMax });
   };
 
+  const handleDisplayFormatChange = (newFormat: string) => {
+    setDisplayFormat(newFormat);
+    onChange(field, value as number, { displayFormat: newFormat });
+  };
+
   // The small number input is just a mantine number input
   if (!expanded) {
-    return <MantineNumberInput
-      w='100%'
+    if (displayFormat === 'slider') {
+      return <Flex w='100%' justify='center' align='center' gap='0.5rem'>
+        
+        <Slider
+          classNames={{ track: 'nodrag' }}
+          w='100%'
+          value={value}
+          onChange={handleValueChange}
+          min={min}
+          max={max}
+          disabled={disabled}
+        />
+        <Text size='xs'>{value}</Text>
+      </Flex>
+    }
+    else {
+      return <MantineNumberInput
+        w='100%'
       value={value}
       onChange={(e) => handleValueChange(Number(e))}
       min={min}
       max={max}
       size='xs'
       disabled={disabled}
-    />
+      />
+    }
   }
   
   // The large number input is a slider and a set of number inputs for the min, max, and value
@@ -116,6 +144,19 @@ export function NumberInput({ field, onChange, expanded, disabled }: InputFieldD
         w='100%'
         disabled={disabled}
       />
+
+    </Flex>
+    <Flex w='100%' justify='center' align='center' gap='1rem' direction='row'>
+      <Text size='xs'>Format: </Text>
+      <Radio.Group
+        value={displayFormat}
+        onChange={handleDisplayFormatChange}
+      >
+        <Group gap='0.25rem'>
+          <Radio p={0} size="xs" value="input" label="Input" />
+          <Radio p={0} size="xs" value="slider" label="Slider" />
+        </Group>
+      </Radio.Group>
     </Flex>
   </Flex>
 }

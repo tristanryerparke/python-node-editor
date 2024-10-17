@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useContext } from 'react';
+import React, { memo, useCallback, useContext, useState, useEffect } from 'react';
 import { Node, NodeProps, useReactFlow, useStore } from '@xyflow/react';
 import { Handle, Position } from '@xyflow/react';
 import { Resizable } from 're-resizable';
@@ -20,16 +20,21 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
 
   // For when the user changes the value of an input field
   // Updates the field data based on the id and clears node outputs
-  const updateNodeData = useCallback((field: NodeField, value: string, metadata: Record<string, unknown> = {}) => {
-    console.log('Updating node data:', field, value);
+  const updateNodeData = useCallback((field: NodeField, value?: unknown, metadata?: Record<string, unknown>) => {
     const newData = { ...data };
     const inputIndex = newData.inputs.findIndex((input: NodeField) => input.label === field.label);
     if (inputIndex !== -1) {
-      newData.inputs[inputIndex] = { 
-        ...newData.inputs[inputIndex], 
-        data: value, 
-        metadata: { ...newData.inputs[inputIndex].metadata, ...metadata }
-      };
+      if (value === undefined && metadata === undefined) {
+        // Replace the entire field
+        newData.inputs[inputIndex] = field;
+      } else {
+        // Update specific parts of the field
+        newData.inputs[inputIndex] = { 
+          ...newData.inputs[inputIndex], 
+          data: value !== undefined ? value : newData.inputs[inputIndex].data, 
+          metadata: metadata ? { ...newData.inputs[inputIndex].metadata, ...metadata } : newData.inputs[inputIndex].metadata
+        };
+      }
     }
     // newData.outputs = newData.outputs.map(output => ({ ...output, data: null }));
     // newData.status = 'not evaluated';
@@ -40,6 +45,34 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
   }, [data, reactFlow, id]);
 
   
+
+  // Add this state to manage expanded states for each input and output field
+  const [expandedStates, setExpandedStates] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setExpandedStates(prevStates => {
+      const newStates = { ...prevStates };
+      data.inputs.forEach(input => {
+        if (!(input.id in newStates)) {
+          newStates[input.id] = false; // Default to collapsed for inputs
+        }
+      });
+      data.outputs.forEach(output => {
+        if (!(output.id in newStates)) {
+          newStates[output.id] = false; // Default to collapsed for outputs
+        }
+      });
+      return newStates;
+    });
+  }, [data.inputs, data.outputs]);
+
+  // Function to toggle expanded state for a specific input or output
+  const setExpanded = useCallback((fieldId: string, expanded: boolean) => {
+    setExpandedStates(prev => ({
+      ...prev,
+      [fieldId]: expanded
+    }));
+  }, []);
 
   function renderInputComponent(inputField: NodeField) {
     const handleId = `${id}-input-${inputField.label}`;
@@ -58,9 +91,10 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
         <InputFieldDisplay 
           field={inputField} 
           onChange={updateNodeData}
-          expanded={false}
           disabled={isEdgeConnected}
-          />
+          expanded={expandedStates[inputField.id]}
+          setExpanded={(expanded) => setExpanded(inputField.id, expanded)}
+        />
       </Flex>
       
       <Handle
@@ -97,8 +131,9 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
         <Flex direction='column' w='100%' pr='0.75rem' pl='0.5rem'>
           <OutputFieldDisplay 
             field={outputField} 
-          defaultExpanded={false}
-        />
+            expanded={expandedStates[outputField.id]}
+            setExpanded={(expanded) => setExpanded(outputField.id, expanded)}
+          />
         </Flex>
         <Handle
           type="source"

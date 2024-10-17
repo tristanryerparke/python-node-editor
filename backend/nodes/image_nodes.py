@@ -31,7 +31,11 @@ class BlurImageNode(BaseNode):
     @node_definition(
         inputs=[
             NodeField(field_type='input', label='image', dtype='image'),
-            NodeField(field_type='input', label='radius', dtype='number', data=5)
+            NodeField(field_type='input', label='radius', dtype='number', data=6, metadata={
+                'min': 0,
+                'max': 100,
+                'displayFormat': 'slider'
+            })
         ],
         outputs=[
             NodeField(field_type='output', label='Blurred Image', dtype='image')
@@ -41,6 +45,15 @@ class BlurImageNode(BaseNode):
         img = Image.fromarray(image.astype(np.uint8))
         img = img.filter(ImageFilter.GaussianBlur(radius=radius))
         return np.array(img)
+    
+    @classmethod
+    def metadata(cls, result):
+        return {
+            'width': result.shape[1],
+            'height': result.shape[0],
+            'channels': result.shape[2] if result.ndim == 3 else 1
+        }
+
 
 class FlipHorizontallyNode(BaseNode):
     @classmethod

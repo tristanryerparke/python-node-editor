@@ -17,7 +17,7 @@ from devtools import debug as d
 
 
 from backend.datatypes.field import NodeField
-from backend.datatypes.field_data_utils import get_string_size_mb, image_to_base64
+from backend.datatypes.field_data_utils import get_string_size_mb, image_to_base64, base64_to_image
 
 
 def test_serialize_and_deserialize():
@@ -26,9 +26,18 @@ def test_serialize_and_deserialize():
     MAX_SIZE = 0.1
 
     # create two data instances, one large and one small
-    large_data = NodeField(dtype='json', data='AAA'*100000,
-                      max_file_size_mb=MAX_SIZE)
-    small_data = NodeField(dtype='json', data='BBB', max_file_size_mb=MAX_SIZE)
+    large_data = NodeField(
+        label='Large Data',
+        dtype='json',
+        data='AAA'*100000,
+        max_file_size_mb=MAX_SIZE
+    )
+    small_data = NodeField(
+        label='Small Data',
+        dtype='json',
+        data='BBB',
+        max_file_size_mb=MAX_SIZE
+    )
 
     # cached should be true for large data, false for small data
     assert large_data.cached == True
@@ -74,18 +83,18 @@ def test_different_basic_data_types():
 
     small_data_inst_with_different_types = [
         # small data
-        NodeField(dtype='json', data='this is some test string data',
+        NodeField(label='String', dtype='json', data='this is some test string data',
              max_file_size_mb=MAX_SIZE),  # string
-        NodeField(dtype='json', data=1234567890, max_file_size_mb=MAX_SIZE),  # int
-        NodeField(dtype='json', data=123.456, max_file_size_mb=MAX_SIZE),  # float
-        NodeField(dtype='json', data=True, max_file_size_mb=MAX_SIZE),  # bool
-        NodeField(dtype='json', data=None, max_file_size_mb=MAX_SIZE),  # None
-        NodeField(dtype='json', data=[1, 2],
+        NodeField(label='Int', dtype='json', data=1234567890, max_file_size_mb=MAX_SIZE),  # int
+        NodeField(label='Float', dtype='json', data=123.456, max_file_size_mb=MAX_SIZE),  # float
+        NodeField(label='Bool', dtype='json', data=True, max_file_size_mb=MAX_SIZE),  # bool
+        NodeField(label='None', dtype='json', data=None, max_file_size_mb=MAX_SIZE),  # None
+        NodeField(label='List of Ints', dtype='json', data=[1, 2],
              max_file_size_mb=MAX_SIZE),  # list of ints
-        NodeField(dtype='json', data={'a': 1, 'b': 2},
+        NodeField(label='Dict with Ints', dtype='json', data={'a': 1, 'b': 2},
              max_file_size_mb=MAX_SIZE),  # dict with ints
         # nested list with differing data
-        NodeField(dtype='json', data=[['a', 'b'], 2], max_file_size_mb=MAX_SIZE),
+        NodeField(label='Nested List', dtype='json', data=[['a', 'b'], 2], max_file_size_mb=MAX_SIZE),
     ]
 
     # serialize and deserialize each
@@ -106,10 +115,10 @@ def test_different_basic_data_types():
 
     large_data_inst_with_different_types = [
         # nested list with differing data
-        NodeField(dtype='json', data=[['a', 'b'] * \
+        NodeField(label='Large Nested List', dtype='json', data=[['a', 'b'] * \
              100000, 2], max_file_size_mb=MAX_SIZE),
         # nested list with differing data
-        NodeField(dtype='json', data=[
+        NodeField(label='Large Nested List with Dict', dtype='json', data=[
              ['a', {'b': 20}] * 100000, None], max_file_size_mb=MAX_SIZE),
     ]
 
@@ -135,6 +144,7 @@ def test_as_if_coming_from_frontend():
     cached and that a preview is generated when serializing'''
 
     data_from_frontend = json.dumps({
+        'label': 'Large Data',
         'data': 'AAA'*1000000,
         'dtype': 'json'
     })
@@ -154,8 +164,8 @@ def test_numpy():
     '''tests direct creation and ser/deser of numpy arrays'''
     max_size = 0.1
 
-    small_numpy = NodeField(dtype='numpy', data=np.ones((10, 10)))
-    big_numpy = NodeField(dtype='numpy', data=np.ones(
+    small_numpy = NodeField(label='Small Numpy', dtype='numpy', data=np.ones((10, 10)))
+    big_numpy = NodeField(label='Large Numpy', dtype='numpy', data=np.ones(
         (1000, 1000)), max_file_size_mb=max_size)
 
     assert small_numpy.cached == False
@@ -180,6 +190,7 @@ def test_numpy_from_frontend():
     '''simulates recieving a small numpy array from the frontend'''
 
     data_from_frontend = '''{
+        "label": "Small Numpy",
         "data" : "[[1,2,3],[4,5,6]]",
         "dtype" : "numpy"
     }'''
@@ -197,14 +208,35 @@ def test_image():
     max_size = 0.5
 
     small_img = np.array(Image.new('RGB', (100, 100), color=(255, 255, 255)))
-    big_img = np.array(Image.open('monkey_1mb.png'))
+    big_img = np.array(Image.open('tests/monkey_1mb.png'))
+    print(big_img.shape)
 
-    small_image = NodeField(dtype='image', data=small_img,
-                       max_file_size_mb=max_size)
-    big_image = NodeField(dtype='image', data=big_img, max_file_size_mb=max_size)
+    small_image = NodeField(
+        label='Small Image',
+        dtype='image',
+        data=small_img,
+        max_file_size_mb=max_size
+    )
+    big_image = NodeField(
+        label='Large Image',
+        dtype='image',
+        data=big_img,
+        max_file_size_mb=max_size
+    )
 
     assert small_image.cached == False
     assert big_image.cached == True
+
+    # Check metadata is created
+    assert small_image.metadata['width'] == 100
+    assert small_image.metadata['height'] == 100
+    assert small_image.metadata['channels'] == 3
+    
+    #(684, 715, 4)
+    assert big_image.metadata['width'] == 715
+    assert big_image.metadata['height'] == 684
+    assert big_image.metadata['channels'] == 4
+
 
     small_image_json = small_image.model_dump_json()
     big_image_json = big_image.model_dump_json()
@@ -219,18 +251,21 @@ def test_image():
     assert big_image.data.all() == big_image_deserialized.data.all()
 
     # emulate getting the thumbnail
-    # big_image_thumbnail = json.loads(big_image_json)['data']
-    # Image.fromarray(base64_to_image(big_image_thumbnail)).show()
+    big_image_thumbnail = json.loads(big_image_json)['data']
+    Image.fromarray(base64_to_image(big_image_thumbnail)).show()
+
+test_image()
 
 
 def test_image_from_frontend():
     '''simulates recieving a full size large image from the frontend and that the image is 
     correctly deserialized, cached, and that the thumbnail is correctly created'''
     max_file_size = 0.1
-    image = np.array(Image.open('monkey_1mb.png'))
+    image = np.array(Image.open('tests/monkey_1mb.png'))
     image_b64 = image_to_base64(image)
 
     dict_from_frontend = json.dumps({
+        'label': 'Large Image',
         'data': image_b64,
         'dtype': 'image',
         'max_file_size_mb': max_file_size
@@ -290,6 +325,7 @@ def test_nested_classes():
     ])
 
     data_with_chicken = NodeField(
+        label='Chicken',
         dtype='basemodel',
         data=c,
         max_file_size_mb=0.1,
@@ -317,8 +353,10 @@ def test_data_inside_other_class():
         data_inside: NodeField
 
     dc_lg = DataContainer(data_inside=NodeField(
+        label='Large Data',
         dtype='json', data='AAA'*100000, max_file_size_mb=0.1))
     dc_sm = DataContainer(data_inside=NodeField(
+        label='Small Data',
         dtype='json', data='BBB', max_file_size_mb=0.1))
 
     dc_lg_json = dc_lg.model_dump_json()
@@ -375,8 +413,10 @@ def test_data_nested_with_numpy_internals():
     max_size = 0.1
 
     sm_data_with_numpy_child = NodeField(
+        label='Small Data with Numpy Child',
         dtype='basemodel', data=dc_sm, max_file_size_mb=max_size)
     lg_data_with_numpy_child = NodeField(
+        label='Large Data with Numpy Child',
         dtype='basemodel', data=dc_lg, max_file_size_mb=max_size)
 
     assert sm_data_with_numpy_child.cached == False

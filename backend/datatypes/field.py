@@ -1,6 +1,8 @@
 import uuid
 import json
-from typing import Any, Union, Literal, ClassVar, FrozenSet, Tuple
+from typing import Any, Union, Literal, ClassVar, FrozenSet, Tuple, Dict
+import numpy as np
+from devtools import debug as d
 
 from pydantic import (
     BaseModel,
@@ -9,6 +11,7 @@ from pydantic import (
     computed_field,
     field_serializer,
     model_validator,
+    model_serializer,
 )
 
 from .field_data_utils import (
@@ -29,7 +32,7 @@ class NodeField(BaseModel):
     field_type: Literal['input', 'output'] = 'input'
     dtype: Literal['number', 'string', 'json', 'numpy', 'image', 'basemodel'] # dtype helps us know how to save, load, serialize, deserialize
     data: Any = None # front facing data attribute / preview
-    metadata: Any = None
+    metadata: Dict[str, Any] = {}  # Additional metadata for the field
     max_file_size_mb: float = PydanticField(default=MAX_FILE_SIZE_MB)
     # class_name: str
     label: str
@@ -41,6 +44,7 @@ class NodeField(BaseModel):
     @field_serializer('data')
     def serialize_data(self, data: Any, _info: Any) -> Any:
         '''return a truncated repr of the data if big (cached), otherwise return the data'''
+
         if self.cached:
             LARGE_DATA_CACHE[self.id] = {'dtype':self.dtype, 'data': data}
             print(f"Stored data in LARGE_DATA_CACHE for id: {self.id}")
@@ -98,22 +102,44 @@ class NodeField(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def load_cached_data(cls, values: dict):
-        if values.get('field_type', 'input') == 'output':
-            values['data'] = None
-
-        elif values.get('cached', False):
-            if values['id'] in LARGE_DATA_CACHE:
-                values['data'] = LARGE_DATA_CACHE[values['id']]['data']
+        if values.get('id', None):
+            print(f'validating node field {values["id"]}')
         else:
+            print(f'validating node field without id')
+
+        print('hi')
+
+        # Pull the data from cache
+        if values.get('cached', False) == True:
+            if values['id'] in LARGE_DATA_CACHE:
+                print(f'pulling data from cache for {values["id"]}')
+                values['data'] = LARGE_DATA_CACHE[values['id']]['data']
+
+        else:
+            # We are getting new data
             if values.get('data', None) is not None:
                 values['data'] = field_data_deserilaization_prep(values['dtype'], values['data'])
+                
+                # Create image metadata
+                if values['dtype'] == 'image':
+                    if 'metadata' not in values:
+                        values['metadata'] = {}
+                    values['metadata']['width'] = values['data'].shape[1]
+                    values['metadata']['height'] = values['data'].shape[0]
+                    values['metadata']['channels'] = values['data'].shape[2] if values['data'].ndim == 3 else 1
+                
+                # Instantiate a class if it is in the options
                 if values['dtype'] == 'basemodel':
                     if isinstance(values['data'], dict):
                         values['data'] = cls.class_options[values['data']['class_name']].model_validate(values['data'])
+        
+        # Update class name and label
         values['class_name'] = cls.__name__
         if values.get('user_label', None) is None:
             values['user_label'] = values['label']
+
         return values
+    
 
     def __hash__(self):
         return hash(self.data)
