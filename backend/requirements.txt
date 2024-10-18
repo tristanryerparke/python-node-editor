@@ -10,3 +10,4 @@ cachetools
 python-multipart
 redis
 pytest
+pytest-asyncio

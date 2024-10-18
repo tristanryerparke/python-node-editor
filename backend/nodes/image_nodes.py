@@ -4,6 +4,8 @@ import numpy as np
 from docarray.typing import ImageUrl
 from PIL import Image, ImageFilter
 from devtools import debug as d
+import requests
+from io import BytesIO
 
 from ..datatypes.field import NodeField
 from ..datatypes.base_node import BaseNode, node_definition
@@ -15,15 +17,27 @@ class ImageFromUrlNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(field_type='input', label='URL', dtype='string', data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true')
+            NodeField(
+                field_type='input', 
+                label='URL', 
+                dtype='string', 
+                data='https://github.com/docarray/docarray/blob/main/tests/toydata/image-data/apple.png?raw=true'
+            )
         ],
         outputs=[
             NodeField(field_type='output', label='Image', dtype='image')
         ]
     )
     def exec(cls, URL: str) -> np.ndarray:
-        image_url = ImageUrl(URL)
-        image_tensor = np.array(image_url.load())
+        response = requests.get(URL)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        image = Image.open(BytesIO(response.content))
+        
+        # Convert image to RGB mode if it's not already
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        image_tensor = np.array(image)
         return image_tensor
 
 class BlurImageNode(BaseNode):

@@ -208,7 +208,7 @@ def test_image():
     max_size = 0.5
 
     small_img = np.array(Image.new('RGB', (100, 100), color=(255, 255, 255)))
-    big_img = np.array(Image.open('tests/monkey_1mb.png'))
+    big_img = np.array(Image.open('tests/materials/monkey_1mb.png'))
     print(big_img.shape)
 
     small_image = NodeField(
@@ -251,17 +251,17 @@ def test_image():
     assert big_image.data.all() == big_image_deserialized.data.all()
 
     # emulate getting the thumbnail
-    big_image_thumbnail = json.loads(big_image_json)['data']
-    Image.fromarray(base64_to_image(big_image_thumbnail)).show()
+    # big_image_thumbnail = json.loads(big_image_json)['data']
+    # Image.fromarray(base64_to_image(big_image_thumbnail)).show()
 
-test_image()
+# test_image()
 
 
 def test_image_from_frontend():
     '''simulates recieving a full size large image from the frontend and that the image is 
     correctly deserialized, cached, and that the thumbnail is correctly created'''
     max_file_size = 0.1
-    image = np.array(Image.open('tests/monkey_1mb.png'))
+    image = np.array(Image.open('tests/materials/monkey_1mb.png'))
     image_b64 = image_to_base64(image)
 
     dict_from_frontend = json.dumps({

@@ -1,0 +1,238 @@
+{
+  "nodes": [
+    {
+      "id": "624cff3a-a201-4bc0-853c-1e1ec7ebd61a",
+      "position": {
+        "x": 3405,
+        "y": 52.5
+      },
+      "type": "customNode",
+      "data": {
+        "display_name": "Add",
+        "class_name": "AddNode",
+        "namespace": "Math",
+        "status": "not evaluated",
+        "terminal_output": "",
+        "error_output": "",
+        "description": "",
+        "inputs": [
+          {
+            "id": "d5285229-e9f3-485c-b456-7829b26f1b4b",
+            "field_type": "input",
+            "dtype": "number",
+            "data": 10,
+            "metadata": {
+              "max": 100,
+              "min": -100
+            },
+            "max_file_size_mb": 0.1,
+            "label": "A",
+            "user_label": "A",
+            "cached": false,
+            "description": "basic data type",
+            "size_mb": 9.5367431640625e-7
+          },
+          {
+            "id": "1fe1e4b8-ef6f-40b5-b73f-6775671bf330",
+            "field_type": "input",
+            "dtype": "number",
+            "data": 5,
+            "metadata": {
+              "max": 100,
+              "min": -100
+            },
+            "max_file_size_mb": 0.1,
+            "label": "B",
+            "user_label": "B",
+            "cached": false,
+            "description": "basic data type",
+            "size_mb": 9.5367431640625e-7
+          }
+        ],
+        "outputs": [
+          {
+            "id": "a0004f57-71d8-468c-9fbc-baf95d5d81da",
+            "field_type": "output",
+            "dtype": "number",
+            "data": null,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "Result",
+            "user_label": "Result",
+            "cached": false,
+            "description": "",
+            "size_mb": 0
+          }
+        ],
+        "streaming": false,
+        "definition_path": "/Users/tristanryerparke/Library/CloudStorage/Dropbox/python-node-editor/backend/nodes/math_nodes.py:12"
+      },
+      "measured": {
+        "width": 250,
+        "height": 148
+      },
+      "selected": false
+    },
+    {
+      "id": "1035423a-6e34-44c6-b995-dd9ed88a2592",
+      "position": {
+        "x": 3696.9458333128437,
+        "y": 169.98750018440612
+      },
+      "type": "customNode",
+      "data": {
+        "display_name": "Subtract",
+        "class_name": "SubtractNode",
+        "namespace": "Math",
+        "status": "not evaluated",
+        "terminal_output": "",
+        "error_output": "",
+        "description": "",
+        "inputs": [
+          {
+            "id": "25fa310e-6e3c-4a7c-b52a-9938ec2ace73",
+            "field_type": "input",
+            "dtype": "number",
+            "data": 0,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "a",
+            "user_label": "a",
+            "cached": false,
+            "description": "basic data type",
+            "size_mb": 9.5367431640625e-7
+          },
+          {
+            "id": "7727a9fc-b0ad-4322-a3e7-7b511ae15f3e",
+            "field_type": "input",
+            "dtype": "number",
+            "data": 6,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "b",
+            "user_label": "b",
+            "cached": false,
+            "description": "basic data type",
+            "size_mb": 9.5367431640625e-7
+          }
+        ],
+        "outputs": [
+          {
+            "id": "40add324-9d31-4281-af3c-12ad5e336e7a",
+            "field_type": "output",
+            "dtype": "number",
+            "data": null,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "result",
+            "user_label": "result",
+            "cached": false,
+            "description": "",
+            "size_mb": 0
+          }
+        ],
+        "streaming": false,
+        "definition_path": "/Users/tristanryerparke/Library/CloudStorage/Dropbox/python-node-editor/backend/nodes/math_nodes.py:58"
+      },
+      "measured": {
+        "width": 250,
+        "height": 148
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "d922916b-d578-42bd-b98b-7023017f2756",
+      "position": {
+        "x": 3892.2940477302764,
+        "y": 383.19642883486586
+      },
+      "type": "customNode",
+      "data": {
+        "display_name": "Multiply",
+        "class_name": "MultiplyNode",
+        "namespace": "Math",
+        "status": "not evaluated",
+        "terminal_output": "",
+        "error_output": "",
+        "description": "",
+        "inputs": [
+          {
+            "id": "34b57ba0-77d5-4a2c-ad57-da4ec3e2d3c4",
+            "field_type": "input",
+            "dtype": "number",
+            "data": 1,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "a",
+            "user_label": "a",
+            "cached": false,
+            "description": "basic data type",
+            "size_mb": 9.5367431640625e-7
+          },
+          {
+            "id": "1a4e166d-9d34-4103-adb5-1430d2f343bf",
+            "field_type": "input",
+            "dtype": "number",
+            "data": 10,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "b",
+            "user_label": "b",
+            "cached": false,
+            "description": "basic data type",
+            "size_mb": 9.5367431640625e-7
+          }
+        ],
+        "outputs": [
+          {
+            "id": "ef6baab9-082c-4cac-8e95-0f0b86e8243a",
+            "field_type": "output",
+            "dtype": "number",
+            "data": null,
+            "metadata": {},
+            "max_file_size_mb": 0.1,
+            "label": "result",
+            "user_label": "result",
+            "cached": false,
+            "description": "",
+            "size_mb": 0
+          }
+        ],
+        "streaming": false,
+        "definition_path": "/Users/tristanryerparke/Library/CloudStorage/Dropbox/python-node-editor/backend/nodes/math_nodes.py:73"
+      },
+      "measured": {
+        "width": 250,
+        "height": 148
+      },
+      "selected": true,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "624cff3a-a201-4bc0-853c-1e1ec7ebd61a",
+      "sourceHandle": "624cff3a-a201-4bc0-853c-1e1ec7ebd61a-output-Result",
+      "target": "1035423a-6e34-44c6-b995-dd9ed88a2592",
+      "targetHandle": "1035423a-6e34-44c6-b995-dd9ed88a2592-input-a",
+      "id": "xy-edge__624cff3a-a201-4bc0-853c-1e1ec7ebd61a624cff3a-a201-4bc0-853c-1e1ec7ebd61a-output-Result-1035423a-6e34-44c6-b995-dd9ed88a25921035423a-6e34-44c6-b995-dd9ed88a2592-input-a"
+    },
+    {
+      "source": "1035423a-6e34-44c6-b995-dd9ed88a2592",
+      "sourceHandle": "1035423a-6e34-44c6-b995-dd9ed88a2592-output-result",
+      "target": "d922916b-d578-42bd-b98b-7023017f2756",
+      "targetHandle": "d922916b-d578-42bd-b98b-7023017f2756-input-a",
+      "id": "xy-edge__1035423a-6e34-44c6-b995-dd9ed88a25921035423a-6e34-44c6-b995-dd9ed88a2592-output-result-d922916b-d578-42bd-b98b-7023017f2756d922916b-d578-42bd-b98b-7023017f2756-input-a"
+    }
+  ],
+  "viewport": {
+    "x": -3282.68491941049,
+    "y": 70.7633697467976,
+    "zoom": 1.0077984432848506
+  },
+  "embedded_data": {},
+  "metadata": {
+    "filename": "test 1"
+  }
+}

@@ -102,12 +102,6 @@ class NodeField(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def load_cached_data(cls, values: dict):
-        if values.get('id', None):
-            print(f'validating node field {values["id"]}')
-        else:
-            print(f'validating node field without id')
-
-        print('hi')
 
         # Pull the data from cache
         if values.get('cached', False) == True:
