@@ -1,25 +1,57 @@
-from pydantic import BaseModel, Field
-from typing import List, Literal
-import uuid
+from typing import Generic, NamedTuple, Tuple
+import numpy as np
+import time
+from inspect import signature, Parameter
+from typing import get_origin, Union, get_args, Any, Dict, get_type_hints, List
 import sys
 from io import StringIO
+import base64
+from PIL import Image
+from io import BytesIO
+from devtools import debug as d
 
-from .field import InputNodeField, OutputNodeField
+from pydantic import BaseModel, ConfigDict
 
-def node_definition(inputs: list[InputNodeField], outputs: list[OutputNodeField]):
+from .field import NodeField
+from devtools import debug as d
+
+
+# CREATE FIELD DATA CLASS THAT IS DYNNAMIC 
+
+# from typing import Any
+# from pydantic import BaseModel
+# class FieldData(BaseModel):
+#     id: str
+#     payload: Any
+#     metadata: dict
+
+# Functions that work inside node functions take FieldDatas as input and return FieldData as output.
+# This allows for metadata handling and generation inside the node function.
+# Node fields are static and don't change.
+# FieldData object ids for user specified inputs do not change unless the data changes.
+# FieldData object ids on outputs only change if the node's inputs changed.
+# This allows tracking / caching data in the flow.
+# Separates UI definitions (NodeFields) from the data flow.
+# FieldData could encapsulate list, dict logic down the line?
+
+def node_definition(inputs: list[NodeField], outputs: list[NodeField]):
     '''decorator to define the inputs and outputs of a node'''
     def decorator(func):
         nonlocal inputs
         nonlocal outputs
+        for inp in inputs:
+            inp.field_type = 'input'
+        for outp in outputs:
+            outp.field_type = 'output'
         func._inputs = inputs
         func._outputs = outputs
-
         def wrapper(cls, **kwargs):
             return func(cls, **kwargs)
         wrapper._inputs = inputs
         wrapper._outputs = outputs
         return wrapper
     return decorator
+    
 
 class CaptureOutput:
     def __init__(self):
@@ -55,25 +87,30 @@ class BaseNodeData(BaseModel):
     display_name: str = ''
     class_name: str = ''
     namespace: str = ''
-    status: Literal[
-        'not evaluated', 
-        'pending', 
-        'executing', 
-        'streaming', 
-        'evaluated', 
-        'error'
-    ] = 'not evaluated'
+    status: str = ['not evaluated', 'pending', 'executing', 'streaming', 'evaluated', 'error'][0]
     terminal_output: str = ''
     error_output: str = ''
     description: str = ''
-    inputs: List[InputNodeField] = []
-    outputs: List[OutputNodeField] = []
+    inputs: List[NodeField] = []
+    outputs: List[NodeField] = []
     streaming: bool = False
     definition_path: str = ''
 
+class StreamingNodeData(BaseNodeData):
+    progress: float = 0
+
+
+def image_to_base64(im: np.ndarray) -> str:
+    buffered = BytesIO()
+    img = Image.fromarray(im)
+    img.save(buffered, format="PNG")
+    return f"data:image/png;base64,{base64.b64encode(buffered.getvalue()).decode()}"
 
 class BaseNode(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    model_config = ConfigDict(arbitrary_types_allowed=True) 
+
+    id: str = ''
+    position: NodePosition = NodePosition(x=0, y=0)
     data: BaseNodeData = BaseNodeData()
 
     def __init__(self, *args, **kwargs):
@@ -81,65 +118,72 @@ class BaseNode(BaseModel):
         if not self.data.class_name:
             self.data.class_name = self.__class__.__name__
         if not self.data.display_name:
-            self.data.display_name = self.__class__.__name__.replace(
-                'Node', '')
+            self.data.display_name = self.__class__.__name__.replace('Node', '')
         self.analyze_inputs()
         self.analyze_outputs()
         self.detect_namespace()
         self.data.definition_path = self.__class__.definition_path
 
     def detect_namespace(self):
-        '''detects the namespace of the node to display in the frontend'''
         module = sys.modules[self.__class__.__module__]
         self.data.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
 
     def analyze_inputs(self):
-        '''retrives the decorated inputs adds them to the node data definition'''
+        
         if len(self.data.inputs) == 0:
             if self.data.streaming:
-                self.data.inputs = getattr(
-                    self.__class__, 'exec_stream')._inputs
+                self.data.inputs = getattr(self.__class__, 'exec_stream')._inputs
             else:
                 self.data.inputs = getattr(self.__class__, 'exec')._inputs
 
     def analyze_outputs(self):
-        '''retrives the decorated outputs adds them to the node data definition'''
         if len(self.data.outputs) == 0:
             if self.data.streaming:
-                self.data.outputs = getattr(
-                    self.__class__, 'exec_stream')._outputs
+                self.data.outputs = getattr(self.__class__, 'exec_stream')._outputs
             else:
                 self.data.outputs = getattr(self.__class__, 'exec')._outputs
 
+    
     def meta_exec(self):
-        '''executes the node's exec method, captures the execution output and updates the ouput data(s)'''
-        exec_kwargs = {inp.label: inp.data for inp in self.data.inputs}
+
+        kwargs = {inp.label: inp.data for inp in self.data.inputs}
+
         with CaptureOutput() as output:
-            results = self.exec(**exec_kwargs)
-            stdout, stderr = output.get_output()
-            self.data.terminal_output = stdout
-            self.data.error_output = stderr
+            result = self.__class__.exec(**kwargs)
 
-        # nodes with only one output will return a single FieldData object
+        stdout, stderr = output.get_output()
+        self.data.terminal_output = stdout
+        self.data.error_output = stderr
+
         if len(self.data.outputs) == 1:
-            results = [results]
+            result = [result]
+        else:
+            results = result
 
-        for outp, res in zip(self.data.outputs, results):
-            outp.data = res
 
-        return results
+        # Create fresh outputs
+        self.data.outputs = [NodeField(
+            field_type='output',
+            label=outp.label,
+            user_label=outp.user_label,
+            dtype=outp.dtype,
+            data=res,
+        ) for outp, res in zip(self.data.outputs, result)]
 
-class StreamingNodeData(BaseNodeData):
-    '''inherits from BaseNodeData and adds a progress attribute'''
-    progress: float = 0
+
+        self.data.status = 'evaluated'
+
+# NodeField(id='4540c268-5223-4db7-bef6-ba9468ba2c7e', field_type='output', dtype='number', data=0, metadata={}, max_file_size_mb=0.1, label='Result', user_label='Result', cached=False, description='basic data type', size_mb=9.5367431640625e-07)
+
+from collections.abc import Generator
 
 class StreamingBaseNode(BaseNode):
-    '''enables data to be streamed during sequential execution of a node'''
     data: StreamingNodeData = StreamingNodeData(streaming=True)
     
     def meta_exec_stream(self):
-        '''executes the node's exec_stream method, captures the execution output and updates the ouput data(s)'''
+        
         kwargs = {inp.label: inp.data for inp in self.data.inputs}
+
 
         with CaptureOutput() as output:
             for result in self.__class__.exec_stream(**kwargs):
@@ -155,3 +199,4 @@ class StreamingBaseNode(BaseNode):
                 yield result
 
         self.data.status = 'evaluated'
+

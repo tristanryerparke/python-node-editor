@@ -38,8 +38,6 @@ async def test_images():
     data['nodes'][0]['data']['outputs'][0]['data'] = image
 
 
-
-
     wrapper = ExecutionWrapper()
     wrapper.classes_dict = find_and_load_classes("backend/nodes")
     

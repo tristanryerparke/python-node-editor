@@ -6,7 +6,7 @@ import {
 import type { OutputFieldDisplayProps } from "../OutputFieldDisplay";
 import { formatClassString } from "../../../utils/classFormatter";
 
-export function NumberOutput({ field, expanded }: OutputFieldDisplayProps) {
+export function NumberOutput({ field }: OutputFieldDisplayProps) {
   const theme = useMantineTheme();
   
   return <Flex

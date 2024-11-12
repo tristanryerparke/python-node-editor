@@ -3,11 +3,12 @@ import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type { NodeField } from "../../types/DataTypes";
 import { TextOutput, NumberOutput } from "./outputs/BasicOutputs";
 import ImageOutput from "./outputs/ImageOutput";
+import { PolylineOutput } from "./outputs/GeometryOutputs";
 
 export interface OutputFieldDisplayProps {
   field: NodeField;
   expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
+  setExpanded?: (expanded: boolean) => void;
 }
 
 function OutputFieldDisplay({ field, expanded, setExpanded }: OutputFieldDisplayProps) {
@@ -15,7 +16,7 @@ function OutputFieldDisplay({ field, expanded, setExpanded }: OutputFieldDisplay
     return <ActionIcon 
       variant='subtle' 
       color='dark.3' 
-      onClick={() => setExpanded(!expanded)}
+      onClick={() => setExpanded && setExpanded(!expanded)}
       size='sm'
     >
     {expanded ? <IconChevronDown /> : <IconChevronUp />}
@@ -37,6 +38,8 @@ function OutputFieldDisplay({ field, expanded, setExpanded }: OutputFieldDisplay
 
   const renderOutput = () => {
     switch (field.dtype) {
+      case 'basemodel':
+        return <PolylineOutput field={field} expanded={expanded} />
       case 'string':
         return <TextOutput field={field} expanded={expanded} />
       case 'number':

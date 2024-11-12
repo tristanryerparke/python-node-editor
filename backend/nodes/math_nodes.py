@@ -3,7 +3,8 @@ from functools import lru_cache
 import sys
 import time
 from ..datatypes.base_node import BaseNode, BaseNodeData, node_definition
-from ..datatypes.field import NodeField
+from ..datatypes.field import InputNodeField, OutputNodeField
+from ..datatypes.field_data import FieldData
 
 MAXSIZE = 10
 
@@ -13,19 +14,19 @@ class AddNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(
+            InputNodeField(
                 label='A', 
                 dtype='number', 
-                data=0,
+                data=FieldData(payload=0, dtype='number'),
                 metadata={
                     'max': 100,
                     'min': -100
                 }
             ),
-            NodeField(
+            InputNodeField(
                 label='B', 
                 dtype='number', 
-                data=0,
+                data=FieldData(payload=0, dtype='number'),
                 metadata={
                     'max': 100,
                     'min': -100
@@ -33,89 +34,99 @@ class AddNode(BaseNode):
             )
         ],
         outputs=[
-            NodeField(label='Result', dtype='number')
+            OutputNodeField(label='Result', dtype='number')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, A: float, B: float):
-        return A + B
+    def exec(cls, A: FieldData, B: FieldData) -> FieldData:
+        result = A.payload + B.payload
+        return FieldData(payload=result, dtype='number')
 
 class AddNoDefaultNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(label='a', dtype='number'),
-            NodeField(label='b', dtype='number')
+            InputNodeField(label='a', dtype='number'),
+            InputNodeField(label='b', dtype='number')
         ],
         outputs=[
-            NodeField(label='result', dtype='number')
+            OutputNodeField(label='result', dtype='number')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, a: float, b: float):
-        return a + b
+    def exec(cls, a: FieldData, b: FieldData) -> FieldData:
+        result = a.payload + b.payload
+        return FieldData(payload=result, dtype='number')
 
 class SubtractNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(label='a', dtype='number', data=0),
-            NodeField(label='b', dtype='number', data=0)
+            InputNodeField(label='a', dtype='number'),
+            InputNodeField(label='b', dtype='number')
         ],
         outputs=[
-            NodeField(label='result', dtype='number')
+            OutputNodeField(label='result', dtype='number')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, a: float, b: float):
-        return a - b
+    def exec(cls, a: FieldData, b: FieldData) -> FieldData:
+        result = a.payload - b.payload
+        return FieldData(payload=result, dtype='number')
 
 class MultiplyNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(label='a', dtype='number', data=1),
-            NodeField(label='b', dtype='number', data=1)
+            InputNodeField(label='a', dtype='number', data=FieldData(payload=0, dtype='number')),
+            InputNodeField(label='b', dtype='number', data=FieldData(payload=1, dtype='number'))
         ],
         outputs=[
-            NodeField(label='result', dtype='number')
+            OutputNodeField(label='result', dtype='number')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, a: float, b: float):
-        return a * b
+    def exec(cls, a: FieldData, b: FieldData) -> FieldData:
+        result = a.payload * b.payload
+        return FieldData(payload=result, dtype='number')
 
 class DivideNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(label='a', dtype='number', data=1),
-            NodeField(label='b', dtype='number', data=1)
+            InputNodeField(label='a', dtype='number', data=FieldData(payload=1, dtype='number')),
+            InputNodeField(label='b', dtype='number', data=FieldData(payload=1, dtype='number'))
         ],
         outputs=[
-            NodeField(label='result', dtype='number')
+            OutputNodeField(label='result', dtype='number')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, a: float, b: float):
-        if b == 0:
+    def exec(cls, a: FieldData, b: FieldData) -> FieldData:
+        if b.payload == 0:
             raise ValueError("Cannot divide by zero")
-        return a / b
+        result = a.payload / b.payload
+        return FieldData(payload=result, dtype='number')
 
 class SplitNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            NodeField(label='number', dtype='number', data=1),
-            NodeField(label='t', dtype='number', data=0.5)
+            InputNodeField(label='number', dtype='number', data=FieldData(payload=1, dtype='number')),
+            InputNodeField(label='t', dtype='number', data=FieldData(payload=0.5, dtype='number'))
         ],
         outputs=[
-            NodeField(label='split_t', dtype='number'),
-            NodeField(label='split_1_minus_t', dtype='number')
+            OutputNodeField(label='split_t', dtype='number'),
+            OutputNodeField(label='split_1_minus_t', dtype='number')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, number: float, t: float) -> Tuple[float, float]:
-        if not 0 <= t <= 1:
+    def exec(cls, number: FieldData, t: FieldData) -> Tuple[FieldData, FieldData]:
+        if not 0 <= t.payload <= 1:
             raise ValueError("t must be between 0 and 1")
-        return number * t, number * (1 - t)
+        split_t = number * t
+        split_1_minus_t = number * (1 - t)
+        return [
+            FieldData(payload=split_t, dtype='number'),
+            FieldData(payload=split_1_minus_t, dtype='number')
+        ]
