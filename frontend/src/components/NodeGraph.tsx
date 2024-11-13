@@ -91,7 +91,8 @@ const NodeGraph: React.FC = () => {
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
-      const droppedNodeData: BaseNodeData = JSON.parse(event.dataTransfer.getData('application/reactflow')).data;
+      const node_data = JSON.parse(event.dataTransfer.getData('application/reactflow'));
+      const droppedNodeData: BaseNodeData = node_data.data;
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
@@ -99,11 +100,12 @@ const NodeGraph: React.FC = () => {
       const newNode: Node = {
         id: crypto.randomUUID(),
         position: {
-          x: position.x - 75,
+          x: position.x - node_data.width / 2,
           y: position.y - 37.5,
         },
         type: 'customNode',
         data: {...droppedNodeData},
+        width: node_data.width,
       };
       setNodes((nds) => [...nds, newNode as Node]);
     },

@@ -3,11 +3,22 @@ import {
   Flex,
   useMantineTheme
 } from "@mantine/core";
-import type { OutputFieldDisplayProps } from "../OutputFieldDisplay";
+import type { OutputDisplayProps} from "../OutputFieldDisplay";
 import { formatClassString } from "../../../utils/classFormatter";
 
-export function NumberOutput({ field }: OutputFieldDisplayProps) {
+export function NumberOutput({ field, expanded }: OutputDisplayProps) {
   const theme = useMantineTheme();
+
+  
+  const roundToThreeDecimals = (num: number) => {
+    return Math.round(num * 1000) / 1000;
+  };
+  
+  const formattedValue = field.data === null 
+    ? '' 
+    : typeof field.data.payload === 'number' 
+      ? roundToThreeDecimals(field.data.payload) 
+      : field.data.payload;
   
   return <Flex
     w='100%' 
@@ -19,22 +30,23 @@ export function NumberOutput({ field }: OutputFieldDisplayProps) {
     style={{
       border: `1px solid ${theme.colors.dark[4]}`, 
       borderRadius: '0.25rem',
+      overflowX: 'auto'
     }}
   >
     <Text size='xs' w='100%' c="dimmed" style={{
       whiteSpace: 'nowrap',
-      overflow: 'hidden',
+      overflow: 'ellipsis',
       textOverflow: 'ellipsis',
       fontSize: '12px'
     }}>
-      {field.data}
+      {formattedValue}
     </Text>
   </Flex>
 }
 
 
 
-export function TextOutput({ field, expanded }: OutputFieldDisplayProps) {
+export function TextOutput({ field, expanded }: OutputDisplayProps) {
   const theme = useMantineTheme();
   
   // the small text display styled to look like a mantine input
@@ -50,20 +62,17 @@ export function TextOutput({ field, expanded }: OutputFieldDisplayProps) {
       style={{
         border: `1px solid ${theme.colors.dark[4]}`, 
         borderRadius: '0.25rem',
-        textOverflow: 'ellipsis',
-        overflow: 'hidden',
-        userSelect: 'text', // Allow text selection
-        cursor: 'text'
       }}
     >
       <Text size='xs' w='100%' c="dimmed" style={{
         whiteSpace: 'nowrap',
-        overflow: 'hidden',
+        overflow: 'ellipsis',
         textOverflow: 'ellipsis',
         fontSize: '12px',
-        userSelect: 'text' // Allow text selection
+        userSelect: 'text', // Allow text selection
+        overflowX: 'hidden'
       }}>
-      {field.data === null ? '' : (typeof field.data === 'object' ? formatClassString(JSON.stringify(field.data)) : field.data)}
+      {field.data === null ? '' : (typeof field.data.payload === 'object' ? formatClassString(JSON.stringify(field.data.payload)) : field.data.payload)}
       </Text>
     </Flex>
   } 
@@ -82,7 +91,8 @@ export function TextOutput({ field, expanded }: OutputFieldDisplayProps) {
       borderRadius: '0.25rem',
       textOverflow: 'clip',
       userSelect: 'text', // Allow text selection
-      cursor: 'text'
+      cursor: 'text',
+      overflowX: 'hidden'
     }}
   >
     <Text
@@ -97,11 +107,7 @@ export function TextOutput({ field, expanded }: OutputFieldDisplayProps) {
       }}
       p='0.25rem'
     >
-      {field.data === null
-        ? ''
-        : typeof field.data === 'object'
-        ? formatClassString(JSON.stringify(field.data), 4)
-        : field.data}
+      {field.data === null ? '' : field.data.payload}
     </Text>
   </Flex>
 }

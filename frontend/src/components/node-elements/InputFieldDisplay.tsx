@@ -1,42 +1,55 @@
-import type { NodeField } from "../../types/DataTypes";
+import { useContext } from "react";
+import type { InputNodeField } from "../../types/DataTypes";
 import { Flex, Text, Tooltip, Badge, ActionIcon } from '@mantine/core';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import ImageInput from './inputs/ImageUploader';
+import ImageInput from './inputs/ImageInput';
 
-import { TextInput, NumberInput } from "./inputs/BasicInputs";
+import { NumberInput } from "./inputs/NumberInput";
+import { TextInput } from "./inputs/TextInput";
+import { FieldIndexContext, FieldDisplayContext } from "./CustomNode";
+
+
+import {  } from "./CustomNode";
 
 export interface InputFieldDisplayProps {
-  field: NodeField;
-  onChange: (field: NodeField, data?: unknown, metadata?: Record<string, unknown>) => void;
-  disabled: boolean
-  expanded: boolean
-  setExpanded: (expanded: boolean) => void
+  field: InputNodeField;
+  setField: (fieldIndex: number, field: InputNodeField) => void;
 }
 
-function InputFieldDisplay({ field, onChange, expanded, setExpanded, disabled }: InputFieldDisplayProps) {
-  
+export interface InputDisplayProps {
+  field: InputNodeField;
+  setField: (fieldIndex: number, field: InputNodeField) => void;
+  expanded: boolean;
+}
+
+function InputFieldDisplay({ field, setField }: InputFieldDisplayProps) {
+  const fieldIndex = useContext(FieldIndexContext);
+  const fieldDisplay = useContext(FieldDisplayContext);
+
+  const expanded = fieldDisplay === 'node' ? field.node_expanded : field.inspector_expanded;
+  const setExpanded = fieldDisplay === 'node' 
+    ? (expanded: boolean) => setField(fieldIndex, { ...field, node_expanded: expanded } as InputNodeField)
+    : (expanded: boolean) => setField(fieldIndex, { ...field, inspector_expanded: expanded } as InputNodeField);
+
   const renderInput = () => {
     switch (field.dtype) {
       case 'number':
         return <NumberInput 
           field={field} 
-          onChange={onChange} 
-          disabled={disabled}
-          expanded={expanded} 
+          setField={setField}
+          expanded={expanded}
         />
       case 'string':
         return <TextInput 
           field={field} 
-          onChange={onChange} 
-          disabled={disabled}
-          expanded={expanded} 
+          setField={setField}
+          expanded={expanded}
         />
       case 'image':
         return <ImageInput 
           field={field} 
-          onChange={onChange} 
-          disabled={disabled}
-          expanded={expanded} 
+          setField={setField}
+          expanded={expanded}
         />
       // Add more cases for future data types here
       default:
@@ -53,7 +66,7 @@ function InputFieldDisplay({ field, onChange, expanded, setExpanded, disabled }:
       color='dark.4'
       position='left'
     >
-      <Text px='0.25rem' size='sm' style={{ whiteSpace: 'nowrap', userSelect: 'none' }}>{field.user_label}</Text>
+      <Text px='0.25rem' size='sm' style={{ whiteSpace: 'nowrap', userSelect: 'none' }}>{field.user_label ? field.user_label : field.label}</Text>
     </Tooltip>
   }
 
@@ -64,7 +77,7 @@ function InputFieldDisplay({ field, onChange, expanded, setExpanded, disabled }:
       onClick={() => setExpanded(!expanded)}
       size='sm'
     >
-    {expanded ? <IconChevronDown /> : <IconChevronUp />}
+      {expanded ? <IconChevronDown /> : <IconChevronUp />}
     </ActionIcon>
   }
 

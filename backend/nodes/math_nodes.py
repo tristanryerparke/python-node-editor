@@ -62,8 +62,8 @@ class SubtractNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='a', dtype='number'),
-            InputNodeField(label='b', dtype='number')
+            InputNodeField(label='a', dtype='number', data=FieldData(payload=0, dtype='number')),
+            InputNodeField(label='b', dtype='number', data=FieldData(payload=0, dtype='number'))
         ],
         outputs=[
             OutputNodeField(label='result', dtype='number')

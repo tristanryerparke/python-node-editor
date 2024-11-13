@@ -12,9 +12,9 @@ class ReplaceNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(field_type='input', label='text', dtype='string'),
-            InputNodeField(field_type='input', label='old', dtype='string'),
-            InputNodeField(field_type='input', label='new', dtype='string')
+            InputNodeField(field_type='input', label='text', dtype='string', data=FieldData(payload='', dtype='string')),
+            InputNodeField(field_type='input', label='old', dtype='string', data=FieldData(payload='', dtype='string')),
+            InputNodeField(field_type='input', label='new', dtype='string', data=FieldData(payload='', dtype='string'))
         ],
         outputs=[
             OutputNodeField(field_type='output', label='replace_result', dtype='string')
@@ -29,9 +29,9 @@ class JoinNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(field_type='input', label='separator', dtype='string'),
-            InputNodeField(field_type='input', label='a', dtype='string'),
-            InputNodeField(field_type='input', label='b', dtype='string')
+            InputNodeField(field_type='input', label='separator', dtype='string', data=FieldData(payload='', dtype='string')),
+            InputNodeField(field_type='input', label='a', dtype='string', data=FieldData(payload='', dtype='string')),
+            InputNodeField(field_type='input', label='b', dtype='string', data=FieldData(payload='', dtype='string'))
         ],
         outputs=[
             OutputNodeField(field_type='output', label='join_result', dtype='string')

@@ -8,26 +8,48 @@ export interface BaseNodeData {
   terminal_output: string;
   error_output: string;
   description: string;
-  inputs: NodeField[];
-  outputs: NodeField[];
+  inputs: InputNodeField[];
+  outputs: OutputNodeField[];
   streaming: boolean;
   definition_path: string;
   progress: number;
 }
 
-export interface NodeField {
+export interface FieldData {
   id: string;
-  dtype: 'number' | 'string' | 'numpy' | 'image' | 'basemodel';
-  data: any;
+  payload: any;
   metadata: Record<string, unknown>;
-  max_file_size_mb: number;
-  class_name: string;
+  dtype: 'number' | 'string' | 'json' | 'numpy' | 'image' | 'class';
   cached: boolean;
-  description: string | null;
   size_mb: number;
-  field_type: 'input' | 'output';
+}
+
+export interface InputNodeField {
+  id: string;
+  dtype: 'number' | 'string' | 'json' | 'numpy' | 'image' | 'class';
+  data: FieldData | null;
+  description: string | null;
   label: string;
   user_label: string;
+  disabled: boolean;
+  is_edge_connected: boolean;
+  node_expanded: boolean;
+  inspector_expanded: boolean;
+  metadata: Record<string, unknown>;
+}
+
+export interface OutputNodeField {
+  id: string;
+  dtype: 'number' | 'string' | 'json' | 'numpy' | 'image' | 'class';
+  data: FieldData | null;
+  description: string | null;
+  label: string;
+  user_label: string;
+  disabled: boolean;
+  is_edge_connected: boolean;
+  node_expanded: boolean;
+  inspector_expanded: boolean;
+  metadata: Record<string, unknown>;
 }
 
 export interface BaseNode {

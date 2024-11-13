@@ -1,24 +1,48 @@
-import { Flex, Image, Text } from "@mantine/core";
-import { OutputFieldDisplayProps } from "../OutputFieldDisplay";
+import { Flex, Image, Text, useMantineTheme } from "@mantine/core";
+import { OutputDisplayProps} from "../OutputFieldDisplay";
+import { formatImageMetadata } from "../nodeUtils";
 
-
-function ImageOutput({ field, expanded }: OutputFieldDisplayProps) {
+function ImageOutput({ field, expanded }: OutputDisplayProps) {
+  const theme = useMantineTheme();
   if (!expanded) {
-    {field.metadata && Object.keys(field.metadata).length > 0 && (
-      <Text size='xs' c='dimmed'>{field.metadata.height as number} x {field.metadata.width as number} ({field.metadata.channels as number } channels)</Text>
-    )}
-  } else {
     return (
-      <Flex w='100%' h='100%' align='center' gap='0.25rem' justify='center' direction='column'>
-        {field.data && (
-          <Image p='1px' w='100%' src={`data:image/jpeg;base64,${field.data}`} style={{borderRadius: '0.25rem'}}/>
-        )}
-        {field.metadata && Object.keys(field.metadata).length > 0 && (
-          <Text size='xs' c='dimmed'>{field.metadata.height as number} x {field.metadata.width as number} ({field.metadata.channels as number } channels)</Text>
-        )}
+      <Flex
+          w='100%' 
+          bg='dark.6' 
+          align='center'
+          justify='center'
+          px='0.5rem'
+          h='29px'
+          style={{
+            border: `1px solid ${theme.colors.dark[4]}`, 
+            borderRadius: '0.25rem',
+          }}
+        >
+          {field.data?.metadata && (
+            <Text size='xs' w='100%' c="dimmed" style={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              fontSize: '12px'
+          }}>
+              {formatImageMetadata(field.data?.metadata as Record<string, unknown>)}
+            </Text>
+          )}
       </Flex>
-    )
+    );
   }
+
+  const imageData = !field.data?.cached ? field.data?.payload : field.data?.metadata.preview;
+  return (
+    <Flex w='100%' h='100%' align='center' gap='0.25rem' justify='center' direction='column'>
+      {field.data && (  
+        <>
+          <Image p='1px' w='100%' src={`data:image/png;base64,${imageData}`} style={{borderRadius: '0.25rem'}}/>
+          <Text size='xs' c='dimmed'>{formatImageMetadata(field.data?.metadata as Record<string, unknown>)}</Text>
+        </>
+      )}
+    </Flex>
+  );
 }
 
 export default ImageOutput;

@@ -22,6 +22,7 @@ import { getStatusColor } from '../../utils/Colors';
 import type { BaseNodeData, NodeField } from '../../types/DataTypes';
 import InputFieldDisplay from '../node-elements/InputFieldDisplay';
 import OutputFieldDisplay from '../node-elements/OutputFieldDisplay';
+import { FieldDisplayContext } from '../node-elements/CustomNode';
 
 function InspectorPanel() {
   const { isLocked, setIsLocked, lockedNodeId, setLockedNodeId, selectedNodeId } = useContext(InspectorContext);
@@ -49,53 +50,24 @@ function InspectorPanel() {
 
   const reactFlow = useReactFlow();
 
-  const [expandedStates, setExpandedStates] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    if (selectedNodeData) {
-      setExpandedStates(prevStates => {
-        const newStates = { ...prevStates };
-        selectedNodeData.inputs.forEach(input => {
-          if (!(input.id in newStates)) {
-            newStates[input.id] = true; // Default to expanded for inputs in inspector
-          }
-        });
-        selectedNodeData.outputs.forEach(output => {
-          if (!(output.id in newStates)) {
-            newStates[output.id] = true; // Default to expanded for outputs in inspector
-          }
-        });
-        return newStates;
-      });
-    }
-  }, [selectedNodeData]);
-
-  const setExpanded = useCallback((fieldId: string, expanded: boolean) => {
-    setExpandedStates(prev => ({
-      ...prev,
-      [fieldId]: expanded
-    }));
-  }, []);
-
-  const updateNodeData = useCallback((field: NodeField, value?: unknown, metadata?: Record<string, unknown>) => {
+  const updateNodeData = useCallback((field: NodeField, value?: unknown, metadata?: Record<string, unknown>, typeContext: 'input' | 'output') => {
     const newData = { ...selectedNodeData };
-    const inputIndex = newData.inputs.findIndex((input: NodeField) => input.label === field.label);
-    if (inputIndex !== -1) {
+    const fieldList = typeContext === 'input' ? newData.inputs : newData.outputs;
+    const fieldIndex = fieldList.findIndex((f: NodeField) => f.label === field.label);
+    if (fieldIndex !== -1) {
       if (value === undefined && metadata === undefined) {
         // Replace the entire field
-        newData.inputs[inputIndex] = field;
+        fieldList[fieldIndex] = field;
       } else {
         // Update specific parts of the field
-        newData.inputs[inputIndex] = { 
-          ...newData.inputs[inputIndex], 
-          data: value !== undefined ? value : newData.inputs[inputIndex].data, 
-          metadata: metadata ? { ...newData.inputs[inputIndex].metadata, ...metadata } : newData.inputs[inputIndex].metadata
+        fieldList[fieldIndex] = { 
+          ...fieldList[fieldIndex], 
+          data: value !== undefined ? value : fieldList[fieldIndex].data, 
+          metadata: metadata ? { ...fieldList[fieldIndex].metadata, ...metadata } : fieldList[fieldIndex].metadata,
+          inspector_expanded: field.inspector_expanded
         };
       }
     }
-    // Commented out as per CustomNode.tsx
-    // newData.outputs = newData.outputs.map(output => ({ ...output, data: null }));
-    // newData.status = 'not evaluated';
 
     reactFlow.setNodes((nds) =>
       nds.map((node) => (node.id === selectedNode?.id ? { ...node, data: newData } : node))
@@ -156,13 +128,12 @@ function InspectorPanel() {
         {inputs.map((input, index) => (
           <React.Fragment key={input.label}>
             <Flex direction='column' w="100%" p='0.5rem' m={0}>
-              <InputFieldDisplay 
-                field={input} 
-                onChange={(field, value, metadata) => updateNodeData(field, value, metadata)}
-                expanded={expandedStates[input.id] ?? true}
-                setExpanded={(expanded) => setExpanded(input.id, expanded)}
-                disabled={false}
-              />
+              <FieldDisplayContext.Provider value='inspector'>
+                <InputFieldDisplay 
+                  field={input} 
+                  setField={(fieldIndex, field) => updateNodeData(field, undefined, undefined, 'input')}
+                />
+              </FieldDisplayContext.Provider>
             </Flex>
             {index < inputs.length - 1 && <Divider variant='dashed' color='dark.3' />}
           </React.Fragment>
@@ -179,11 +150,12 @@ function InspectorPanel() {
         {outputs.map((output, index) => (
           <React.Fragment key={output.label}>
             <Flex direction='column' w='100%' p='0.5rem' m={0}>
-              <OutputFieldDisplay 
-                field={output} 
-                expanded={expandedStates[output.id] ?? true}
-                setExpanded={(expanded) => setExpanded(output.id, expanded)}
-              />
+              <FieldDisplayContext.Provider value='inspector'>
+                <OutputFieldDisplay 
+                  field={output} 
+                  setField={(fieldIndex, field) => updateNodeData(field, undefined, undefined, 'output')}
+                />
+              </FieldDisplayContext.Provider>
             </Flex>
             {index < outputs.length - 1 && <Divider variant='dashed' color='dark.3' />}
           </React.Fragment>

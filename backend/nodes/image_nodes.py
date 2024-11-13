@@ -1,4 +1,4 @@
-from typing import Tuple, Union, Dict, Generator
+from typing import Tuple, Union, Dict, Generator, ClassVar
 from functools import lru_cache
 import numpy as np
 from docarray.typing import ImageUrl
@@ -45,6 +45,8 @@ class ImageFromUrlNode(BaseNode):
         return FieldData(payload=image_tensor, dtype='image')
 
 class BlurImageNode(BaseNode):
+    width: int = 275
+
     @classmethod
     @node_definition(
         inputs=[
@@ -56,21 +58,13 @@ class BlurImageNode(BaseNode):
             })
         ],
         outputs=[
-            OutputNodeField(field_type='output', label='Blurred Image', dtype='image')
+            OutputNodeField(field_type='output', label='blurred_image', dtype='image')
         ]
     )
     def exec(cls, image: FieldData, radius: FieldData) -> FieldData:
         img = Image.fromarray(image.payload.astype(np.uint8))
         img = img.filter(ImageFilter.GaussianBlur(radius=radius.payload))
         return FieldData(payload=np.array(img), dtype='image')
-    
-    @classmethod
-    def metadata(cls, result):
-        return {
-            'width': result.shape[1],
-            'height': result.shape[0],
-            'channels': result.shape[2] if result.ndim == 3 else 1
-        }
 
 
 class FlipHorizontallyNode(BaseNode):

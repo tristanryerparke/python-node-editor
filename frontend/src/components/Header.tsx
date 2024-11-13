@@ -38,7 +38,12 @@ function EditableTitle( { filename, setFilename }: { filename: string, setFilena
   };
 
   return (
-    <Flex miw='6rem' justify='center' align='center'>
+    <Flex 
+      miw='6rem' 
+      justify='center' 
+      align='center'
+      mx='1rem'
+    >
       {isEditing ? (
         <TextInput
           ref={inputRef}

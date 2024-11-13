@@ -34,7 +34,9 @@ class TestStreamingAddNode(StreamingBaseNode):
     ]:
         for i in range(10):
             # yield {'progress': i/5, 'outputs': [NodeField(field_type='output', label='result', dtype='number', data=i)]}
-            yield {'progress': i/10, 'outputs': [i]}
+            yield {'progress': i/10, 'outputs': [
+                FieldData(payload=i, dtype='number')
+            ]}
             time.sleep(1)
             print(f'this status update came from inside the node: {i}')
             result = a.payload + b.payload

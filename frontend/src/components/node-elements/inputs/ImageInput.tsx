@@ -1,42 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { FileInput, Flex, Loader, Image, Text } from "@mantine/core";
 import { IconUpload, IconX } from "@tabler/icons-react";
-import { InputFieldDisplayProps } from "../InputFieldDisplay";
+import { InputDisplayProps } from "../InputFieldDisplay";
+import { InputNodeField } from "../../../types/DataTypes";
 
+import { FieldIndexContext } from "../CustomNode";
+import { setFieldData } from "../nodeUtils";
 
-function ImageInput({ field, onChange, expanded, disabled }: InputFieldDisplayProps) {
+function ImageInput({ field, setField, expanded }: InputDisplayProps) {
+
+  const fieldIndex = useContext(FieldIndexContext);
 
   const [fileValue, setFileValue] = useState<File | null>(null);
   const [dummyFile, setDummyFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (field && disabled) {
+    if (field && field.disabled) {
       setDummyFile(new File([], field.description ? field.description : ''));
     // } else if (field && field.data && field.description) {
     //   setFileValue(new File([], field.description ? field.description : ''));
-    } else if (field && field.data && field.metadata.filename) {
-      setFileValue(new File([], field.metadata.filename as string));
+    } else if (field && field.data && field.data.metadata.filename) {
+      setFileValue(new File([], field.data.metadata.filename as string));
     } else {
       setDummyFile(null);
       setFileValue(null);
     }
-  }, [disabled, field]);
+  }, [field]);
 
   function handleUpload(file: File | null) {
-    console.log('Handling upload:', file, field);
-
     if (file && field) {
-      console.log('Uploading image');
       setIsLoading(true);
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64String = e.target?.result as string;
-        const updatedInputField = { ...field, data: base64String };
+        
+        // Create a FieldData-compatible object
+        const fieldDataObject = {
+          payload: base64String,
+          dtype: 'image',
+          metadata: {
+            filename: file.name,
+            original_filename: file.name
+          }
+        };
 
         const formData = new FormData();
-        const blob = new Blob([JSON.stringify(updatedInputField)], { type: 'application/json' });
-        formData.append('file', blob, 'large_data.json');
+        formData.append('file', new Blob([JSON.stringify(fieldDataObject)], { type: 'application/json' }));
         formData.append('original_filename', file.name);
         formData.append('file_extension', file.name.split('.').pop() || '');
 
@@ -47,10 +57,11 @@ function ImageInput({ field, onChange, expanded, disabled }: InputFieldDisplayPr
           });
 
           if (response.ok) {
-            const result = await response.json();
-            onChange(result);
-            console.log('Uploaded large file:', result);
-            setFileValue(new File([], result.metadata.filename));
+            const resultFieldData = await response.json();
+            console.log('resultFieldData', resultFieldData);
+            // We don't use setFieldValue here becuase the backend already gives a fresh id that we need to maintain
+            setField(fieldIndex, {...field, data: resultFieldData} as InputNodeField);
+            setFileValue(new File([], resultFieldData.metadata.filename));
           } else {
             console.error('Failed to upload large file');
           }
@@ -62,7 +73,7 @@ function ImageInput({ field, onChange, expanded, disabled }: InputFieldDisplayPr
       };
       reader.readAsDataURL(file);
     } else {
-      onChange(field, '', {});
+      setFieldData(fieldIndex, setField, field, null);
       setFileValue(null);
     }
   }
@@ -79,13 +90,13 @@ function ImageInput({ field, onChange, expanded, disabled }: InputFieldDisplayPr
             size={20} style={{cursor: 'pointer'}}
             onClick={() => { 
               handleUpload(null);
-              onChange({ ...field, data: null, metadata: {} });
+              setFieldData(fieldIndex, setField, field, null, );
             }}
-            opacity={disabled || !fileValue ? 0 : 1}
+            opacity={!fileValue ? 0 : 1}
           />}
-          disabled={disabled}
-          value={disabled ? dummyFile : fileValue}
-          placeholder={disabled ? "Connected" : "Upload image"}
+          disabled={field.disabled || field.is_edge_connected}
+          value={field.disabled ? dummyFile : fileValue}
+          placeholder={field.disabled ? "Connected" : "Upload image"}
           style={{overflow: 'hidden'}}
           onChange={(file) => handleUpload(file)}
         />
@@ -95,13 +106,16 @@ function ImageInput({ field, onChange, expanded, disabled }: InputFieldDisplayPr
   if (!expanded) {
     return renderFilePicker();
   } else {
+
+
+    const imageData = !field.data?.cached ? field.data?.payload : field.data?.metadata.preview;
     return (
       <Flex w='100%' h='100%' align='center' gap='0.25rem' justify='center' direction='column'>
-        {field.data && (
-          <Image p='1px' w='100%' src={`data:image/jpeg;base64,${field.data}`} style={{borderRadius: '0.25rem'}}/>
-        )}
-        {field.metadata && Object.keys(field.metadata).length > 0 && (
-          <Text size='xs' c='dimmed'>{field.metadata.height} x {field.metadata.width} ({field.metadata.channels} channels)</Text>
+        {field.data && (  
+          <>
+            <Image p='1px' w='100%' src={`data:image/png;base64,${imageData}`} style={{borderRadius: '0.25rem'}}/>
+            <Text size='xs' c='dimmed'>{field.data?.metadata.height as number} x {field.data?.metadata.width as number} ({field.data?.metadata.type as string})</Text>
+          </>
         )}
         {renderFilePicker()}
       </Flex>
