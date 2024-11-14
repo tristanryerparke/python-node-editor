@@ -1,34 +1,14 @@
-import { Flex, Image, Text, useMantineTheme } from "@mantine/core";
-import { OutputDisplayProps} from "../OutputFieldDisplay";
+import { Flex, Image, Text } from "@mantine/core";
+import type { OutputDisplayProps } from "../OutputFieldDisplay";
 import { formatImageMetadata } from "../nodeUtils";
+import { OutputWrapper } from "../../../common/OutputWrapper";
 
 function ImageOutput({ field, expanded }: OutputDisplayProps) {
-  const theme = useMantineTheme();
   if (!expanded) {
     return (
-      <Flex
-          w='100%' 
-          bg='dark.6' 
-          align='center'
-          justify='center'
-          px='0.5rem'
-          h='29px'
-          style={{
-            border: `1px solid ${theme.colors.dark[4]}`, 
-            borderRadius: '0.25rem',
-          }}
-        >
-          {field.data?.metadata && (
-            <Text size='xs' w='100%' c="dimmed" style={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              fontSize: '12px'
-          }}>
-              {formatImageMetadata(field.data?.metadata as Record<string, unknown>)}
-            </Text>
-          )}
-      </Flex>
+      <OutputWrapper>
+        {field.data?.metadata && formatImageMetadata(field.data?.metadata as Record<string, unknown>)}
+      </OutputWrapper>
     );
   }
 

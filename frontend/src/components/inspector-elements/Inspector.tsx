@@ -15,11 +15,11 @@ import {
 } from '@mantine/core'  
 import { useDisclosure } from '@mantine/hooks';
 import { IconLockOpen, IconLockFilled, IconEye } from '@tabler/icons-react';
-import React, { useContext, useState, useCallback, useEffect } from 'react';
+import React, { useContext, useState, useCallback } from 'react';
 import { InspectorContext } from '../../GlobalContext';
 import { useNodes, useReactFlow } from '@xyflow/react';
 import { getStatusColor } from '../../utils/Colors';
-import type { BaseNodeData, NodeField } from '../../types/DataTypes';
+import type { BaseNodeData, InputNodeField, NodeField, OutputNodeField } from '../../types/DataTypes';
 import InputFieldDisplay from '../node-elements/InputFieldDisplay';
 import OutputFieldDisplay from '../node-elements/OutputFieldDisplay';
 import { FieldDisplayContext } from '../node-elements/CustomNode';
@@ -40,98 +40,40 @@ function InspectorPanel() {
   const nodes = useNodes();
 
   const nodeToDisplay = isLocked ? lockedNodeId : selectedNodeId;
-  const selectedNode = nodes.find(node => node.id === nodeToDisplay);
-  const selectedNodeData = selectedNode?.data as unknown as BaseNodeData;
-
-  const [opened, { open, close }] = useDisclosure(false);
-  const [modalImage, setModalImage] = useState('');
-  const [modalTitle, setModalTitle] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const focusedNode = nodes.find(node => node.id === nodeToDisplay);
+  const focusedNodeData = focusedNode?.data as unknown as BaseNodeData;
 
   const reactFlow = useReactFlow();
 
-  const updateNodeData = useCallback((field: NodeField, value?: unknown, metadata?: Record<string, unknown>, typeContext: 'input' | 'output') => {
-    const newData = { ...selectedNodeData };
-    const fieldList = typeContext === 'input' ? newData.inputs : newData.outputs;
-    const fieldIndex = fieldList.findIndex((f: NodeField) => f.label === field.label);
-    if (fieldIndex !== -1) {
-      if (value === undefined && metadata === undefined) {
-        // Replace the entire field
-        fieldList[fieldIndex] = field;
+  const setField = useCallback(
+    (fieldIndex: number, field: InputNodeField | OutputNodeField, type: 'input' | 'output') => {
+      const newData = { ...focusedNodeData };
+      if (type === 'input') {
+        newData.inputs = [...newData.inputs];
+        newData.inputs[fieldIndex] = field as InputNodeField;
       } else {
-        // Update specific parts of the field
-        fieldList[fieldIndex] = { 
-          ...fieldList[fieldIndex], 
-          data: value !== undefined ? value : fieldList[fieldIndex].data, 
-          metadata: metadata ? { ...fieldList[fieldIndex].metadata, ...metadata } : fieldList[fieldIndex].metadata,
-          inspector_expanded: field.inspector_expanded
-        };
+        newData.outputs = [...newData.outputs];
+        newData.outputs[fieldIndex] = field as OutputNodeField;
       }
-    }
-
-    reactFlow.setNodes((nds) =>
-      nds.map((node) => (node.id === selectedNode?.id ? { ...node, data: newData } : node))
-    );
-  }, [selectedNodeData, reactFlow, selectedNode?.id]);
-
-  const openModal = useCallback(async (inputOrOutput: 'input' | 'output', label: string) => {
-    setIsLoading(true);
-    open();
-    setModalTitle(label);
-    try {
-      const fieldItem = inputOrOutput === 'input' 
-        ? selectedNodeData.inputs.find(input => input.label === label)
-        : selectedNodeData.outputs.find(output => output.label === label);
-      
-      if (fieldItem && fieldItem.id) {
-        const response = await fetch(`http://localhost:8000/full_data/${fieldItem.id}?dtype=${fieldItem.dtype}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch image data');
-        }
-        const imageData = await response.text();
-        setModalImage(`data:image/jpeg;base64,${imageData.replace(/"/g, '')}`);
-      } else {
-        throw new Error('Image data ID not found');
-      }
-    } catch (error) {
-      console.error('Error fetching image:', error);
-      setModalImage('');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [open, selectedNodeData]);
-
-  const renderImageItem = (fieldItem: NodeField, inputOrOutput: 'input' | 'output') => {
-    return (
-      <Flex direction="column" key={fieldItem.label} w="100%" pb='0.5rem'>
-        <Text fw={700} span>{fieldItem.label}:</Text> <Text span>{fieldItem.description}</Text>
-        {fieldItem.data && typeof fieldItem.data === 'string' && (
-          <MantineImage fit="contain" src={`data:image/jpeg;base64,${fieldItem.data}`} alt={`${fieldItem.label} preview`} w="100%" h="100%" />
-        )}
-        <ActionIcon 
-          style={{ position: 'relative', top: -30, right: -2 }} 
-          variant="subtle" 
-          color="dark.3"
-          onClick={() => selectedNode && openModal(inputOrOutput, fieldItem.label)}
-        >
-          <IconEye />
-        </ActionIcon>
-      </Flex>
-    );
-  };
+      reactFlow.setNodes((nds) =>
+        nds.map((node) => (node.id === focusedNode?.id ? { ...node, data: newData } : node))
+      );
+    },
+    [focusedNodeData, reactFlow, focusedNode?.id]
+  );
 
   const renderInputs = (inputs: NodeField[]) => (
     <Paper withBorder m='0.5rem' radius='md'>
       <Flex direction="column" w="100%" className='inspector-inputs'>
         <Title ml='0.5rem' py='0.25rem' order={4}>Inputs:</Title>
         <Divider color='dark.3' />
-        {inputs.map((input, index) => (
-          <React.Fragment key={input.label}>
+        {inputs.map((field, index) => (
+          <React.Fragment key={field.label}>
             <Flex direction='column' w="100%" p='0.5rem' m={0}>
               <FieldDisplayContext.Provider value='inspector'>
                 <InputFieldDisplay 
-                  field={input} 
-                  setField={(fieldIndex, field) => updateNodeData(field, undefined, undefined, 'input')}
+                  field={field} 
+                  setField={setField}
                 />
               </FieldDisplayContext.Provider>
             </Flex>
@@ -153,7 +95,7 @@ function InspectorPanel() {
               <FieldDisplayContext.Provider value='inspector'>
                 <OutputFieldDisplay 
                   field={output} 
-                  setField={(fieldIndex, field) => updateNodeData(field, undefined, undefined, 'output')}
+                  setField={setField}
                 />
               </FieldDisplayContext.Provider>
             </Flex>
@@ -222,22 +164,22 @@ function InspectorPanel() {
       <Flex direction="row" w="100%" h="100%" m={0} p={0} gap='0.5rem' style={{ overflowY: 'auto' }}>
 
           <Flex direction="column" m={0} p={0} w="100%" >
-            {selectedNode ? (
+            {focusedNode ? (
               <>
                 <Flex direction="row" align="center" justify="space-between" p='0.5rem'>
-                  <Title order={3}>{`Node: ${selectedNodeData.display_name}`}</Title>
-                  <Badge color={getStatusColor(selectedNodeData.status, theme)}>
-                    {selectedNodeData.status}
+                  <Title order={3}>{`Node: ${focusedNodeData.display_name}`}</Title>
+                  <Badge color={getStatusColor(focusedNodeData.status, theme)}>
+                    {focusedNodeData.status}
                   </Badge>
                 </Flex>
-                <Text px='0.5rem' size="xs">{`ID: ${selectedNode.id}`}</Text>
+                <Text px='0.5rem' size="xs">{`ID: ${focusedNode.id}`}</Text>
                 <Divider orientation='horizontal' color='dark.3' size='sm' w='100%'/>
                 <Flex direction="column" w="100%" p={0} m={0}>
-                  {renderInputs(selectedNodeData.inputs)}
+                  {renderInputs(focusedNodeData.inputs)}
                   <Divider color='dark.3' />
-                  {renderOutputs(selectedNodeData.outputs)}
+                  {renderOutputs(focusedNodeData.outputs)}
                   <Divider color='dark.3' />
-                  {renderTerminalAndErrorOutput(selectedNodeData.terminal_output, selectedNodeData.error_output)}
+                  {renderTerminalAndErrorOutput(focusedNodeData.terminal_output, focusedNodeData.error_output)}
                 </Flex>
               </>
             ) : (
@@ -248,22 +190,6 @@ function InspectorPanel() {
           </Flex>
       </Flex>
     </Panel>
-    <Modal 
-      size="90%"
-      centered 
-      opened={opened} 
-      onClose={close} 
-      title={modalTitle}
-      style={{overflow: 'hidden'}}
-    >
-      <Flex justify="center" align="center" w="100%" h="80%" style={{overflow: 'hidden', flexGrow: 1}}>
-      {isLoading ? (
-          <Loader color='dark.3' size="xl" />
-      ) : (
-        <MantineImage h="100%" src={modalImage} alt={modalTitle} fit="contain" />
-      )}
-    </Flex>
-    </Modal>
     </>
   );
 }

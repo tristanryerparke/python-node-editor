@@ -2,8 +2,9 @@ import { useContext } from "react";
 import { Flex, ActionIcon, Tooltip, Badge, Text } from "@mantine/core";
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import type { OutputNodeField } from "../../types/DataTypes";
-import { TextOutput, NumberOutput } from "./outputs/BasicOutputs";
-import ImageOutput from "./outputs/ImageOutput";
+import { TextOutput } from "./outputs/TextOutput";
+import { NumberOutput } from "./outputs/NumberOutput";
+import  ImageOutput from "./outputs/ImageOutput";
 import { PolylineOutput } from "./outputs/GeometryOutputs";
 import { FieldIndexContext, FieldDisplayContext } from "./CustomNode";
 

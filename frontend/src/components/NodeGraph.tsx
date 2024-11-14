@@ -23,7 +23,7 @@ import { Panel } from 'react-resizable-panels';
 import CustomNode from './node-elements/CustomNode';
 import { AppContext, InspectorContext, FlowMetadataContext } from '../GlobalContext';
 import { BaseNodeData, FlowFileObject } from '../types/DataTypes';
-import { useAutoSave } from '../hooks/useAutoSave';
+// import { useAutoSave } from '../hooks/useAutoSave';
 
 const nodeTypes: NodeTypes = {
   customNode: CustomNode,
@@ -51,6 +51,8 @@ const NodeGraph: React.FC = () => {
     [setEdges],
   );
 
+  // Comment out or remove both effects
+  /*
   useEffect(() => {
     const savedFlow = localStorage.getItem('savedFlow');
     if (savedFlow) {
@@ -82,6 +84,7 @@ const NodeGraph: React.FC = () => {
     window.addEventListener('beforeunload', saveFlow);
     return () => window.removeEventListener('beforeunload', saveFlow);
   }, [nodes, edges, getViewport, filename]);
+  */
 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -124,7 +127,7 @@ const NodeGraph: React.FC = () => {
     onChange: onSelectionChange,
   });
 
-  useAutoSave();
+  // useAutoSave();
 
   const [, setForceUpdate] = useState({});
 

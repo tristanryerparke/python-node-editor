@@ -41,6 +41,38 @@ class AddNode(BaseNode):
     def exec(cls, A: FieldData, B: FieldData) -> FieldData:
         result = A.payload + B.payload
         return FieldData(payload=result, dtype='number')
+    
+class ExponentNode(BaseNode):
+    @classmethod
+    @node_definition(
+        inputs=[
+            InputNodeField(
+                label='Base', 
+                dtype='number', 
+                data=FieldData(payload=2, dtype='number'),
+                metadata={
+                    'max': 100,
+                    'min': -100
+                }
+            ),
+            InputNodeField(
+                label='Exponent', 
+                dtype='number', 
+                data=FieldData(payload=2, dtype='number'),
+                metadata={
+                    'max': 10,  # Limiting exponent range to avoid extremely large numbers
+                    'min': -10
+                }
+            )
+        ],
+        outputs=[
+            OutputNodeField(label='Result', dtype='number')
+        ]
+    )
+    @lru_cache(maxsize=MAXSIZE)
+    def exec(cls, Base: FieldData, Exponent: FieldData) -> FieldData:
+        result = Base.payload ** Exponent.payload
+        return FieldData(payload=result, dtype='number')
 
 class AddNoDefaultNode(BaseNode):
     @classmethod
