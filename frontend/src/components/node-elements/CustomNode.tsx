@@ -1,121 +1,125 @@
-import React, { memo, useCallback, useContext, useState, useEffect } from 'react';
+import React, { memo, useCallback, useContext, useEffect, createContext } from 'react';
 import { Node, NodeProps, useReactFlow, useStore } from '@xyflow/react';
 import { Handle, Position } from '@xyflow/react';
 import { Resizable } from 're-resizable';
 import { Paper, Divider, Flex, useMantineTheme } from '@mantine/core';
 import NodeTopBar from './NodeTopBar';
 import { InspectorContext } from '../../GlobalContext';
-import { BaseNodeData, NodeField } from '../../types/DataTypes';
+import { BaseNodeData, InputNodeField, OutputNodeField } from '../../types/DataTypes';
 import OutputFieldDisplay from './OutputFieldDisplay';
 import InputFieldDisplay from './InputFieldDisplay';
 
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
-export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
+export const FieldIndexContext = createContext<number>(-1);
+export const FieldDisplayContext = createContext<string>('node');
+
+export default memo(function CustomNode({ data, id, width }: NodeProps<CustomNodeData>) {
   const reactFlow = useReactFlow();
   const theme = useMantineTheme();  
 
   // Get edges from the React Flow store
   const edges = useStore((state) => state.edges);
 
-  // For when the user changes the value of an input field
-  // Updates the field data based on the id and clears node outputs
-  const updateNodeData = useCallback((field: NodeField, value?: unknown, metadata?: Record<string, unknown>) => {
-    const newData = { ...data };
-    const inputIndex = newData.inputs.findIndex((input: NodeField) => input.label === field.label);
-    if (inputIndex !== -1) {
-      if (value === undefined && metadata === undefined) {
-        // Replace the entire field
-        newData.inputs[inputIndex] = field;
+  // This gets passed down to lower components, mostly this is used to swap out or update field.data
+  // But it can also be used to set the expanded state of a field, etc
+  const setField = useCallback(
+    (fieldIndex: number, field: InputNodeField | OutputNodeField, type: 'input' | 'output') => {
+      const newData = { ...data };
+      if (type === 'input') {
+        newData.inputs = [...newData.inputs];
+        newData.inputs[fieldIndex] = field as InputNodeField;
       } else {
-        // Update specific parts of the field
-        newData.inputs[inputIndex] = { 
-          ...newData.inputs[inputIndex], 
-          data: value !== undefined ? value : newData.inputs[inputIndex].data, 
-          metadata: metadata ? { ...newData.inputs[inputIndex].metadata, ...metadata } : newData.inputs[inputIndex].metadata
-        };
+        newData.outputs = [...newData.outputs];
+        newData.outputs[fieldIndex] = field as OutputNodeField;
       }
-    }
-    // newData.outputs = newData.outputs.map(output => ({ ...output, data: null }));
-    // newData.status = 'not evaluated';
-
-    reactFlow.setNodes((nds) =>
-      nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
-    );
-  }, [data, reactFlow, id]);
-
+      reactFlow.setNodes((nds) =>
+        nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
+      );
+    },
+    [data, reactFlow, id]
+  );
   
 
-  // Add this state to manage expanded states for each input and output field
-  const [expandedStates, setExpandedStates] = useState<Record<string, boolean>>({});
-
+  // Add an effect to update is_edge_connected when edges change
   useEffect(() => {
-    setExpandedStates(prevStates => {
-      const newStates = { ...prevStates };
-      data.inputs.forEach(input => {
-        if (!(input.id in newStates)) {
-          newStates[input.id] = false; // Default to collapsed for inputs
-        }
-      });
-      data.outputs.forEach(output => {
-        if (!(output.id in newStates)) {
-          newStates[output.id] = false; // Default to collapsed for outputs
-        }
-      });
-      return newStates;
+    const newData = { ...data };
+    let hasChanges = false;
+
+    // Update inputs
+    newData.inputs = newData.inputs.map(input => {
+      const handleId = `${id}-input-${input.label}`;
+      const isConnected = edges.some(edge => edge.targetHandle === handleId);
+      
+      if (input.is_edge_connected !== isConnected) {
+        hasChanges = true;
+        return { ...input, is_edge_connected: isConnected };
+      }
+      return input;
     });
-  }, [data.inputs, data.outputs]);
 
-  // Function to toggle expanded state for a specific input or output
-  const setExpanded = useCallback((fieldId: string, expanded: boolean) => {
-    setExpandedStates(prev => ({
-      ...prev,
-      [fieldId]: expanded
-    }));
-  }, []);
+    // Update outputs
+    newData.outputs = newData.outputs.map(output => {
+      const handleId = `${id}-output-${output.label}`;
+      const isConnected = edges.some(edge => edge.sourceHandle === handleId);
+      
+      if (output.is_edge_connected !== isConnected) {
+        hasChanges = true;
+        return { ...output, is_edge_connected: isConnected };
+      }
+      return output;
+    });
 
-  function renderInputComponent(inputField: NodeField) {
+    // Only update nodes if there were changes
+    if (hasChanges) {
+      reactFlow.setNodes((nds) =>
+        nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
+      );
+    }
+  }, [edges, data, id, reactFlow]);
+
+  function renderInputComponent(inputField: InputNodeField, index: number) {
     const handleId = `${id}-input-${inputField.label}`;
-    const isEdgeConnected = edges.some(edge => edge.targetHandle === handleId);
-
+    
     return (
-    <Flex 
-      key={handleId}
-      py='0.25rem'
-      style={{position: 'relative'}} 
-      align='center' 
-      justify='space-between' 
-      w='100%'
-    > 
-      <Flex direction='column' w='100%' pl='0.75rem' pr='0.5rem'>
-        <InputFieldDisplay 
-          field={inputField} 
-          onChange={updateNodeData}
-          disabled={isEdgeConnected}
-          expanded={expandedStates[inputField.id]}
-          setExpanded={(expanded) => setExpanded(inputField.id, expanded)}
+      <Flex 
+        key={index}
+        py='0.25rem'
+        style={{position: 'relative'}} 
+        align='center' 
+        justify='space-between' 
+        w='100%'
+      > 
+        <Flex direction='column' w='100%' pl='0.75rem' pr='0.5rem'>
+          <FieldIndexContext.Provider value={index}> 
+            <FieldDisplayContext.Provider value='node'>
+              <InputFieldDisplay 
+                field={inputField}
+                setField={(fieldIndex, field) => setField(fieldIndex, field, 'input')}
+              />
+            </FieldDisplayContext.Provider>
+          </FieldIndexContext.Provider>
+        </Flex>
+        
+        <Handle
+          type="target"
+          id={handleId}
+          position={Position.Left}
+          style={{ 
+            width: '1rem',
+            height: '1rem',
+            borderRadius: '50%',
+            border: '2px solid',
+            borderColor: theme.colors.dark[2],
+            backgroundColor: theme.colors.dark[5],
+            zIndex: 1000,
+          }}
         />
       </Flex>
-      
-      <Handle
-        type="target"
-        id={handleId}
-        position={Position.Left}
-        style={{ 
-          width: '1rem',
-          height: '1rem',
-          borderRadius: '50%',
-          border: '2px solid',
-          borderColor: theme.colors.dark[2],
-          backgroundColor: theme.colors.dark[5],
-          zIndex: 1000,
-        }}
-      />
-    </Flex>
     );
   }
 
-  const renderOutputComponent = (outputField: NodeField) => {
+  const renderOutputComponent = (outputField: OutputNodeField, index: number) => {
     const handleId = `${id}-output-${outputField.label}`;
     return (
       <Flex 
@@ -129,11 +133,12 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
         w='100%'
       >
         <Flex direction='column' w='100%' pr='0.75rem' pl='0.5rem'>
-          <OutputFieldDisplay 
-            field={outputField} 
-            expanded={expandedStates[outputField.id]}
-            setExpanded={(expanded) => setExpanded(outputField.id, expanded)}
-          />
+          <FieldIndexContext.Provider value={index}>
+            <OutputFieldDisplay 
+              field={outputField}
+              setField={(fieldIndex, field) => setField(fieldIndex, field, 'output')}
+            />
+          </FieldIndexContext.Provider>
         </Flex>
         <Handle
           type="source"
@@ -169,9 +174,9 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
   return (
     <Resizable
       defaultSize={{
-        width: 250,
+        width: width as number,
       }}
-      minWidth={200}
+      minWidth={width as number}
       enable={{
         top: false,
         right: true,
@@ -209,7 +214,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
         <Flex direction='column' gap='0' w='100%'>
           {data.inputs.map((inputField, index) => (
             <React.Fragment key={inputField.id}>
-              {renderInputComponent(inputField)}
+              {renderInputComponent(inputField, index)}
               {index < data.inputs.length - 1 && <Divider variant='dashed' color='dark.3' />}
             </React.Fragment>
           ))}
@@ -220,7 +225,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
         <Flex direction='column' gap='0' w='100%'>
           {data.outputs.map((output, index) => (
             <React.Fragment key={output.id}>
-              {!(data.streaming && output.label === 'status') && renderOutputComponent(output)}
+              {!(data.streaming && output.label === 'status') && renderOutputComponent(output, index)}
               {index < data.outputs.length - 1 && <Divider variant='dashed' color='dark.3' />}
             </React.Fragment>
           ))}

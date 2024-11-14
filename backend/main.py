@@ -18,6 +18,25 @@ from .datatypes.base_node import BaseNode
 CACHE_SAVE_INTERVAL_MINS = 1
 
 
+# CREATE FIELD DATA CLASS THAT IS DYNNAMIC 
+
+# from typing import Any
+# from pydantic import BaseModel
+# class FieldData(BaseModel):
+#     id: str
+#     payload: Any
+#     metadata: dict
+
+# Functions that work inside node functions take FieldDatas as input and return FieldData as output.
+# This allows for metadata handling and generation inside the node function.
+# Node fields are static and don't change.
+# FieldData object ids for user specified inputs do not change unless the data changes.
+# FieldData object ids on outputs only change if the node's inputs changed.
+# This allows tracking / caching data in the flow.
+# Separates UI definitions (NodeFields) from the data flow.
+# FieldData could encapsulate list, dict logic down the line?
+
+
 app = FastAPI()
 
 app.add_middleware(
