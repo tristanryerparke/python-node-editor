@@ -11,8 +11,6 @@ from backend.datatypes.field_data_utils import (
     truncate_repr
 )
 
-
-
 class FieldData(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     payload: Any

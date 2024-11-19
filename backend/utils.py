@@ -20,35 +20,58 @@ def find_and_load_classes(directory: str):
     '''finds all node classes in a given directory and loads them'''
     all_classes = {}
 
-    for filename in os.listdir(directory):
-        if filename.endswith('.py'):
-            module_name = filename[:-3]
-            module_path = f"backend.nodes.{module_name}"
+    # Iterate through directories (categories) in the nodes folder
+    for item in os.listdir(directory):
+        category_path = os.path.join(directory, item)
+        
+        # Skip if not a directory or if it's a __pycache__ folder
+        if not os.path.isdir(category_path) or item.startswith('__'):
+            continue
 
-            try:
-                importlib.invalidate_caches()
-                module = importlib.import_module(module_path)
-                importlib.reload(module)
-            except ModuleNotFoundError:
-                print(f"Error loading module {module_path}")
-                continue
-
+        try:
+            # Import the category's __init__.py to get the display name
+            category_module = importlib.import_module(f"backend.nodes.{item}")
+            display_name = getattr(category_module, 'DISPLAY_NAME', item)
             classes = []
-            for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, BaseNode) and obj != BaseNode and obj != StreamingBaseNode:
-                    try:
-                        source_file = inspect.getsourcefile(obj)
-                        start_line = inspect.getsourcelines(obj)[1]
-                        obj.definition_path = f"{source_file}:{start_line}"
-                        classes.append(obj)
-                    except (OSError, TypeError) as e:
-                        print(f"Error getting source file for {obj.__name__}: {e}")
-                        continue
 
-            display_name = getattr(module, 'DISPLAY_NAME', module_name)
+            # Iterate through all python files in the category folder
+            for filename in os.listdir(category_path):
+                if not filename.endswith('.py') or filename.startswith('__'):
+                    continue
 
+                module_name = filename[:-3]
+                module_path = f"backend.nodes.{item}.{module_name}"
 
-            all_classes[display_name] = classes
+                try:
+                    importlib.invalidate_caches()
+                    module = importlib.import_module(module_path)
+                    importlib.reload(module)
+
+                    # Find all node classes in the module
+                    for name, obj in inspect.getmembers(module):
+                        if (inspect.isclass(obj) and 
+                            issubclass(obj, BaseNode) and 
+                            obj != BaseNode and 
+                            obj != StreamingBaseNode):
+                            try:
+                                source_file = inspect.getsourcefile(obj)
+                                start_line = inspect.getsourcelines(obj)[1]
+                                obj.definition_path = f"{source_file}:{start_line}"
+                                classes.append(obj)
+                            except (OSError, TypeError) as e:
+                                print(f"Error getting source file for {obj.__name__}: {e}")
+                                continue
+
+                except ModuleNotFoundError:
+                    print(f"Error loading module {module_path}")
+                    continue
+
+            if classes:  # Only add categories that have nodes
+                all_classes[display_name] = classes
+
+        except ModuleNotFoundError:
+            print(f"Error loading category {item}")
+            continue
 
     return all_classes
 

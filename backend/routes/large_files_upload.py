@@ -12,12 +12,11 @@ large_files_router = APIRouter()
 async def handle_large_file(
     file: UploadFile = File(...),
     original_filename: str = Form(...),
-    file_extension: str = Form(...)
 ):
+    '''receives a large file from a frontend and returns a field data instance with small preview that is cached'''
     file_content = await file.read()
 
     json_str = file_content.decode('utf-8')
-
 
     data_instance = FieldData.model_validate_json(json_str)
 

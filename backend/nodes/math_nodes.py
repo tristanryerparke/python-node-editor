@@ -8,7 +8,7 @@ from ..datatypes.field_data import FieldData
 
 MAXSIZE = 10
 
-DISPLAY_NAME = "Math"
+DISPLAY_NAME = "Math Tristan"
 
 class AddNode(BaseNode):
     @classmethod
