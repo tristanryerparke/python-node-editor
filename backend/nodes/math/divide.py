@@ -5,14 +5,13 @@ from ...datatypes.field_data import FieldData
 
 MAXSIZE = 10
 
-class MultiplyNode(BaseNode):
+class DivideNode(BaseNode):
     group: str = 'Basic'
-    
     @classmethod
     @node_definition(
         inputs=[
             InputNodeField(label='a', dtype='number', data=FieldData(payload=0, dtype='number')),
-            InputNodeField(label='b', dtype='number', data=FieldData(payload=1, dtype='number'))
+            InputNodeField(label='b', dtype='number', data=FieldData(payload=0, dtype='number'))
         ],
         outputs=[
             OutputNodeField(label='result', dtype='number')
@@ -20,5 +19,5 @@ class MultiplyNode(BaseNode):
     )
     @lru_cache(maxsize=MAXSIZE)
     def exec(cls, a: FieldData, b: FieldData) -> FieldData:
-        result = a.payload * b.payload
+        result = a.payload / b.payload
         return FieldData(payload=result, dtype='number') 

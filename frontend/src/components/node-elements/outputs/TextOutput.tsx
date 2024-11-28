@@ -6,9 +6,13 @@ export function TextOutput({ field, expanded }: OutputDisplayProps) {
 
   const formatPayload = (data: any) => {
     if (data === null) return '';
-    if (typeof data.payload === 'object') {
-      return formatClassString(JSON.stringify(data.payload));
+    
+    // If payload is null but we have a preview, use the preview
+    if (data.payload === null && data.metadata?.preview) {
+      return data.metadata.preview;
     }
+  
+    
     return data.payload;
   };
 

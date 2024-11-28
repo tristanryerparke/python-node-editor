@@ -1,7 +1,7 @@
 import time
 import json
 import traceback
-# import cProfile
+import cProfile
 from pydantic import BaseModel
 
 from .datatypes.base_node import BaseNode, StreamingBaseNode
@@ -54,8 +54,8 @@ class ExecutionWrapper:
                 raise ExecutionCancelled("Execution was cancelled")
 
 
-        # profiler = cProfile.Profile()
-        # profiler.enable()
+        profiler = cProfile.Profile()
+        profiler.enable()
         start_time = time.time()
         self.node_instances = {}
 
@@ -103,6 +103,7 @@ class ExecutionWrapper:
 
         await check_cancel_flag()
 
+        
         # Node execution
         execution_start = time.time()
         for node_id in sorted_nodes:
@@ -207,7 +208,7 @@ class ExecutionWrapper:
 
 
 
-        # profiler.disable()
-        # profiler.dump_stats("execution_profile.pstat")
+        profiler.disable()
+        profiler.dump_stats("execution_profile.pstat")
 
         return updated_nodes

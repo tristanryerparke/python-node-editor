@@ -2,13 +2,14 @@ from pydantic import BaseModel, Field, model_validator, model_serializer, comput
 from typing import Any, Literal, ClassVar
 import uuid
 import json
+from sys import getsizeof
 
 from backend.datatypes.field_data_utils import (
     field_data_serlialization_prep,
     field_data_deserilaization_prep,
     LARGE_DATA_CACHE,
-    create_thumbnail,
-    truncate_repr
+    truncate_repr,
+    generate_image_metadata
 )
 
 class FieldData(BaseModel):
@@ -36,17 +37,19 @@ class FieldData(BaseModel):
         if isinstance(self.payload, type(None)):
             return 0
 
-        if self.dtype == 'json' or self.dtype == 'string' or self.dtype == 'number':
-            json_data = json.dumps(self.payload)
-            size = len(json_data.encode('utf-8'))
-        elif self.dtype == 'numpy' or self.dtype == 'image':
+        if self.dtype == 'numpy' or self.dtype == 'image':
             size = self.payload.nbytes
-        elif self.dtype == 'basemodel':
-            size = len(json.dumps(self.payload.model_dump()).encode('utf-8'))
         else:
-            raise TypeError(f'Invalid dtype: {self.dtype}')
+            # Fast size estimation for basic types and objects
+            size = getsizeof(self.payload)
+            
+            # For container types (dict, list, etc), add size of immediate children
+            if hasattr(self.payload, '__dict__'):
+                size += sum(getsizeof(v) for v in self.payload.__dict__.values())
+            elif isinstance(self.payload, (dict, list, tuple, set)):
+                size += sum(getsizeof(item) for item in self.payload)
 
-        return size / (1024 * 1024)
+        return size / (1024 * 1024)  # Convert to MB
 
     @model_validator(mode='before')
     @classmethod
@@ -84,18 +87,11 @@ class FieldData(BaseModel):
             LARGE_DATA_CACHE[self.id] = {'dtype': self.dtype, 'payload': self.payload}
             self_as_dict['payload'] = None
             if self.dtype == 'image':
-                self.metadata['preview'] = create_thumbnail(
-                    self.payload, self.max_file_size_mb)
-                self.metadata['height'] = self.payload.shape[0]
-                self.metadata['width'] = self.payload.shape[1]
-                if self.payload.shape[2] == 1:
-                    self.metadata['type'] = "GRAYSCALE"
-                elif self.payload.shape[2] == 3:
-                    self.metadata['type'] = "RGB"
-                elif self.payload.shape[2] == 4:
-                    self.metadata['type'] = "RGBA"
-                else:
-                    self.metadata['type'] = "UNKNOWN"
+                self_as_dict['metadata'] = generate_image_metadata(
+                    self.payload, self.metadata, self.max_file_size_mb)
+                
+            elif self.dtype == 'object':
+                self_as_dict['metadata']['preview'] = truncate_repr(self.payload)
             else:
                 self_as_dict['metadata']['preview'] = truncate_repr(self.payload)
         else:

@@ -140,25 +140,3 @@ class DivideNode(BaseNode):
         result = a.payload / b.payload
         return FieldData(payload=result, dtype='number')
 
-class SplitNode(BaseNode):
-    @classmethod
-    @node_definition(
-        inputs=[
-            InputNodeField(label='number', dtype='number', data=FieldData(payload=1, dtype='number')),
-            InputNodeField(label='t', dtype='number', data=FieldData(payload=0.5, dtype='number'))
-        ],
-        outputs=[
-            OutputNodeField(label='split_t', dtype='number'),
-            OutputNodeField(label='split_1_minus_t', dtype='number')
-        ]
-    )
-    @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, number: FieldData, t: FieldData) -> Tuple[FieldData, FieldData]:
-        if not 0 <= t.payload <= 1:
-            raise ValueError("t must be between 0 and 1")
-        split_t = number * t
-        split_1_minus_t = number * (1 - t)
-        return [
-            FieldData(payload=split_t, dtype='number'),
-            FieldData(payload=split_1_minus_t, dtype='number')
-        ]

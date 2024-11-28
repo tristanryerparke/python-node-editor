@@ -43,12 +43,35 @@ function NodePicker() {
   };
 
   const filteredCategories = Object.entries(nodeCategories).reduce((acc, [category, nodes]) => {
-    const filteredNodes = nodes.filter(node => node.data.display_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    if (category.toLowerCase().includes(searchTerm.toLowerCase()) || filteredNodes.length > 0) {
-      acc[category] = filteredNodes;
+    // Group nodes by their group attribute
+    const groupedNodes = nodes.reduce((groups: Record<string, BaseNode[]>, node) => {
+      const group = node.group || 'Ungrouped';  // Default to 'Ungrouped' if no group specified
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(node);
+      return groups;
+    }, {});
+
+    // Filter nodes based on search term
+    const filteredGroups: Record<string, BaseNode[]> = {};
+    Object.entries(groupedNodes).forEach(([group, groupNodes]) => {
+      const filteredNodes = groupNodes.filter(node => 
+        node.data.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      if (filteredNodes.length > 0) {
+        filteredGroups[group] = filteredNodes;
+      }
+    });
+
+    if (Object.keys(filteredGroups).length > 0 || category.toLowerCase().includes(searchTerm.toLowerCase())) {
+      acc[category] = nodes.filter(node => 
+        node.data.display_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      acc[category].groups = filteredGroups;  // Attach groups to the category
     }
     return acc;
-  }, {} as NodeCategories);
+  }, {} as NodeCategories & { [key: string]: { groups?: Record<string, BaseNode[]> } });
 
   return (
     <>
@@ -64,37 +87,42 @@ function NodePicker() {
           </ActionIcon>
         </Flex>
         <ScrollArea w='100%' h='100%' p={0} m={0}>
-          {Object.entries(filteredCategories).map(([category, nodes]) => (
+          {Object.entries(filteredCategories).map(([category, categoryData]) => (
             <Flex key={category} direction='column' align='center' w='100%' p={0} gap='0'>
               <Divider orientation='horizontal' color='dark.3' w='100%' mb='0.25rem' />
               <Text fw='bold'>{category}</Text>
-              <Flex direction='column' align='center' w='100%' px='0.5rem' pb='0.5rem' pt='0.25rem' m={0} gap='0.25rem'>
-                {nodes.map((node, index) => (
-                  <Tooltip
-                    key={index}
-                    label={node.data.description || 'No Description'}
-                    color='dark.3'
-                    withArrow
-                    arrowSize={8}
-                    multiline
-                    w={200}
-                    position="right"
-                  >
-                    <Flex
-                      onDragStart={(event) => onDragStart(event, node)}
-                      draggable
-                      w='100%'
-                      h='2rem'
-                      justify='center'
-                      align='center'
-                      bg='dark.5'
-                      style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
-                    >
-                      <Text size='sm' fw={700}>{`${node.data.display_name}`}</Text>
-                    </Flex>
-                  </Tooltip>
-                ))}
-              </Flex>
+              {categoryData.groups && Object.entries(categoryData.groups).map(([group, nodes]) => (
+                <Flex key={`${category}-${group}`} direction='column' align='center' w='100%' p={0} gap='0'>
+                  <Text size='sm' c='dimmed'>{group}</Text>
+                  <Flex direction='column' align='center' w='100%' px='0.5rem' pb='0.5rem' pt='0.25rem' m={0} gap='0.25rem'>
+                    {nodes.map((node, index) => (
+                      <Tooltip
+                        key={index}
+                        label={node.data.description || 'No Description'}
+                        color='dark.3'
+                        withArrow
+                        arrowSize={8}
+                        multiline
+                        w={200}
+                        position="right"
+                      >
+                        <Flex
+                          onDragStart={(event) => onDragStart(event, node)}
+                          draggable
+                          w='100%'
+                          h='2rem'
+                          justify='center'
+                          align='center'
+                          bg='dark.5'
+                          style={{ border: '1px solid var(--mantine-color-dark-3)', borderRadius: '0.25rem' }}
+                        >
+                          <Text size='sm' fw={700}>{`${node.data.display_name}`}</Text>
+                        </Flex>
+                      </Tooltip>
+                    ))}
+                  </Flex>
+                </Flex>
+              ))}
             </Flex>
           ))}
         </ScrollArea>

@@ -76,7 +76,7 @@ function OutputFieldDisplay({ field, setField }: OutputFieldDisplayProps) {
     !expanded ? (
       <Flex direction='row' h='30px' w='100%' gap='0.25rem' align='center' justify='space-between'>
         {renderExpandButton()}
-        <Flex style={{ flex: 1, overflowX: 'hidden' }}>
+        <Flex style={{ height: '100%', flex: 1, overflowX: 'hidden' }}>
           {renderOutput()}
         </Flex>
         {renderLabel()}

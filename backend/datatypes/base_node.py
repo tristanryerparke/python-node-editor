@@ -77,6 +77,7 @@ class BaseNode(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     data: BaseNodeData = BaseNodeData()
     width: int = 250
+    group: str = ''
 
 
     def __init__(self, *args, **kwargs):
@@ -91,10 +92,23 @@ class BaseNode(BaseModel):
         self.detect_namespace()
         self.data.definition_path = self.__class__.definition_path
 
+        self.data.description = self.__class__.__doc__
+
     def detect_namespace(self):
         '''detects the namespace of the node to display in the frontend'''
         module = sys.modules[self.__class__.__module__]
-        self.data.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
+        # Get the parent module (the one containing __init__.py)
+        parent_module_name = '.'.join(self.__class__.__module__.split('.')[:-1])
+        try:
+            parent_module = sys.modules[parent_module_name]
+            # Try to get DISPLAY_NAME from parent module (__init__.py) first
+            self.data.namespace = getattr(parent_module, 'DISPLAY_NAME', 
+                # Fallback to current module's DISPLAY_NAME or module name
+                getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
+            )
+        except KeyError:
+            # Fallback to current module if parent module isn't loaded
+            self.data.namespace = getattr(module, 'DISPLAY_NAME', module.__name__.split('.')[-1])
 
     def analyze_inputs(self):
         '''retrives the decorated inputs adds them to the node data definition'''

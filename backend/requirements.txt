@@ -11,3 +11,4 @@ python-multipart
 redis
 pytest
 pytest-asyncio
+tuna

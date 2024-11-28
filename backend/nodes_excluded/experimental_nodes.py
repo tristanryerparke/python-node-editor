@@ -1,9 +1,7 @@
-from typing import Tuple, Union, Dict, Generator, List
-from functools import lru_cache
-from pydantic import BaseModel, model_validator
+from typing import Union, Dict, Generator, List
 import sys
 import time
-from ..datatypes.base_node import BaseNode, StreamingBaseNode, node_definition
+from ..datatypes.base_node import StreamingBaseNode, node_definition
 from ..datatypes.field import InputNodeField, OutputNodeField
 from ..datatypes.field_data import FieldData
 
@@ -81,14 +79,7 @@ class TestStreamingSplitNode(StreamingBaseNode):
         }
         
 
-# class NamedBaseModel(BaseModel):
-#     class_name: str
 
-#     @model_validator(mode='before')
-#     @classmethod
-#     def load_cached_data(cls, values):
-#         values['class_name'] = cls.__name__
-#         return values
     
 # class Egg(NamedBaseModel):
 #     color: str

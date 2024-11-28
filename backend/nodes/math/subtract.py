@@ -6,6 +6,7 @@ from ...datatypes.field_data import FieldData
 MAXSIZE = 10
 
 class SubtractNode(BaseNode):
+    group: str = 'Basic'
     @classmethod
     @node_definition(
         inputs=[

@@ -1,1 +1,1 @@
-DISPLAY_NAME = "Mathematics" 
+DISPLAY_NAME = "Mathematics"

@@ -43,8 +43,9 @@ def field_data_serlialization_prep(dtype: str, data: Any) -> str:
     elif dtype == 'image':
         return image_to_base64(data)
 
-    elif dtype == 'basemodel':
+    elif dtype == 'object':
         return data.model_dump()
+    
 
     else:
         raise TypeError('unsupported dtype for frontend serialization')
@@ -74,6 +75,9 @@ def field_data_deserilaization_prep(dtype: str, data: Any) -> Any:
     elif dtype == 'basemodel':
         return data
 
+    elif dtype == 'object':
+        return data
+
     else:
         raise TypeError('unsupported dtype for frontend deserialization')
 
@@ -95,3 +99,16 @@ def create_thumbnail(data, max_file_size_mb):
 def get_string_size_mb(s: str) -> float:
     return len(s.encode('utf-8')) / (1024 * 1024)
 
+
+def generate_image_metadata(data: np.ndarray, metadata: dict, max_file_size_mb: float) -> dict:
+    metadata['preview'] = create_thumbnail(
+        data, max_file_size_mb)
+    metadata['height'] = data.shape[0]
+    metadata['width'] = data.shape[1]
+    if data.shape[2] == 1:
+        metadata['type'] = "GRAYSCALE"
+    elif data.shape[2] == 3:
+        metadata['type'] = "RGB"
+    elif data.shape[2] == 4:
+        metadata['type'] = "RGBA"
+    return metadata

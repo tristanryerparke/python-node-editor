@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, Field, model_validator, model_serializer, computed_field
+from pydantic import BaseModel, Field, model_validator, model_serializer, computed_field, field_serializer, field_validator
 from typing import Literal, ClassVar, Any, Union, List, Callable
 import uuid
 from io import BytesIO
@@ -154,8 +154,50 @@ def test_data_from_frontend():
         else:
             assert serialized_field_data_dict['metadata'].get('preview') is None
 
+def test_with_object():
+    from devtools import debug as d
+    from PIL import Image
+    image = Image.open('tests/materials/monkey_1mb.png')
+    from pydantic import ConfigDict
 
+    class TestObject(BaseModel):
+        model_config = ConfigDict(arbitrary_types_allowed=True)
+
+        image: np.ndarray
+        number: int
+
+        @field_serializer('image')
+        def serialize_image(image: np.ndarray):
+            return image.tolist()
         
+        @field_validator('image', mode='before')
+        @classmethod
+        def validate_image(cls, image: Any):
+            if isinstance(image, list):
+                return np.array(image)
+            elif isinstance(image, np.ndarray):
+                return image
+            else:
+                raise ValueError('invalid image')
+            
+    # create a large data field locally as if an image was uploaded
+    lg_datafield = FieldData(
+        payload=TestObject(image=np.array(image), number=1),
+        dtype='object'
+    )
+
+    parent_json = lg_datafield.model_dump_json()
+
+
+    lg_datafield_from_json = FieldData.model_validate_json(parent_json)
+
+    assert np.array_equal(lg_datafield_from_json.payload.image, lg_datafield.payload.image)
+    assert lg_datafield_from_json.payload.number == lg_datafield.payload.number
+
+
+
+test_with_object()
+
 
 
 # test_data_from_frontend()

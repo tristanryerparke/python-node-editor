@@ -8,3 +8,7 @@ The important things about python-node-editor are the following:
 - Robust support for nodes to stream data and progress info to the frontend via generators.
 - Buttons for direct access to the source code on each node.
 - Saving of flows with embedded (even large) data.
+
+
+# Profile with:
+`tuna execution_profile.pstat`
