@@ -1,0 +1,28 @@
+[project]
+name = "python_node_editor"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "devtools",
+    "requests", 
+    "pywebview",
+    "annotated-types",
+    "Pillow",
+    "opencv-python-headless",
+    "cachetools",
+    "python-multipart",
+    "redis",
+    "pytest",
+    "pytest-asyncio",
+    "tuna"
+]
+
+[tool.pytest]
+pythonpath = [
+    ".",
+    "tests"
+]
