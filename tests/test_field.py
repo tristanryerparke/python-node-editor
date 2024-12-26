@@ -152,7 +152,7 @@ def test_document_from_frontend():
     assert field.data.width_mm.payload == 210
     assert field.data.height_mm.payload == 297
 
-# test_document_from_frontend()
+test_document_from_frontend()
 
     
 

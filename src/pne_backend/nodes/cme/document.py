@@ -11,6 +11,7 @@ class Document(SendableDataModel):
     units: UnitsData
     width: FloatData
     height: FloatData
+    
 
 class ConstructDocumentNode(BaseNode):
     '''Creates a document, a collection of an image, units, width, and height.'''

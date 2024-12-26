@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 import json
 import numpy as np
 
@@ -51,6 +51,33 @@ def test_small_data():
 
 # test_small_data()
 
+def test_custom_computed_fields():
+
+    class NumberWithSquare(BaseData):
+        payload: float
+
+        @computed_field(repr=True)
+        @property
+        def square(self) -> int:
+            return self.payload ** 2
+        
+    number = NumberWithSquare(payload=2.0)
+
+    d(number)
+
+    assert number.square == 4.0
+
+    d_as_json = number.model_dump_json()
+    d(json.loads(d_as_json))
+
+    number_from_json = NumberWithSquare.model_validate_json(d_as_json)
+    d(number_from_json)
+
+    assert number_from_json.square == 4.0
+
+# test_custom_computed_fields()
+
+
 def test_large_data():
     '''test that a large data gets cached, and that serialized previews are sent to the frontend'''
 
@@ -88,7 +115,7 @@ def test_int_data_from_frontend():
     assert payload_int == d_from_json.payload
     assert not d_from_json.cached
 
-test_int_data_from_frontend()
+# test_int_data_from_frontend()
 
 
 def test_float_data_from_frontend():
@@ -172,7 +199,7 @@ def test_small_nested_data():
     assert d_from_json.data1.cached == False 
     assert d_from_json.data2.cached == False
 
-test_small_nested_data()
+# test_small_nested_data()
 
 
 def test_large_nested_data():

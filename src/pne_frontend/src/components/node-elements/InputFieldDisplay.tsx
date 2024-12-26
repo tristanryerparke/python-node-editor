@@ -33,7 +33,7 @@ function InputFieldDisplay({ field, setField }: InputFieldDisplayProps) {
     : (expanded: boolean) => setField(fieldIndex, { ...field, inspector_expanded: expanded } as InputNodeField);
 
   const renderInput = () => {
-    console.log('field.dtype: ', field.data?.class_name);
+    // console.log('field.dtype: ', field.data?.class_name);
     switch (field.dtype) {
       case 'number':
         return <NumberInput 

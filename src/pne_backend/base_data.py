@@ -25,7 +25,6 @@ class SendableDataModel(BaseModel):
     the frontend can infer the class of the data from the class name'''
     class_name: str
 
-
     @model_validator(mode='before')
     @classmethod
     def load_cached_data(cls, values):
@@ -108,11 +107,12 @@ class BaseData(SendableDataModel):
     @model_serializer()
     def serialize(self):
         self_as_dict = self.__dict__.copy()
+        self_as_dict |= {k: getattr(self, k) for k in self.model_computed_fields}
 
         # add computed fields to the dict
-        self_as_dict['dtype'] = self.dtype
-        self_as_dict['cached'] = self.cached
-        self_as_dict['size_mb'] = self.size_mb
+        # self_as_dict['dtype'] = self.dtype
+        # self_as_dict['cached'] = self.cached
+        # self_as_dict['size_mb'] = self.size_mb
 
         if self.cached:
             self_as_dict['payload'] = None

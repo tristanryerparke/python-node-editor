@@ -1,0 +1,26 @@
+{
+  "class_name": "ListData",
+  "payload": [
+    {
+      "class_name": "IntData",
+      "payload": 1
+    },
+    {
+      "class_name": "FloatData",
+      "payload": 2.0
+    },
+    {
+      "class_name": "ListData",
+      "payload": [
+        {
+          "class_name": "IntData",
+          "payload": 3
+        },
+        {
+          "class_name": "FloatData",
+          "payload": 4.0
+        }
+      ]
+    }
+  ]
+}
