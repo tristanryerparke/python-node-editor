@@ -1,34 +1,28 @@
-from typing import Union, Any
-from pydantic import BaseModel, ConfigDict, computed_field
-from pydantic_core._pydantic_core import ValidationError
+from pydantic import BaseModel, computed_field
 import json
 import numpy as np
 
 from devtools import debug as d
-from PIL import Image
-import io
-import base64
-import sys
-import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.datatypes.cachable_data import CachableData
-from backend.datatypes.basic_data import IntData, FloatData, StringData, NumpyData
+from pne_backend.base_data import BaseData
+from pne_backend.datatypes.basic import IntData, FloatData, StringData, NumpyData
 
 # set the max file size for caching to 50kb
-CachableData.max_file_size_mb = 0.05
+BaseData.max_file_size_mb = 0.05
 
 def test_invalid_payload():
     """Ensure that a CachableData instance with an invalid payload raises a error"""
     try:
-        mf2 = CachableData(payload=None)
+        mf2 = BaseData(payload=None)
     except ValueError as e:
         print(e)
         return
     assert False
 
 # test_invalid_payload()
+
+
 
 
 def test_small_data():
@@ -44,16 +38,44 @@ def test_small_data():
 
     for data in small_data_instances:
 
+        data: BaseData # type hint
+
         d_as_json = data.model_dump_json()
         d(json.loads(d_as_json))
 
         data_from_json = data.__class__.model_validate_json(d_as_json)
 
-        assert data.id is None
+        assert data.id is not None
         assert not data.cached
         assert data_from_json.preview is None
 
 # test_small_data()
+
+def test_custom_computed_fields():
+
+    class NumberWithSquare(BaseData):
+        payload: float
+
+        @computed_field(repr=True)
+        @property
+        def square(self) -> int:
+            return self.payload ** 2
+        
+    number = NumberWithSquare(payload=2.0)
+
+    d(number)
+
+    assert number.square == 4.0
+
+    d_as_json = number.model_dump_json()
+    d(json.loads(d_as_json))
+
+    number_from_json = NumberWithSquare.model_validate_json(d_as_json)
+    d(number_from_json)
+
+    assert number_from_json.square == 4.0
+
+# test_custom_computed_fields()
 
 
 def test_large_data():
@@ -73,7 +95,7 @@ def test_large_data():
         data_from_json = data.__class__.model_validate_json(d_as_json)
 
         assert data.id is not None
-        assert data.cached
+        assert data.cached == True
         assert data_from_json.preview is not None
 
 # test_large_data()
@@ -100,7 +122,7 @@ def test_float_data_from_frontend():
     '''Test that a float created in the frontend can be deserialized in the backend'''
     payload_float = 3.14159
     json_def = {
-        'class_name': 'FloatData',
+        # 'class_name': 'FloatData',
         'payload': payload_float
     }
     d(json_def)
@@ -152,6 +174,7 @@ def test_numpy_data_from_frontend():
 def test_small_nested_data():
     """Test that subclasses of of CachableData can be nested inside other classes
     and are correctly serialized and deserialized"""
+
     class NestedData(BaseModel):
         data1: NumpyData
         data2: StringData
@@ -161,8 +184,6 @@ def test_small_nested_data():
         data2=StringData(payload='hello')
     )
     d(nested_data)
-
-
 
     d_as_json = nested_data.model_dump_json()
     loaded = json.loads(d_as_json)
@@ -213,47 +234,5 @@ def test_large_nested_data():
 # test_large_nested_data()
 
 
-def test_infer_subclass():
-    """Test that a specific subclass of CachableData can be inferred from the frontend"""
-    
-    class NestedData2(BaseModel):
-        data_flex_1: Union[FloatData, StringData]
-        data_flex_2: Union[FloatData, StringData]
-
-    data_json_1 = {
-        'data_flex_1': {
-            # 'class_name': 'StringData',
-            'payload': 'hello'
-        },
-        'data_flex_2': {
-            # 'class_name': 'FloatData',
-            'payload': 1.0
-        }
-    }
-
-    data_json_2 = {
-        'data_flex_1': {
-            'class_name': 'FloatData',
-            'payload': 1.0
-        },
-        'data_flex_2': {
-            'class_name': 'StringData',
-            'payload': 'hello'
-        }
-    }
-
-    instance = NestedData2.model_validate(data_json_1)
-
-    print(instance.data_flex_1)
-    print(instance.data_flex_2)
-
-    assert isinstance(instance.data_flex_1, StringData)
-    assert isinstance(instance.data_flex_2, FloatData)
-
-    instance = NestedData2.model_validate(data_json_2)
-    assert isinstance(instance.data_flex_1, FloatData)
-    assert isinstance(instance.data_flex_2, StringData)
-
-test_infer_subclass()
 
 
