@@ -3,7 +3,9 @@ import listData from './list_data.json' assert { type: 'json' }
 import modelData from './model_data.json' assert { type: 'json' }
 import nestedModelData from './nested_model_data.json' assert { type: 'json' }
 import { MantineProvider, Textarea, TypographyStylesProvider } from '@mantine/core';
-
+import { IntInput, StringInput, InputDefinition, InputField } from './Inputs';
+import { CreateDataObject } from './dataCreation';
+import { z } from 'zod';
 import '@mantine/core/styles.css';
 
 interface BasicData {
@@ -204,12 +206,57 @@ const HTMLRender = () => {
   );
 }
 
+// this is how the input might get sent up from the backend
+const intInputDef: InputField = {
+  data: {
+    class_name: 'IntData',
+    payload: 100,
+    id: '985dbbb4-0bfb-45b9-9405-d33899db9931'
+  },
+  allowed_types: ['IntData'],
+  input_display_generate: 'IntData',
+  display_type: 'input'
+}
+
+const stringInputDef: InputField = {
+  data: null,
+  allowed_types: ['StringData'],
+  input_display_generate: 'StringData',
+  display_type: 'input'
+}
+
+function updateInputDef(field: InputField, value: unknown) {
+  
+  const oldData = field.data?.payload;
+  // Don't update if the value is the same
+  if (oldData !== value) {
+    try {
+      const newData = CreateDataObject(field.input_display_generate, value);
+      // Check if the class_name is in allowed_types before updating
+      if (field.allowed_types.includes(newData.class_name)) {
+        field.data = newData;
+        console.log('Input updated successfully:', field);
+      } else {
+        console.error(`Class name ${newData.class_name} not in allowed types: ${field.allowed_types}`);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.errors);
+      } else {
+        console.error('Error creating data object:', error);
+      }
+      // Clear the data when there's an error
+      field.data = null;
+    }
+  }
+}
+
 function App() {
   return (
     <MantineProvider>
-      <div style={{ display: 'flex', gap: '20px', overflow: 'hidden' }}>
-        <BasicRender />
-        <HTMLRender />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflow: 'hidden' }}>
+        <IntInput field={intInputDef} onUpdate={updateInputDef} />
+        <StringInput field={stringInputDef} onUpdate={updateInputDef} />
       </div>
     </MantineProvider>
   )

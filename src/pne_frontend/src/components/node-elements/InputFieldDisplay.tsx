@@ -1,75 +1,100 @@
-import { useContext } from "react";
-import type { InputNodeField } from "../../types/BaseDataTypes";
-import { Flex, Text, Tooltip, Badge, ActionIcon } from '@mantine/core';
+import { Flex, Text, Tooltip, ActionIcon, NumberInput } from '@mantine/core';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
-import ImageInput from './inputs/ImageInput';
+import { BaseData } from '../../types/BaseDataTypes';
+import { useDebouncedValue } from '@mantine/hooks';
+import { useEffect, useState, useContext } from 'react';
+import { FieldIndexContext } from './CustomNode';
 
-import { NumberInput } from "./inputs/NumberInput";
-import { TextInput } from "./inputs/TextInput";
-import { FieldIndexContext, FieldDisplayContext } from "./CustomNode";
+import { IntDataSchema, StringDataSchema, FloatDataSchema, BoolDataSchema } from './DataTypes';
 
-
-import {  } from "./CustomNode";
-import { UnitsInput } from "./inputs/UnitsInput";
-
-export interface InputFieldDisplayProps {
-  field: InputNodeField;
-  setField: (fieldIndex: number, field: InputNodeField) => void;
+export interface InputField {
+  data: BaseData | null;
+  allowed_types: string[];
+  default_generator_type: string;
+  display_type: string;
+  label: string;
+  description: string;
+  user_label: string;
+  is_edge_connected: boolean;
+  metadata: Record<string, unknown>;
 }
 
-export interface InputDisplayProps {
-  field: InputNodeField;
-  setField: (fieldIndex: number, field: InputNodeField) => void;
-  expanded: boolean;
+export interface InputFieldCreateProps {
+  field: InputField;
+  setField: (fieldIndex: number, field: InputField) => void;
 }
 
-function InputFieldDisplay({ field, setField }: InputFieldDisplayProps) {
+function CreateDataObject(class_name: string, payload: unknown): BaseData {
+  const rawData = {
+    class_name,
+    payload,
+    id: uuidv4()
+  };
+
+  switch (class_name) {
+    case 'IntData':
+      return IntDataSchema.parse(rawData);
+    case 'StringData':
+      return StringDataSchema.parse(rawData);
+    case 'FloatData':
+      return FloatDataSchema.parse(rawData);
+    case 'BoolData':
+      return BoolDataSchema.parse(rawData);
+    default:
+      throw new Error(`Unsupported class_name: ${class_name}`);
+  }
+}
+
+function IntInput({ field, setField }: InputFieldCreateProps) {
   const fieldIndex = useContext(FieldIndexContext);
-  const fieldDisplay = useContext(FieldDisplayContext);
+  const [value, setValue] = useState<number | undefined>(field.data?.payload as number);
+  const [debouncedValue] = useDebouncedValue(value, 200);
 
-  const expanded = fieldDisplay === 'node' ? field.node_expanded : field.inspector_expanded;
-  const setExpanded = fieldDisplay === 'node' 
-    ? (expanded: boolean) => setField(fieldIndex, { ...field, node_expanded: expanded } as InputNodeField)
-    : (expanded: boolean) => setField(fieldIndex, { ...field, inspector_expanded: expanded } as InputNodeField);
+  useEffect(() => {
+    if (debouncedValue !== undefined && debouncedValue !== field.data?.payload) {
+      const newField = { ...field } as InputField;
+      newField.data = { ...field.data, payload: debouncedValue };
+      setField(fieldIndex, newField);
+    }
+  }, [debouncedValue]);
+
+  return <NumberInput 
+    value={value}
+    classNames={{ input: 'nodrag nopan' }}
+    onChange={(val) => {
+      setValue(typeof val === 'string' ? (val === '' ? undefined : parseInt(val)) : val);
+    }}
+    step={1}
+  />;
+}
+
+
+
+function InputFieldDisplay({ field, setField }: InputFieldCreateProps) {
+  const [expanded, setExpanded] = useState(false);
+  const fieldIndex = useContext(FieldIndexContext);
 
   const renderInput = () => {
-    // console.log('field.dtype: ', field.data?.class_name);
-    switch (field.dtype) {
-      case 'number':
-        return <NumberInput 
-          field={field} 
-          setField={setField}
-          expanded={expanded}
-        />
-      case 'string':
-        return <TextInput 
-          field={field} 
-          setField={setField}
-          expanded={expanded}
-        />
-      case 'units':
-        return <UnitsInput 
-          field={field} 
-          setField={setField}
-          expanded={expanded}
-        />
-      case 'image':
-        return <ImageInput 
-          field={field} 
-          setField={setField}
-          expanded={expanded}
-        />
-      // Add more cases for future data types here
-      default:
-        return null;
-    } 
-  };
+    if (field.default_generator_type !== null) {
+      switch (field.default_generator_type) {
+        case 'IntData':
+          return <IntInput field={field} setField={setField} />
+        case 'FloatData':
+          return <div>String</div>
+        case 'StringData':
+          return <div>Units</div>
+      }
+    }
+  }
 
   const renderLabel = () => {
     return <Tooltip 
       withArrow 
       label={
-        <Badge size='md'>{field.dtype}</Badge>
+        <div style={{flexDirection: 'column', gap: '0.25rem' }}>
+          <b>Allowed Types:</b> 
+          {field.allowed_types.join(', ')}
+        </div>
       }
       color='dark.4'
       position='left'
@@ -89,13 +114,23 @@ function InputFieldDisplay({ field, setField }: InputFieldDisplayProps) {
     </ActionIcon>
   }
 
+
   return (
     !expanded ? (
-      <Flex direction='row' h='30px' w='100%' gap='0.25rem' align='center' justify='space-between'>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        height: '30px',
+        width: '100%',
+        gap: '0.25rem',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        
+      }}>
         {renderLabel()}
         {renderInput()}
         {renderExpandButton()}
-      </Flex>
+      </div>
     ) : (
       <Flex direction='column' w='100%'>
         <Flex direction='row' h='30px' align='center' w='100%' justify='space-between'>

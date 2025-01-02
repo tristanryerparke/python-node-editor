@@ -11,10 +11,10 @@ export function TextInput({ field, setField, expanded }: InputDisplayProps) {
     
     if (!expanded) {
       return <MantineTextInput
-        w='100%'
         size='xs'
         disabled={field.disabled}
         classNames={{ input: 'nodrag nopan' }}
+        style={{cursor: 'default' }}
         value={field.data?.payload === null ? '' : field.data?.payload}
         onChange={(e) => setFieldData(fieldIndex, setField, field, {...field.data, payload: e.target.value} as FieldData)}
       />

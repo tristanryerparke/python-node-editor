@@ -51,6 +51,10 @@ body {
   --mantine-color-body-bg: var(--mantine-color-dark-7) !important;
 }
 
+div {
+  display: flex;
+}
+
 .react-flow__edge-path {
   stroke-width: 4px;
 }

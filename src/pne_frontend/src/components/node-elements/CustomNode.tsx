@@ -24,18 +24,19 @@ export default memo(function CustomNode({ data, id, width }: NodeProps<CustomNod
   // This gets passed down to lower components, mostly this is used to swap out or update field.data
   // But it can also be used to set the expanded state of a field, etc
   const setField = useCallback(
-    (fieldIndex: number, field: InputNodeField | OutputNodeField, type: 'input' | 'output') => {
+    (fieldIndex: number, field: InputNodeField | OutputNodeField) => {
+      
+
       const newData = { ...data };
-      if (type === 'input') {
-        newData.inputs = [...newData.inputs];
-        newData.inputs[fieldIndex] = field as InputNodeField;
-      } else {
-        newData.outputs = [...newData.outputs];
-        newData.outputs[fieldIndex] = field as OutputNodeField;
-      }
+
+      newData.inputs = [...newData.inputs];
+      newData.inputs[fieldIndex] = field as InputNodeField;
+
+      
       reactFlow.setNodes((nds) =>
         nds.map((node) => (node.id === id ? { ...node, data: newData } : node))
       );
+      console.log('setField', fieldIndex, field);
     },
     [data, reactFlow, id]
   );
@@ -215,7 +216,7 @@ export default memo(function CustomNode({ data, id, width }: NodeProps<CustomNod
           {data.inputs.map((inputField, index) => (
             <React.Fragment key={inputField.id}>
               {renderInputComponent(inputField, index)}
-              {index < data.inputs.length - 1 && <Divider variant='dashed' color='dark.3' />}
+              {index < data.inputs.length - 1 && <Divider key={`divider-${inputField.id}`} variant='dashed' color='dark.3' />}
             </React.Fragment>
           ))}
         </Flex>
@@ -226,7 +227,7 @@ export default memo(function CustomNode({ data, id, width }: NodeProps<CustomNod
           {data.outputs.map((output, index) => (
             <React.Fragment key={output.id}>
               {!(data.streaming && output.label === 'status') && renderOutputComponent(output, index)}
-              {index < data.outputs.length - 1 && <Divider variant='dashed' color='dark.3' />}
+              {index < data.outputs.length - 1 && <Divider key={`divider-${output.id}`} variant='dashed' color='dark.3' />}
             </React.Fragment>
           ))}
         </Flex>

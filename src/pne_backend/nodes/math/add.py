@@ -13,8 +13,9 @@ class AddNode(BaseNode):
         inputs=[
             InputNodeField(
                 label='a', 
-                dtype='number', 
-                data=FloatData(payload=0),
+                allowed_types=['IntData', 'FloatData'],
+                default_generator_type='IntData',
+                data=IntData(payload=0),
                 metadata={
                     'max': 100,
                     'min': -100
@@ -22,8 +23,9 @@ class AddNode(BaseNode):
             ),
             InputNodeField(
                 label='b', 
-                dtype='number', 
-                data=FloatData(payload=0),
+                allowed_types=['IntData', 'FloatData'],
+                default_generator_type='IntData',
+                data=IntData(payload=0),
                 metadata={
                     'max': 100,
                     'min': -100
@@ -31,7 +33,7 @@ class AddNode(BaseNode):
             )
         ],
         outputs=[
-            OutputNodeField(label='result', dtype='number')
+            OutputNodeField(label='result')
         ]
     )
     def exec(cls, a: Union[IntData, FloatData], b: Union[IntData, FloatData]) -> FloatData:

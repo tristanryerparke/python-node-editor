@@ -62,10 +62,10 @@ class BaseData(SendableDataModel):
     def size_mb(self) -> float:
         return round(getsizeof(self.payload) / 1024 / 1024, 2)
     
-    @computed_field(repr=True)
-    @property
-    def dtype(self) -> str:
-        return self.model_fields['payload'].annotation.__name__
+    # @computed_field(repr=True)
+    # @property
+    # def dtype(self) -> str:
+    #     return self.model_fields['payload'].annotation.__name__
     
     @classmethod
     def serialize_payload(cls, payload: Any) -> Any:

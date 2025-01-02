@@ -54,20 +54,20 @@ def dynamic_datatype_load(
 # DATATYPE_REGISTRY = dynamic_datatype_load('pne_backend.datatypes', BaseData)
 DATATYPE_REGISTRY = {}
 
-        
-
 
 class InputNodeField(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    dtype: Literal['number', 'string', 'json', 'numpy', 'image', 'object', 'ListData']
+    # id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     data: Optional[Any] = None
+    allowed_types: list[str] = []
+    default_generator_type: Optional[str] = None
+    display_type: Optional[str] = None
     label: str
-    description: str | None = None
-    user_label: str = ''
-    disabled: bool = False
+    description: Optional[str] = None
+    user_label: Optional[str] = None
+    # disabled: bool = False
     is_edge_connected: bool = False
-    node_expanded: bool = False
-    inspector_expanded: bool = True
+    # node_expanded: bool = False
+    # inspector_expanded: bool = True
     metadata: dict = {}
 
     datatype_registry: ClassVar[dict] = DATATYPE_REGISTRY
@@ -84,13 +84,12 @@ class InputNodeField(BaseModel):
 
 class OutputNodeField(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    dtype: Literal['number', 'string', 'json', 'numpy', 'image', 'object', 'ListData']
     data: Optional[Any] = None
     label: str
-    description: str | None = None
-    user_label: str = ''
-    disabled: bool = False
+    description: Optional[str] = None
+    user_label: Optional[str] = None
+    # disabled: bool = False
     is_edge_connected: bool = False
-    node_expanded: bool = False
-    inspector_expanded: bool = True
+    # node_expanded: bool = False
+    # inspector_expanded: bool = True
     metadata: dict = {}

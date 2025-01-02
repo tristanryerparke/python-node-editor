@@ -12,3 +12,26 @@ The important things about python-node-editor are the following:
 
 # Profile with:
 `tuna execution_profile.pstat`
+
+
+
+plans:
+
+on a node, there are inputs and outputs
+
+each input and output has a list of data types that it can accept (like a union type)
+
+if the data type is not accepted, the input will be highlighted in red and the execution is blocked
+
+Every bit of data that be sent into a node will be one of the following types:
+- Basic Data Types: IntData, FloatData, StringData, BoolData, ImageData
+- ListData (contains Basic Data Types or nested ListData, ModelData)
+- ModelData (contains Basic Data Types or nested ListData, ModelData)
+
+These basic types will be defined in both python and typescript, and typescript should be able to validate the data so that it won't be invalid in the backend.
+
+Validation will happen when users change the input. For instance, a number input where you delete the number and remove focus from the input field will be invalid.
+
+When a user is inputting data on a node field, the callback function will only be called if a valid instance of the data type is created. This could mean only when a valid integer is entered, or an image is uploaded.
+
+

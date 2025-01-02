@@ -22,8 +22,23 @@ def test_invalid_payload():
 
 # test_invalid_payload()
 
+def test_class_name():
+    
+    test_instances = {
+        'IntData': IntData(payload=1),
+        'FloatData': FloatData(payload=1.0),
+        'StringData': StringData(payload='hello'),
+        'NumpyData': NumpyData(payload=np.array([[1, 2, 3], [4, 5, 6]])),
+    }
 
+    for expected_name, instance in test_instances.items():
+        json_dict = json.loads(instance.model_dump_json())
+        assert json_dict['class_name'] == expected_name
 
+    
+    
+
+test_class_name()
 
 def test_small_data():
     '''test that a small data does not get cached, 
