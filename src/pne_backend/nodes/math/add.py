@@ -13,6 +13,7 @@ class AddNode(BaseNode):
         inputs=[
             InputNodeField(
                 label='a', 
+                user_label='A',
                 allowed_types=['IntData', 'FloatData'],
                 default_generator_type='IntData',
                 data=IntData(payload=0),

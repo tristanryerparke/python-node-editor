@@ -1,20 +1,7 @@
 import { ReactFlowJsonObject } from '@xyflow/react';
 import { z } from 'zod';
 
-export interface BaseNodeData {
-  display_name: string;
-  class_name: string;
-  namespace: string;
-  status: 'not evaluated' | 'pending' | 'executing' | 'streaming' | 'evaluated' | 'error';
-  terminal_output: string;
-  error_output: string;
-  description: string;
-  inputs: InputNodeField[];
-  outputs: OutputNodeField[];
-  streaming: boolean;
-  definition_path: string;
-  progress: number;
-}
+
 
 export interface InputNodeField {
   id: string;

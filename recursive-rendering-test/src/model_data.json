@@ -1,13 +1,12 @@
 {
   "class_name": "ModelData",
-  "payload": {
-    "image_width": {
-      "class_name": "IntData",
-      "payload": 1024
-    },
-    "image_height": {
-      "class_name": "IntData",
-      "payload": 1024
-    }
+  "image_width": {
+    "class_name": "IntData",
+    "payload": 1024
+  },
+  "image_height": {
+    "class_name": "IntData",
+    "payload": 1024
   }
+
 } 

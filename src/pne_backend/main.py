@@ -72,6 +72,9 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/all_nodes")
 def get_all_nodes():
     """Finds and retrieves all nodes in the nodes directory"""
+    import time
+    start_time = time.time()
+    
     global EXECUTION_WRAPPER
     EXECUTION_WRAPPER.node_classes = find_and_load_classes("pne_backend.nodes")
 
@@ -83,6 +86,9 @@ def get_all_nodes():
             category_list.append(instance.model_dump())
         nodes_dict[key] = category_list
 
+    duration = time.time() - start_time
+    print(f"get_all_nodes took {duration:.3f} seconds")
+    
     return nodes_dict
 
 @app.get("/all_datatypes")

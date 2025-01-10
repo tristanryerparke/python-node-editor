@@ -2,25 +2,31 @@ import basicData from './basic_data.json' assert { type: 'json' }
 import listData from './list_data.json' assert { type: 'json' }
 import modelData from './model_data.json' assert { type: 'json' }
 import nestedModelData from './nested_model_data.json' assert { type: 'json' }
+import backendData from './document_with_extra_test_item.json' assert { type: 'json' }
 import { MantineProvider, Textarea, TypographyStylesProvider } from '@mantine/core';
 import { IntInput, StringInput, InputDefinition, InputField } from './Inputs';
 import { CreateDataObject } from './dataCreation';
 import { z } from 'zod';
 import '@mantine/core/styles.css';
 
-interface BasicData {
+interface BaseData {
+  class_name: string;
+  
+}
+
+interface BasicData extends BaseData {
   class_name: 'IntData' | 'FloatData' | 'StringData' | 'BoolData';
   payload: number | string | boolean;
 }
 
-interface ListData {
+interface ListData extends BaseData {
   class_name: 'ListData';
-  payload: (BasicData | ListData | ModelData)[];
+  payload: DataType[];
 }
 
-interface ModelData {
+interface ModelData extends BaseData {
   class_name: 'ModelData';
-  payload: Record<string, BasicData | ListData | ModelData>;
+  [key: string]: DataType | string | undefined;  // allows for class_name and other fields
 }
 
 type DataType = BasicData | ListData | ModelData;
@@ -33,8 +39,12 @@ const isListData = (data: DataType): data is ListData => {
   return data.class_name === 'ListData';
 }
 
+const hasModelParent = (data: DataType): boolean => {
+  return data.class_parent === 'ModelData';
+}
+
 const isModelData = (data: DataType): data is ModelData => {
-  return data.class_name === 'ModelData';
+  return data.class_name === 'ModelData' || hasModelParent(data);
 }
 
 function Render(data: DataType, runningIndent: number = 0, padObject: string = '   ', currentKey?: string): string {
@@ -62,8 +72,10 @@ function Render(data: DataType, runningIndent: number = 0, padObject: string = '
     } else {
       lines.push(`${indentStr}${data.class_name}(\n`);
     }
-    Object.entries(data.payload).forEach(([key, value]) => {
-      lines.push(Render(value, runningIndent + 1, padObject, key));
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'class_name' && typeof value === 'object') {
+        lines.push(Render(value as DataType, runningIndent + 1, padObject, key));
+      }
     });
     lines.push(`${indentStr})\n`);
     return lines.join('');
@@ -96,8 +108,10 @@ function RenderHTML(data: DataType, runningIndent: number = 0, padObject: string
     } else {
       lines.push(`${indentStr}<b>${data.class_name}{</b><br/>`);
     }
-    Object.entries(data.payload).forEach(([key, value]) => {
-      lines.push(RenderHTML(value, runningIndent + 1, padObject, key));
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== 'class_name' && typeof value === 'object') {
+        lines.push(RenderHTML(value as DataType, runningIndent + 1, padObject, key));
+      }
     });
     lines.push(`<b>${indentStr}}</b><br/>`);
     return lines.join('');
@@ -140,9 +154,18 @@ const BasicRender = () => {
         styles={{ input: style }}
       />
 
-      <h3 style={{ color: 'blue' }}>Nested Model Data:</h3>
+      {/* <h3 style={{ color: 'blue' }}>Nested Model Data:</h3>
       <Textarea
         value={Render(nestedModelData as ModelData)}
+        readOnly
+        autosize
+        minRows={2}
+        styles={{ input: style }}
+      /> */}
+
+      <h3 style={{ color: 'blue' }}>Nested Data from backend:</h3>
+      <Textarea
+        value={Render(backendData as ModelData)}
         readOnly
         autosize
         minRows={2}
@@ -191,7 +214,7 @@ const HTMLRender = () => {
         />
       </TypographyStylesProvider>
 
-      <h3 style={{ color: 'blue' }}>Nested Model Data (HTML):</h3>
+      {/* <h3 style={{ color: 'blue' }}>Nested Model Data (HTML):</h3>
       <TypographyStylesProvider>
         <div 
           style={{ 
@@ -201,7 +224,8 @@ const HTMLRender = () => {
           }} 
           dangerouslySetInnerHTML={{ __html: RenderHTML(nestedModelData as ModelData) }} 
         />
-      </TypographyStylesProvider>
+      </TypographyStylesProvider> */}
+      
     </div>
   );
 }
@@ -254,10 +278,14 @@ function updateInputDef(field: InputField, value: unknown) {
 function App() {
   return (
     <MantineProvider>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflow: 'hidden' }}>
+      <BasicRender />
+      
+      <div style={{ width: '20px', height: '100%',}}/>
+      <HTMLRender />
+      {/* <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflow: 'hidden' }}>
         <IntInput field={intInputDef} onUpdate={updateInputDef} />
         <StringInput field={stringInputDef} onUpdate={updateInputDef} />
-      </div>
+      </div> */}
     </MantineProvider>
   )
 }

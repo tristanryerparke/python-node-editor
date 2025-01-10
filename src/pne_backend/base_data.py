@@ -32,8 +32,6 @@ class SendableDataModel(BaseModel):
         return values
 
 
-
-
 class BaseData(SendableDataModel):
     id: Optional[str] = None
     payload: Any
@@ -81,38 +79,38 @@ class BaseData(SendableDataModel):
         
     @model_validator(mode='before')
     @classmethod
-    def validate_payload(cls, data):
+    def validate_payload(cls, input_values):
         '''if the data is cached (id is in the cache), retrieve it from the cache'''
+        if not isinstance(input_values, dict):
+            print(f'input_values is not a dict: {input_values}')
+            raise ValueError('Input values must be a dictionary')
         
-        data['class_name'] = cls.__name__ # used to infer subclasses when deserializing
+        
+        
+        input_values['class_name'] = cls.__name__ # used to infer subclasses when deserializing
 
         # if an id is not provided, generate a new one
-        id = data.get('id')
+        id = input_values.get('id')
         if id is None:
-            data['id'] = str(uuid.uuid4())
+            input_values['id'] = str(uuid.uuid4())
         
         # if the id is in the cache, retrieve the data from the cache
         if id and cls.cache_key_exists(id):
-            data['payload'] = cls.cache_get(id)
+            input_values['payload'] = cls.cache_get(id)
         
         # if the data is not in the cache, deserialize the data
         else:
-            if data['payload'] is None:
+            if input_values['payload'] is None:
                 raise ValueError('Payload is None')
             # the deserialize function should avoid deserializing
             # if the payload is already the correct type
-            data['payload'] = cls.deserialize_payload(data['payload'])
-        return data
+            input_values['payload'] = cls.deserialize_payload(input_values['payload'])
+        return input_values
     
     @model_serializer()
     def serialize(self):
         self_as_dict = self.__dict__.copy()
         self_as_dict |= {k: getattr(self, k) for k in self.model_computed_fields}
-
-        # add computed fields to the dict
-        # self_as_dict['dtype'] = self.dtype
-        # self_as_dict['cached'] = self.cached
-        # self_as_dict['size_mb'] = self.size_mb
 
         if self.cached:
             self_as_dict['payload'] = None

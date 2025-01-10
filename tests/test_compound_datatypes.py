@@ -1,67 +1,55 @@
+import json
+import numpy as np
+from PIL import Image
 from devtools import debug as d
 
-from pne_backend.datatypes.basic import IntData, FloatData, StringData
 from pne_backend.field import (
     dynamic_datatype_load, 
     InputNodeField, 
     ModelNotFoundError
 )
-from pne_backend.datatypes.compound import ListData, ModelData
-from pne_backend.datatypes.image import ImageData, image_to_base64
-from pne_backend.base_data import SendableDataModel
-from PIL import Image
-import sys
-import numpy as np
-import json
+from pne_backend.datatypes.compound import ModelData, ListData
+from pne_backend.datatypes.basic import IntData, FloatData, StringData
+from pne_backend.datatypes.image import ImageData
+
 DATATYPE_REGISTRY = dynamic_datatype_load('pne_backend.datatypes')
-# DATATYPE_REGISTRY.update(dynamic_datatype_load('tests.custom_types'))
-InputNodeField.datatype_registry = DATATYPE_REGISTRY
 
-# hack to be able to run the test without pytest
-running_under_pytest = 'pytest' in sys.modules
-if running_under_pytest:
-    from tests.custom_types.custom_types_1 import CustomData3
-else:
-    from custom_types.custom_types_1 import CustomData3
-
-def test_class_not_in_registry():
-    field_dict = {
-        'label': 'custom_data',
-        'dtype': 'json',
-        'data': {'class_name': 'CustomData4'}
-    }
-    try:
-        field = InputNodeField.model_validate(field_dict)
-    except ModelNotFoundError as e:
-        pass
-
-# test_class_not_in_registry()
-
-def test_list_of_data():
+def test_list_of_data_from_frontend():
 
     # ensure that listdata has a datatype dictionary to infer types from
     ListData.datatype_registry = DATATYPE_REGISTRY
 
     data_list_dict = {
         'class_name': 'ListData',
-        'data': [
+        'payload': [
             IntData(payload=1).model_dump(), 
             FloatData(payload=2).model_dump()
         ]
     }
 
-    field_dict = {
-        'label': 'data_list',
-        'dtype': 'json',
-        'payload': data_list_dict
-    }
+    list_of_data = ListData.model_validate(data_list_dict)
 
-    field = InputNodeField.model_validate(field_dict)
+    d(list_of_data)
 
-    d(field)
+# test_list_of_data_from_frontend()
 
-# test_list_of_data()
+def test_list_of_data_from_backend():
+    
+    ListData.datatype_registry = DATATYPE_REGISTRY
 
+    list_of_data = ListData(payload=[
+        IntData(payload=1),
+        FloatData(payload=2)
+    ])
+
+    list_of_data_json = list_of_data.model_dump_json()
+    d(list_of_data_json)
+
+    list_of_data_from_json = ListData.model_validate_json(list_of_data_json)
+
+    d(list_of_data)
+
+# test_list_of_data_from_backend()
 
 def test_nested_list_of_data():
 
@@ -154,7 +142,7 @@ def test_document_with_list():
     assert document.units.payload == document_from_json.units.payload
     assert document.list_of_bs.payload == document_from_json.list_of_bs.payload
 
-test_document_with_list()
+# test_document_with_list()
 
 
 def test_document_with_list_of_lists():
@@ -209,101 +197,80 @@ def test_document_with_list_of_lists():
     assert document.units.payload == document_from_json.units.payload
     assert document.list_of_lists.payload == document_from_json.list_of_lists.payload
 
-test_document_with_list_of_lists()
+# test_document_with_list_of_lists()
 
 
-def test_dynamic_datatype_load():
-    # hack to be able to run the test without pytest
-    if running_under_pytest:
-        module_path = 'tests.custom_types'
-    else:
-        module_path = 'custom_types'
 
-    DATATYPE_REGISTRY.update(dynamic_datatype_load(module_path))
-
-    assert CustomData3 in DATATYPE_REGISTRY.values()
-
-    custom_data_dict = {
-        'class_name': 'CustomData3',
-        'a': IntData(payload=1).model_dump(),
-        'b': FloatData(payload=2.0).model_dump(),
-        'c': StringData(payload='world').model_dump()
-    }
-
-    field_dict = {
-        'label': 'custom_data',
-        'dtype': 'json',
-        'data': custom_data_dict
-    }
-
-    field = InputNodeField.model_validate(field_dict)
-
-    d(field)
-
-    # assert isinstance(field.data, CustomData3)
-
-
-# test_dynamic_datatype_load()
-
-
-def test_image_data_from_frontend():
-    image = Image.open('tests/materials/monkey_1mb.png')
-    image_base64 = image_to_base64(image)
-    d(image_base64[:100])
-
-    data_json = {
-        'class_name': 'ImageData',
-        'payload': image_base64
-    }
-
-    field_dict = {
-        'label': 'image',
-        'dtype': 'image',
-        'data': data_json
-    }
-
-    field = InputNodeField.model_validate(field_dict)
-
-    d(type(field.data))
-
-# test_image_data_from_frontend()
-
-def test_document_from_frontend():
+def test_nested_model_data():
     
-    class Document(SendableDataModel):
+    ListData.datatype_registry = DATATYPE_REGISTRY
+    
+    img = np.array(Image.open('tests/materials/monkey_1mb.png').resize((250, 250)))
+    image = ImageData(payload=img)
+    width_mm = FloatData(payload=100)
+    height_mm = FloatData(payload=100)
+    units = StringData(payload='mm')
+
+    class TestItem(ModelData):
+        a: IntData
+        b: FloatData
+        c: StringData
+
+    item_1 = TestItem(a=IntData(payload=1), b=FloatData(payload=2), c=StringData(payload='hello'))
+    
+    
+    class DocumentWithExtraTestItem(ModelData):
         image: ImageData
         width_mm: FloatData
         height_mm: FloatData
-
-    DATATYPE_REGISTRY.update({'Document': Document})
+        units: StringData
+        extra_test_item: TestItem
     
-    image = Image.open('tests/materials/monkey_1mb.png')
-    shape = np.array(image).shape
-    image_base64 = image_to_base64(image)
+    document = DocumentWithExtraTestItem(
+        image=image, 
+        width_mm=width_mm, 
+        height_mm=height_mm, 
+        units=units,
+        extra_test_item=item_1
+    )
+    d(document)
+    d_as_json = document.model_dump_json()
+    d(json.dumps(json.loads(d_as_json), indent=4))
 
-    doc_dict = {
-        'class_name': 'Document',
-        'image': {'payload': image_base64},
-        'width_mm': {'payload': 210},
-        'height_mm': {'payload': 297}
-    }
+    with open('tests/materials/document_with_extra_test_item.json', 'w') as f:
+        f.write(d_as_json)
 
-    field_dict = {
-        'label': 'document',
-        'dtype': 'json',
-        'data': doc_dict
-    }
+    document_from_json = DocumentWithExtraTestItem.model_validate_json(d_as_json)
+    d(document_from_json)
 
-    field = InputNodeField.model_validate(field_dict)
+# test_nested_model_data()
 
-    d(field)
 
-    assert isinstance(field.data.image.payload, np.ndarray)
-    assert np.array_equal(field.data.image.payload.shape, shape)
-    assert field.data.width_mm.payload == 210
-    assert field.data.height_mm.payload == 297
+def test_list_of_model_data():
 
-# test_document_from_frontend()
+    class TestItem1(ModelData):
+        a: IntData
+        b: FloatData
+        c: StringData
 
-    
+    class TestItem2(ModelData):
+        a: IntData
+        b: FloatData
+        c: StringData
+        d: StringData
+
+    # DATATYPE_REGISTRY['ModelData'] = ModelData
+    DATATYPE_REGISTRY['TestItem1'] = TestItem1
+    DATATYPE_REGISTRY['TestItem2'] = TestItem2
+    ListData.datatype_registry = DATATYPE_REGISTRY
+
+    item_1 = TestItem1(a=IntData(payload=1), b=FloatData(payload=2), c=StringData(payload='hello'))
+    item_2 = TestItem2(a=IntData(payload=3), b=FloatData(payload=4), c=StringData(payload='world'), d=StringData(payload='extra'))
+
+    list_of_items = ListData(payload=[item_1, item_2])
+
+    # list_of_items_json = list_of_items.model_dump_json()
+    # d(list_of_items_json)
+
+test_list_of_model_data()
 

@@ -11,11 +11,21 @@ class SubtractNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='a', dtype='number', data=FloatData(payload=0)),
-            InputNodeField(label='b', dtype='number', data=FloatData(payload=0))
+            InputNodeField(
+                label='a', 
+                user_label='A',
+                dtype='number', 
+                data=FloatData(payload=0)
+            ),
+            InputNodeField(
+                label='b', 
+                user_label='B',
+                dtype='number', 
+                data=FloatData(payload=0)
+            )
         ],
         outputs=[
-            OutputNodeField(label='result', dtype='number')
+            OutputNodeField(label='result', user_label='Result')
         ]
     )
     # @lru_cache(maxsize=MAXSIZE)
