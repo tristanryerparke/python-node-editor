@@ -52,6 +52,14 @@ html, body, #root {
   gap: 5px;
 }
 
+.node-field-internals.left {
+  padding-left: 10px;
+}
+
+.node-field-internals.right {
+  padding-right: 10px;
+}
+
 .node-field-minified {
   /* padding: 5px; */
   flex-direction: row;
@@ -59,11 +67,19 @@ html, body, #root {
 }
 
 .node-label-display {
-  flex-direction: column;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
+  flex-direction: row;
   font-size: 14px;
+  gap: 0.25rem;
 }
+
+.node-label-display.left {
+  justify-content: flex-start;
+}
+
+.node-label-display.right {
+  justify-content: flex-end;
+}
+
 
 div.center {
   align-items: center;

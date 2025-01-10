@@ -59,6 +59,12 @@ class ImageData(BaseData):
             return 'RGB'
         elif self.payload.shape[2] == 4:
             return 'RGBA'
+        
+
+    @computed_field(return_type=str)
+    @property
+    def description(self) -> str:
+        return f'{self.width}x{self.height} {self.image_type}'
     
     @classmethod
     def serialize_payload(cls, payload: np.ndarray) -> list:

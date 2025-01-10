@@ -2,7 +2,10 @@ import { Handle, Position, useNodeId } from '@xyflow/react';
 import { type OutputField } from '../../types/nodeTypes';
 import ChevronButton from '../../common/ChevronButton';
 import type { Direction } from '../../common/ChevronButton';
+
+import ShortDisplay from '../../common/MinifiedDisplay';
 import DebugDisplay from '../../common/DebugDisplay';
+
 
 interface OutputFieldComponentProps {
   field: OutputField;
@@ -26,6 +29,21 @@ export default function OutputFieldComponent({ field, index, updateField }: Outp
 
   return (
     <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
+      <div className='pne-div node-field-internals'>
+        <div className='pne-div node-field-minified'>
+          <ChevronButton 
+            direction={isExpanded ? 'down' : 'up'}
+            onChange={(direction) => handleDirectionChange(direction)}
+          />
+          <div className='pne-div node-label-display right'>
+            <strong>{`${field.user_label ?? field.label}: `}</strong>
+            <ShortDisplay data={field.data} />
+          </div>
+        </div>
+        {isExpanded && <DebugDisplay data={field.data} />}
+      </div>
+      
+      <div className='handle-padder'/>
       <Handle 
         style={{
           width: '12px',
@@ -38,21 +56,6 @@ export default function OutputFieldComponent({ field, index, updateField }: Outp
         position={Position.Right}
         id={`${nodeId}-output-${index}`}
       />
-      <div className='node-field-internals' style={{ height: isExpanded ? '120px' : 'auto', transition: 'height 0.2s ease-in-out' }}>
-        <ChevronButton 
-          direction={isExpanded ? 'down' : 'up'}
-          onChange={(direction) => handleDirectionChange(direction)}
-        />
-        <div className='node-label-display'>
-          {field.user_label ?? field.label} 
-          ({field.data?.class_name ?? 'no type'}):
-          {String(field.data?.payload ?? 'no data')}
-          
-          
-        </div>
-        
-      </div>
-      {isExpanded && <DebugDisplay data={field.data} />}
     </div>
     
   );

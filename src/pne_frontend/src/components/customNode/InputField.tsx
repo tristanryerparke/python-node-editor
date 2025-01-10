@@ -3,7 +3,7 @@ import { type InputField } from '../../types/nodeTypes';
 import { useEdgeConnection } from '../../hooks/useEdgeConnection';
 import ChevronButton from '../../common/ChevronButton';
 import type { Direction } from '../../common/ChevronButton';
-
+import ShortDisplay from '../../common/MinifiedDisplay';
 import DebugDisplay from '../../common/DebugDisplay';
 
 interface InputFieldProps {
@@ -41,12 +41,11 @@ export default function InputFieldComponent({ field, index, updateField }: Input
         position={Position.Left}
         id={`${nodeId}-input-${index}`}
       />
-      <div className='handle-padder'/>
-      <div className='pne-div node-field-internals'>
+      <div className='pne-div node-field-internals left'>
         <div className='pne-div node-field-minified'>
-          <div className='node-label-display'>
-            {field.user_label ?? field.label}: 
-            {field.data?.class_name ?? 'null'}
+          <div className='pne-div node-label-display left'>
+            <strong>{`${field.user_label ?? field.label}:  `}</strong>
+            <ShortDisplay data={field.data} />
             
             
           </div>
