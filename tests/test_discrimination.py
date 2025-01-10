@@ -146,11 +146,16 @@ class Document(ModelData):
 
 def test_model_data():
 
+    image = ImageData(payload=np.zeros((100, 100, 3)))
+    width = FloatData(payload=10)
+    height = FloatData(payload=10)
+    units = StringData(payload='mm')
+
     doc = Document(
-        image= ImageData(payload=np.zeros((100, 100, 3))),
-        width= FloatData(payload=10),
-        height= FloatData(payload=10),
-        units= StringData(payload='mm')
+        image=image,
+        width=width,
+        height=height,
+        units=units
     )
 
     d(doc)

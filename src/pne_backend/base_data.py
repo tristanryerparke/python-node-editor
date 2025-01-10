@@ -29,7 +29,7 @@ def cache_set(id: str, data: Any) -> None:
 
 class BaseData(BaseModel):
     payload: Any
-    id: Optional[str] = Field(default=None, repr=False)
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()), repr=False)
     preview: Optional[str] = Field(default=None, repr=False)
     metadata: dict = Field(default_factory=lambda: {})
 
@@ -86,12 +86,8 @@ class BaseData(BaseModel):
     def validate_payload(cls, input_values, info):
         '''if the data is cached (id is in the cache), retrieve it from the cache'''
 
-        if input_values.get('id') is None:
-            input_values['id'] = str(uuid.uuid4())
-        
-        context = info.context or {}
-
-        if info.mode == 'python' and not context.get('state') == 'deserializing':
+        # this means we are creating the instance on the backend
+        if info.mode == 'python':
             return input_values
         
         # this means we are deserializing the from the frontend

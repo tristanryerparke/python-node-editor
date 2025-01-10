@@ -52,5 +52,4 @@ class ModelData(BaseModel):
         self_as_dict |= self.__dict__.copy()
         return self_as_dict
     
-# AnyData = Union[IntData, FloatData, StringData, NumpyData, UnitsData, ListData, ModelData]
 
