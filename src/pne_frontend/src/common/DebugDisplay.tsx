@@ -9,41 +9,52 @@ const isListData = (data: BaseData): data is ListData => {
 }
 
 const isModelData = (data: BaseData): data is ModelData => {
-  return data.class_name === 'ModelData';
+  if ('class_parent' in data) {
+    return data.class_parent === 'ModelData';
+  }
+  return false;
 }
 
-function Render(data: BaseData, runningIndent: number = 0, padObject: string = '   ', currentKey?: string): string {
+function Render(data: BaseData | ModelData, runningIndent: number = 0, padObject: string = '   ', currentKey?: string): string {
   const indentStr = padObject.repeat(runningIndent);
   const keyDisplay = currentKey ? `${currentKey}: ` : '';
+
+  if (typeof data !== 'object' || data === null) {
+    // Handle unexpected data types
+    return `${indentStr}${keyDisplay}invalid data type\n`;
+  }
 
   if (isBasicData(data)) {
     return `${indentStr}${keyDisplay}${data.class_name}: ${data.payload}\n`;
   } else if (isListData(data)) {
     const lines: string[] = [];
-    if (currentKey) {
-      lines.push(`${indentStr}${keyDisplay}${data.class_name}[\n`);
-    } else {
-      lines.push(`${indentStr}${data.class_name}[\n`);
-    }
+    lines.push(`${indentStr}${keyDisplay}${data.class_name}[\n`);
     data.payload.forEach(item => {
-      lines.push(Render(item, runningIndent + 1, padObject));
+      if (typeof item === 'object' && item !== null) {
+        lines.push(Render(item as BaseData, runningIndent + 1, padObject));
+      } else {
+        lines.push(`${indentStr}${padObject}invalid item type\n`);
+      }
     });
     lines.push(`${indentStr}]\n`);
     return lines.join('');
   } else if (isModelData(data)) {
     const lines: string[] = [];
-    if (currentKey) {
-      lines.push(`${indentStr}${keyDisplay}${data.class_name}(\n`);
-    } else {
-      lines.push(`${indentStr}${data.class_name}(\n`);
-    }
-    Object.entries(data.payload).forEach(([key, value]) => {
-      lines.push(Render(value, runningIndent + 1, padObject, key));
+    lines.push(`${indentStr}${keyDisplay}${data.class_name}(\n`);
+    Object.entries(data).forEach(([key, value]) => {
+      // Skip rendering class_name and class_parent
+      if (key !== 'class_name' && key !== 'class_parent' && typeof value === 'object' && value !== null) {
+        lines.push(Render(value as BaseData, runningIndent + 1, padObject, key));
+      } else if (key !== 'class_name' && key !== 'class_parent') {
+        lines.push(`${indentStr}${padObject}${key}: ${value}\n`);
+      }
     });
     lines.push(`${indentStr})\n`);
     return lines.join('');
+  } else {
+    // Default case to handle unexpected data types
+    return `${indentStr}${keyDisplay}unknown data type\n`;
   }
-  return `${indentStr}unknown data type: ${(data as any).class_name}\n`;
 }
 
 
@@ -65,3 +76,4 @@ export default function DebugDisplay({ data }: { data: BaseData }) {
     }}
   >{Render(data)}</div>;
 }
+

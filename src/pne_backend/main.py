@@ -11,7 +11,7 @@ from .execution_wrapper import ExecutionWrapper
 from .utils import find_and_load_classes
 from .base_node import BaseNode
 from .datatypes.compound import ListData
-from .field import InputNodeField, dynamic_datatype_load
+from .field import InputNodeField
 
 CACHE_SAVE_INTERVAL_MINS = 1
 
@@ -32,15 +32,15 @@ app.include_router(autosave_router)
 EXECUTION_WRAPPER = ExecutionWrapper()
 EXECUTION_WRAPPER.node_classes = find_and_load_classes("pne_backend.nodes")
 
-# load basic and compund datatypes defined in the datatypes directory
-DATATYPE_REGISTRY = dynamic_datatype_load('pne_backend.datatypes')
+# # load basic and compund datatypes defined in the datatypes directory
+# DATATYPE_REGISTRY = dynamic_datatype_load('pne_backend.datatypes')
 
-# load compound datatypes attached to nodes
-DATATYPE_REGISTRY.update(dynamic_datatype_load('pne_backend.nodes.cme'))
+# # load compound datatypes attached to nodes
+# DATATYPE_REGISTRY.update(dynamic_datatype_load('pne_backend.nodes.cme'))
 
 # tell the fields about the datatype registry so they can infer classes when deserializing
-InputNodeField.datatype_registry = DATATYPE_REGISTRY
-ListData.datatype_registry = DATATYPE_REGISTRY
+# InputNodeField.datatype_registry = DATATYPE_REGISTRY
+# ListData.datatype_registry = DATATYPE_REGISTRY
 
 
 @app.websocket("/execute")

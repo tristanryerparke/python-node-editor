@@ -2,10 +2,12 @@ from typing import Tuple
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import StringData, FloatData, UnitsData
 from ...datatypes.image import ImageData
+from ...base_data import register_class
 from ...base_node import BaseNode, node_definition
-from ...base_data import SendableDataModel
+from ...datatypes.compound import ModelData
 
-class Document(SendableDataModel):
+@register_class
+class Document(ModelData):
 
     image: ImageData
     units: UnitsData

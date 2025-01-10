@@ -1,69 +1,37 @@
-import {
-  MantineProvider,
-  Flex
-} from '@mantine/core';
+import NodePicker from './components/nodePicker/NodePicker';
+import { MantineProvider, createTheme } from '@mantine/core';
 import { ReactFlowProvider } from '@xyflow/react';
-
-import { useState, useEffect } from 'react';
-import { PanelGroup } from 'react-resizable-panels';
-import NodeGraph from './components/NodeGraph';
-import Header from './components/Header';
-import Inspector from './components/inspector-elements/Inspector';
-import NodePicker from './components/NodePicker';
-import { AppContext, InspectorContext, FlowMetadataContext } from './GlobalContext';
-
-// Styles
 import '@mantine/core/styles.css';
 import '@xyflow/react/dist/style.css';
+import NodeGraph from './components/nodeGraph/NodeGraph';
+
+const theme = createTheme({
+  primaryColor: 'dark',
+});
 
 function App() {
 
-  const [panels, setPanels] = useState(() => {
-    const savedPanelState = localStorage.getItem('panels');
-    return savedPanelState ? JSON.parse(savedPanelState) : { showInspector: false, showNodePicker: true };
-  });
-
-  useEffect(() => {
-    localStorage.setItem('panels', JSON.stringify(panels));
-  }, [panels]);
-
-
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [isLocked, setIsLocked] = useState(false);
-  const [lockedNodeId, setLockedNodeId] = useState<string | null>(null);
-  const [filename, setFilename] = useState<string>('Untitled');
-  const [lastAutosaved, setLastAutosaved] = useState<Date | null>(null);
-
-
   return (
-    <AppContext.Provider value={{ panels, setPanels, lastAutosaved, setLastAutosaved }}>
-      <InspectorContext.Provider value={{
-        isLocked, 
-        setIsLocked, 
-        lockedNodeId, 
-        setLockedNodeId, 
-        selectedNodeId, 
-        setSelectedNodeId 
-      }}>
-        <FlowMetadataContext.Provider value={{ filename, setFilename }}>
-          <MantineProvider defaultColorScheme="dark">
-            <ReactFlowProvider>
-              <Flex className="App">
-                <Header  />
-                <PanelGroup direction="horizontal" autoSaveId="panel-width-save">
-                
-                  {panels.showNodePicker && (<NodePicker />)}
-                  <NodeGraph />
-                  {panels.showInspector && (<Inspector />)}
-
-                </PanelGroup>
-              </Flex>
-            </ReactFlowProvider>
-          </MantineProvider>
-        </FlowMetadataContext.Provider>
-      </InspectorContext.Provider>
-    </AppContext.Provider>
-  );
+    <>
+      <MantineProvider theme={theme}>
+        <ReactFlowProvider>
+          <div style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
+            <div style={{
+              width: 400, height: '100%'}}>
+              {/* <h1>PNE Frontend 2</h1> */}
+              <NodePicker />
+            </div>
+            <div style={{width: '1px', height: '100%', backgroundColor: 'black'}}/>
+            <div style={{
+              display: 'flex',
+              width: '100%', height: '100%'}}>
+              <NodeGraph />
+            </div>
+          </div>
+        </ReactFlowProvider>
+      </MantineProvider>
+    </>
+  )
 }
 
-export default App;
+export default App

@@ -35,18 +35,18 @@ export type BoolData = z.infer<typeof BoolDataSchema>;
 
 export const ListDataSchema = BaseDataSchema.extend({
   class_name: z.literal('ListData'),
-  id: z.string(),
   payload: z.array(BaseDataSchema)
 });
 
-
-export const ModelDataSchema = BaseDataSchema.extend({
-  class_name: z.literal('ModelData'),
-  id: z.string(),
-  payload: z.record(z.string(), BaseDataSchema)
-}); 
-
 export type ListData = z.infer<typeof ListDataSchema>;
+
+export const ModelDataSchema = z.object({
+  class_name: z.string(),
+  id: z.string(),
+  class_parent: z.literal('ModelData'),
+  // Add other fields specific to ModelData if needed
+});
+
 export type ModelData = z.infer<typeof ModelDataSchema>;
 
 

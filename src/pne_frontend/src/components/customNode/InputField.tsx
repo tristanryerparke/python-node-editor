@@ -45,9 +45,8 @@ export default function InputFieldComponent({ field, index, updateField }: Input
       <div className='pne-div node-field-internals'>
         <div className='pne-div node-field-minified'>
           <div className='node-label-display'>
-            {field.user_label ?? field.label}
-            ({field.data?.class_name ?? 'null'}):
-            {String(field.data?.payload ?? 'no data')}
+            {field.user_label ?? field.label}: 
+            {field.data?.class_name ?? 'null'}
             
             
           </div>

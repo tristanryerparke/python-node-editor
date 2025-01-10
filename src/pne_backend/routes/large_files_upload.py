@@ -4,7 +4,6 @@ from PIL import Image
 import io
 import json
 import base64
-from ..field import instantiate_data_class
 
 large_files_router = APIRouter()
 
@@ -21,7 +20,11 @@ async def handle_large_file(
 
     content_dict = json.loads(json_str)
 
-    data_instance = instantiate_data_class(content_dict, DATATYPE_REGISTRY)
+    discriminator = content_dict.get('class_parent') or content_dict.get('class_name')
+    if discriminator and discriminator in DATATYPE_REGISTRY:
+        data_instance = DATATYPE_REGISTRY[discriminator].model_validate(content_dict)
+    else:
+        data_instance = content_dict
 
     data_instance.metadata['filename'] = original_filename
 

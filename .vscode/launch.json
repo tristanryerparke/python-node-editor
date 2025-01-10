@@ -21,7 +21,7 @@
         "env": {
           "VITE_MAX_FILE_SIZE_MB": "2"
         },
-        "justMyCode": false,
+        "justMyCode": true,
         "pythonPath": "${command:python.interpreterPath}"
       },
       {
@@ -30,7 +30,7 @@
         "request": "launch",
         "program": "${file}",
         "console": "integratedTerminal",
-        "justMyCode": true
+        "justMyCode": false
       }
     ],
     "compounds": [
