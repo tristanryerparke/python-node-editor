@@ -30,7 +30,7 @@ def test_computed_fields():
     assert image_dict['height'] == 10
     assert image_dict['image_type'] == 'GRAY'
 
-test_computed_fields()
+# test_computed_fields()
 
 
 def test_image_data():
@@ -59,17 +59,17 @@ def test_image_data_from_frontend():
     image_base64 = image_to_base64(image)
     d(image_base64[:100])
 
-    data_json = {
-        # 'class_name': 'ImageData',
+    data_json = json.dumps({
+        'class_name': 'ImageData',
         'payload': image_base64
-    }
+    })
 
     d(data_json)
 
-    img_data = ImageData.model_validate(data_json)
+    img_data = ImageData.model_validate_json(data_json)
 
     d(img_data)
 
     # assert ImageData.cache_key_exists(img_data.id)
 
-# test_image_data_from_frontend()
+test_image_data_from_frontend()

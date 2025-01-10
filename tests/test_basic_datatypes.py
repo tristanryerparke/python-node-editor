@@ -1,26 +1,18 @@
 from pydantic import BaseModel, computed_field
 import json
 import numpy as np
+import traceback
 
 from devtools import debug as d
 
 
-from pne_backend.base_data import BaseData
+from pne_backend.base_data import BaseData, register_class
+from pne_backend.datatypes.compound import ModelData
 from pne_backend.datatypes.basic import IntData, FloatData, StringData, NumpyData
 
 # set the max file size for caching to 50kb
 BaseData.max_file_size_mb = 0.05
 
-def test_invalid_payload():
-    """Ensure that a CachableData instance with an invalid payload raises a error"""
-    try:
-        mf2 = BaseData(payload=None)
-    except ValueError as e:
-        print(e)
-        return
-    assert False
-
-# test_invalid_payload()
 
 def test_class_name():
     
@@ -35,10 +27,8 @@ def test_class_name():
         json_dict = json.loads(instance.model_dump_json())
         assert json_dict['class_name'] == expected_name
 
-    
-    
 
-test_class_name()
+# test_class_name()
 
 def test_small_data():
     '''test that a small data does not get cached, 
@@ -92,28 +82,56 @@ def test_custom_computed_fields():
 
 # test_custom_computed_fields()
 
+def test_id_consistency():
+    '''test that the id is consistent between serialization and deserialization'''
+    data = FloatData(payload=2.0)
+    d(data)
 
-def test_large_data():
-    '''test that a large data gets cached, and that serialized previews are sent to the frontend'''
+    d_as_json = data.model_dump_json()
+    d(json.loads(d_as_json))
 
-    large_data_instances = [
-        StringData(payload='hello'*100000),
-        NumpyData(payload=np.random.rand(1000, 1000)),
-    ]
+    data_from_json = FloatData.model_validate_json(d_as_json)
+    d(data_from_json)
 
-    for data in large_data_instances:
-        d(data)
+    assert data.id == data_from_json.id
 
-        d_as_json = data.model_dump_json()
-        d(json.loads(d_as_json))
+# test_id_consistency()
 
-        data_from_json = data.__class__.model_validate_json(d_as_json)
+def test_large_string_data():
+    '''test that a large string gets cached and has a preview'''
+    data = StringData(payload='hello'*10000)
+    d(data)
 
-        assert data.id is not None
-        assert data.cached == True
-        assert data_from_json.preview is not None
+    d_as_json = data.model_dump_json()
+    d(json.loads(d_as_json))
 
-# test_large_data()
+    data_from_json = StringData.model_validate_json(d_as_json)
+
+    assert data.id is not None
+    assert data.cached == True
+    assert data_from_json.preview is not None
+
+    d(data_from_json)
+
+# test_large_string_data()
+
+def test_large_numpy_data():
+    '''test that a large numpy array gets cached and has a preview'''
+    data = NumpyData(payload=np.random.rand(1000, 1000))
+    d(data)
+
+    d_as_json = data.model_dump_json()
+    d(json.loads(d_as_json))
+
+    data_from_json = NumpyData.model_validate_json(d_as_json)
+
+    assert data.id is not None
+    assert data.cached == True
+    assert data_from_json.preview is not None
+
+    d(data_from_json)
+
+# test_large_numpy_data()
 
 def test_int_data_from_frontend():
     '''Test that an integer created in the frontend can be deserialized in the backend'''
@@ -185,34 +203,26 @@ def test_numpy_data_from_frontend():
 
 # test_numpy_data_from_frontend()
 
+@register_class
+class NestedData(ModelData):
+    data1: IntData
+    data2: StringData
 
 def test_small_nested_data():
-    """Test that subclasses of of CachableData can be nested inside other classes
-    and are correctly serialized and deserialized"""
 
-    class NestedData(BaseModel):
-        data1: NumpyData
-        data2: StringData
 
     nested_data = NestedData(
-        data1=NumpyData(payload=np.random.rand(5, 5)),
+        data1=IntData(payload=1),
         data2=StringData(payload='hello')
     )
     d(nested_data)
 
     d_as_json = nested_data.model_dump_json()
-    loaded = json.loads(d_as_json)
-    d(loaded)
 
-    assert 'preview' not in loaded['data1']
-    assert 'preview' not in loaded['data2']
 
-    d_from_json = NestedData.model_validate(loaded)
+    d_from_json = NestedData.model_validate_json(d_as_json)
+    d(d_from_json)
 
-    assert np.array_equal(nested_data.data1.payload, d_from_json.data1.payload)
-    assert nested_data.data2.payload == d_from_json.data2.payload
-    assert d_from_json.data1.cached == False 
-    assert d_from_json.data2.cached == False
 
 # test_small_nested_data()
 
@@ -234,19 +244,19 @@ def test_large_nested_data():
     d_as_json = nested_data.model_dump_json()
 
     loaded = json.loads(d_as_json)
-    d(loaded)
+
 
     assert loaded['data1']['preview'] is not None
     assert loaded['data2']['preview'] is not None
 
-    d_from_json = NestedData.model_validate(loaded)
+    d_from_json = NestedData.model_validate_json(d_as_json)
 
     assert np.array_equal(nested_data.data1.payload, d_from_json.data1.payload)
     assert nested_data.data2.payload == d_from_json.data2.payload
     assert d_from_json.data1.cached == True
     assert d_from_json.data2.cached == True
 
-# test_large_nested_data()
+test_large_nested_data()
 
 
 

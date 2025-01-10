@@ -7,20 +7,16 @@ import numpy as np
 from ..base_data import BaseData
 
 class IntData(BaseData):
-    class_name: str = 'IntData'
     payload: int
 
 class FloatData(BaseData):
-    class_name: str = 'FloatData'
     payload: float
 
 class StringData(BaseData):
-    class_name: str = 'StringData'
     payload: str
 
 class NumpyData(BaseData):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    class_name: str = 'NumpyData'
     payload: Annotated[np.ndarray, WithJsonSchema({'type': 'ndarray'})]
 
     @classmethod

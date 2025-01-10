@@ -1,11 +1,18 @@
-from typing import Any, ClassVar, Union, Callable, Optional, Dict
+from typing import Any, ClassVar, Union, Callable, Optional, Dict, Type
 from pydantic import BaseModel, computed_field, model_validator,model_serializer, Field
 from sys import getsizeof
+from functools import cached_property
 import uuid
 
 
 LARGE_DATA_CACHE = {}
 
+CLASS_REGISTRY: Dict[str, Type[BaseModel]] = {}
+
+def register_class(cls: Type[BaseModel]):
+    # decorator to register the class in the CLASS_REGISTRY
+    CLASS_REGISTRY[cls.__name__] = cls
+    return cls
 
 def cache_key_exists(id: str) -> bool:
     return id in LARGE_DATA_CACHE
@@ -17,27 +24,14 @@ def cache_get(id: str) -> Any:
 
 def cache_set(id: str, data: Any) -> None:
     LARGE_DATA_CACHE.update({id: data})
+    return True
 
 
-class SendableDataModel(BaseModel):
-    '''Sendable data base class, adds its own class name to the serialized data so 
-    that the frontend can perform specific actions like custom display , and so
-    the frontend can infer the class of the data from the class name'''
-    class_name: str
-
-    @model_validator(mode='before')
-    @classmethod
-    def load_cached_data(cls, values):
-        values['class_name'] = cls.__name__
-        return values
-
-
-class BaseData(SendableDataModel):
-    id: Optional[str] = None
+class BaseData(BaseModel):
     payload: Any
-    preview: Optional[str] = None
+    id: Optional[str] = Field(default=None, repr=False)
+    preview: Optional[str] = Field(default=None, repr=False)
     metadata: dict = Field(default_factory=lambda: {})
-
 
     # Class variables
     max_file_size_mb: ClassVar[float] = 0.1
@@ -46,6 +40,15 @@ class BaseData(SendableDataModel):
     cache_key_exists: ClassVar[Callable] = None
     # cache_dict: ClassVar[dict] = None
 
+    @computed_field(repr=True)
+    @property
+    def class_name(self) -> str:
+        return self.__class__.__name__
+    
+    # @computed_field(repr=True)
+    # @cached_property
+    # def id(self) -> str:
+    #     return str(uuid.uuid4())
 
     @computed_field(repr=True)
     @property
@@ -76,66 +79,58 @@ class BaseData(SendableDataModel):
     @classmethod
     def preview_payload(cls, payload: Any) -> Any:
         return f'{payload.__repr__()[:50]}...'
+    
         
     @model_validator(mode='before')
     @classmethod
-    def validate_payload(cls, input_values):
+    def validate_payload(cls, input_values, info):
         '''if the data is cached (id is in the cache), retrieve it from the cache'''
-        if not isinstance(input_values, dict):
-            print(f'input_values is not a dict: {input_values}')
-            raise ValueError('Input values must be a dictionary')
-        
-        
-        
-        input_values['class_name'] = cls.__name__ # used to infer subclasses when deserializing
 
-        # if an id is not provided, generate a new one
-        id = input_values.get('id')
-        if id is None:
+        if input_values.get('id') is None:
             input_values['id'] = str(uuid.uuid4())
+
+        # this means we are creating the instance on the backend
+        if info.mode == 'python':
+            return input_values
         
-        # if the id is in the cache, retrieve the data from the cache
-        if id and cls.cache_key_exists(id):
-            input_values['payload'] = cls.cache_get(id)
-        
-        # if the data is not in the cache, deserialize the data
+        # this means we are deserializing the from the frontend
+        # it could be a cached instance or a new instance
         else:
-            if input_values['payload'] is None:
-                raise ValueError('Payload is None')
-            # the deserialize function should avoid deserializing
-            # if the payload is already the correct type
-            input_values['payload'] = cls.deserialize_payload(input_values['payload'])
-        return input_values
+            id = input_values.get('id')
+
+            # if the id is in the cache, retrieve the data from the cache
+            if id and cls.cache_key_exists(id):
+                input_values['payload'] = cls.cache_get(id)
+
+            # if the id is not in the cache, deserialize the data
+            else:
+                # if the payload is already the correct type
+                input_values['payload'] = cls.deserialize_payload(input_values['payload'])  
+
+        
+            return input_values
     
     @model_serializer()
     def serialize(self):
-        self_as_dict = self.__dict__.copy()
-        self_as_dict |= {k: getattr(self, k) for k in self.model_computed_fields}
+        # get the computed and non-computed fields in a dict
+        self_as_dict = {k: getattr(self, k) for k in self.model_computed_fields}
+        self_as_dict |= self.__dict__.copy()
 
         if self.cached:
             self_as_dict['payload'] = None
-            id = str(uuid.uuid4())
-            self.id = id
-            self_as_dict['id'] = id
-            self.__class__.cache_set(id, self.payload)
+            self.__class__.cache_set(self.id, self.payload)
             self_as_dict['preview'] = self.__class__.preview_payload(self.payload)
-            return self_as_dict
+
+
         else:
             self_as_dict['payload'] = self.__class__.serialize_payload(self.payload)
             # remove the preview field from the dict
             self_as_dict.pop('preview')
-            return self_as_dict
-        
-    def __eq__(self, other: 'BaseData'):
-        return self.model_dump() == other.model_dump()
 
-
-        
-
+        return self_as_dict
 
 # Default values for the class variables
 BaseData.max_file_size_mb = 0.1
 BaseData.cache_get = cache_get
 BaseData.cache_set = cache_set
 BaseData.cache_key_exists = cache_key_exists
-# BaseData.cache_dict = LARGE_DATA_CACHE

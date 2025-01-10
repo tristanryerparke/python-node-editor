@@ -38,19 +38,7 @@ class ImageData(BaseData):
         'arbitrary_types_allowed': True,
     }
     payload: Annotated[np.ndarray, WithJsonSchema({'type': 'image'})]
-        
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
 
-    #     # Compute some info about the image
-    #     self.height = self.payload.shape[0]
-    #     self.width = self.payload.shape[1]
-    #     if self.payload.shape[2] == 1:
-    #         self.image_type = 'GRAY'
-    #     elif self.payload.shape[2] == 3:
-    #         self.image_type = 'RGB'
-    #     elif self.payload.shape[2] == 4:
-    #         self.image_type = 'RGBA'
 
     @computed_field(return_type=int)
     @property

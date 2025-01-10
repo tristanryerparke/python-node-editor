@@ -1,49 +1,46 @@
-from typing import List, ClassVar, Union, Dict, ForwardRef, Literal
-from pydantic import BaseModel, Field, model_validator
+from typing import List, ClassVar, Union, Dict, ForwardRef, Literal, Type, Any
+from pydantic import BaseModel, Field, model_validator, field_validator, computed_field, model_serializer
 import uuid
-from ..base_data import SendableDataModel, BaseData
-from ..field import DATATYPE_REGISTRY, instantiate_data_class
+from ..base_data import BaseData, register_class, CLASS_REGISTRY
 from devtools import debug as d
 
+@register_class
+class ListData(BaseData):
+    payload: List[Any] = Field(discriminator='class_name')
 
-class ListData(SendableDataModel):
-    payload: List[Union[BaseData, 'ListData', 'ModelData']] = Field(discriminator='class_name')
-
-    datatype_registry: ClassVar[dict] = DATATYPE_REGISTRY
-
-    @model_validator(mode='before')
+    @field_validator('payload', mode='before')
     @classmethod
-    def validate_payload(cls, input_values, info):
-        if not isinstance(input_values, dict):
-            print(f'list creation: input_values is not a dict: {input_values}')
-            raise ValueError('Input values must be a dictionary')
+    def validate_payload(cls, value):
+        if isinstance(value, list):
+            new_list = []
+            for item in value:
+                if isinstance(item, dict):
+                    class_parent = item.get('class_parent')
+                    class_name = item.get('class_name')
+                    # Prioritize class_parent if available
+                    discriminator = class_parent or class_name
+                    if discriminator and discriminator in CLASS_REGISTRY:
+                        item_class = CLASS_REGISTRY[discriminator]
+                        new_item = item_class.model_validate(item)
+                        new_list.append(new_item)
+                    else:
+                        new_list.append(item)
+                else:
+                    new_list.append(item)
+            return new_list
+        return value
 
-        # Instantiate the sub-items if we are deserializing from JSON
-        new_data = []
-        for item in input_values['payload']:
-            if isinstance(item, dict):
-                new_data.append(instantiate_data_class(item, cls.datatype_registry))
-            else:
-                new_data.append(item)
-        input_values['payload'] = new_data
-
-        # Generate a new ID if not provided
-        if not input_values.get('id'):
-            input_values['id'] = str(uuid.uuid4())
-
-        return input_values
-
-class ModelData(SendableDataModel):
+class ModelData(BaseModel):
+    '''Modeldata is subclassed to allow creation of classes that can be serialized and deserialized'''
     class_parent: str = 'ModelData'
 
-    datatype_registry: ClassVar[dict] = DATATYPE_REGISTRY
+    @computed_field(repr=True)
+    @property
+    def class_name(self) -> str:
+        return self.__class__.__name__
 
-    @model_validator(mode='before')
-    @classmethod
-    def validate_data(cls, input_values):
-        return input_values
-
-
-
-    
-
+    @model_serializer
+    def serialize(self):
+        self_as_dict = {k: getattr(self, k) for k in self.model_computed_fields}
+        self_as_dict |= self.__dict__.copy()
+        return self_as_dict
