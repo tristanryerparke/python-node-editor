@@ -3,8 +3,9 @@ import { type InputField } from '../../types/nodeTypes';
 import { useEdgeConnection } from '../../hooks/useEdgeConnection';
 import ChevronButton from '../../common/ChevronButton';
 import type { Direction } from '../../common/ChevronButton';
-import ShortDisplay from '../../common/MinifiedDisplay';
+import MinifiedDisplay from '../../common/MinifiedDisplay';
 import DebugDisplay from '../../common/DebugDisplay';
+import { AnyData } from '../../types/dataTypes';
 
 interface InputFieldProps {
   field: InputField;
@@ -45,7 +46,7 @@ export default function InputFieldComponent({ field, index, updateField }: Input
         <div className='pne-div node-field-minified'>
           <div className='pne-div node-label-display left'>
             <strong>{`${field.user_label ?? field.label}:  `}</strong>
-            <ShortDisplay data={field.data} />
+            <MinifiedDisplay data={field.data as AnyData } />
             
             
           </div>

@@ -2,8 +2,9 @@ import { Handle, Position, useNodeId } from '@xyflow/react';
 import { type OutputField } from '../../types/nodeTypes';
 import ChevronButton from '../../common/ChevronButton';
 import type { Direction } from '../../common/ChevronButton';
+import { AnyData } from '../../types/dataTypes';
 
-import ShortDisplay from '../../common/MinifiedDisplay';
+import MinifiedDisplay from '../../common/MinifiedDisplay';
 import DebugDisplay from '../../common/DebugDisplay';
 
 
@@ -37,7 +38,7 @@ export default function OutputFieldComponent({ field, index, updateField }: Outp
           />
           <div className='pne-div node-label-display right'>
             <strong>{`${field.user_label ?? field.label}: `}</strong>
-            <ShortDisplay data={field.data} />
+            <MinifiedDisplay data={field.data as AnyData} />
           </div>
         </div>
         {isExpanded && <DebugDisplay data={field.data} />}

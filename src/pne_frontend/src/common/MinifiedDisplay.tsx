@@ -1,16 +1,11 @@
-import { BaseData, ImageData, ModelData } from "../types/dataTypes";
+import {  AnyData, ImageData, ModelData } from "../types/dataTypes";
 import { isBasicData, isImageData, isListData, isModelData } from "../utils/dataUtils";
 
 
 
 
 
-
-
-
-
-
-export default function ShortDisplay({ data }: { data: BaseData | ModelData }) {
+export default function MinifiedDisplay({ data }: { data: AnyData }) {
 
   if (data == null) {
     return <div>no data</div>;
@@ -25,8 +20,9 @@ export default function ShortDisplay({ data }: { data: BaseData | ModelData }) {
       {`${data.class_name.replace('Data', '')}[${data.payload.length}]`}
     </div>;
   } else if (isModelData(data)) {
+    const modelData = data as ModelData;
     return <div>
-      {`${data.class_name.replace('Data', '')}(${Object.keys(data).length})`}
+      {`${modelData.class_name.replace('Data', '')}(${Object.keys(modelData).length})`}
     </div>;
   } else if (isImageData(data)) {
     const imageData = data as ImageData;

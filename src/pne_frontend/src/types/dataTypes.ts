@@ -32,7 +32,8 @@ export const ImageDataSchema = BaseDataSchema.extend({
   description: z.string(),
   width: z.number(),
   height: z.number(),
-  image_type: z.string()
+  image_type: z.string(),
+  preview: z.string()
 });
 
 export type BaseData = z.infer<typeof BaseDataSchema>;
@@ -59,3 +60,4 @@ export const ModelDataSchema = z.object({
 export type ModelData = z.infer<typeof ModelDataSchema>;
 
 
+export type AnyData = BaseData | ListData | ModelData | ImageData;

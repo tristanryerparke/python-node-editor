@@ -1,10 +1,10 @@
-import { BaseData, ListData, ModelData } from "../types/dataTypes";
+import { AnyData,  BaseData, ListData, ModelData, ImageData } from "../types/dataTypes";
 
-export const isBasicData = (data: BaseData): data is BaseData => {
+export const isBasicData = (data: AnyData): data is BaseData => {
   return ['IntData', 'FloatData', 'StringData', 'BoolData'].includes(data.class_name);
 }
 
-export const isListData = (data: BaseData): data is ListData => {
+export const isListData = (data: AnyData): data is ListData => {
   return data.class_name === 'ListData';
 }
 
@@ -15,6 +15,10 @@ export const isModelData = (data: BaseData): data is ModelData => {
   return false;
 }
 
-export const isImageData = (data: BaseData): data is ImageData => {
-  return data.class_name === 'ImageData';
+export const isImageData = (data: AnyData): data is ImageData => {
+  if ('class_name' in data) {
+    const imageData = data as ImageData;
+    return imageData.class_name === 'ImageData';
+  }
+  return false;
 }

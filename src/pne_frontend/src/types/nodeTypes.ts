@@ -42,6 +42,7 @@ export interface BaseNode {
   id: string;
   position: { x: number; y: number };
   data: BaseNodeData;
+  group?: string;
 }
 
 export type NodeCategories = Record<string, BaseNode[] & { groups?: Record<string, BaseNode[]> }>;

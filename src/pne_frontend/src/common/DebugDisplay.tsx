@@ -1,7 +1,12 @@
-import { BaseData, ModelData } from "../types/dataTypes";
+import { BaseData, ModelData, ImageData } from "../types/dataTypes";
 import { isBasicData, isListData, isModelData, isImageData } from "../utils/dataUtils";
 
-function Render(data: BaseData | ModelData , runningIndent: number = 0, padObject: string = '   ', currentKey?: string): string {
+function Render(
+  data: BaseData | ModelData | ImageData, 
+  runningIndent: number = 0, 
+  padObject: string = '   ', 
+  currentKey?: string
+): string {
   const indentStr = padObject.repeat(runningIndent);
   const keyDisplay = currentKey ? `${currentKey}: ` : '';
 
@@ -44,8 +49,9 @@ function Render(data: BaseData | ModelData , runningIndent: number = 0, padObjec
     return lines.join('');
   } else if (isImageData(data)) {
     const lines: string[] = [];
-    lines.push(`${indentStr}${keyDisplay}${data.class_name}(\n`);
-    Object.entries(data).forEach(([key, value]) => {
+    const imageData = data as ImageData;
+    lines.push(`${indentStr}${keyDisplay}${imageData.class_name}(\n`);
+    Object.entries(imageData).forEach(([key, value]) => {
       if (key !== 'class_name') {
         lines.push(`${indentStr}${padObject}${key}: ${value}\n`);
       }
@@ -59,9 +65,7 @@ function Render(data: BaseData | ModelData , runningIndent: number = 0, padObjec
 }
 
 
-
-
-export default function DebugDisplay({ data }: { data: BaseData }) {
+export default function DebugDisplay({ data }: { data: unknown }) {
   // console.log(data);
   return <div
     className='pne-div nodrag nopan nowheel'
@@ -78,6 +82,6 @@ export default function DebugDisplay({ data }: { data: BaseData }) {
       MozUserSelect: 'text', // Add Firefox support
       msUserSelect: 'text', // Add IE support
     }}
-  >{Render(data)}</div>;
+  >{Render(data as BaseData)}</div>;
 }
 
