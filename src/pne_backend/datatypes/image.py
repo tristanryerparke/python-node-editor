@@ -6,7 +6,7 @@ import base64
 from PIL import Image
 
 
-from ..base_data import BaseData
+from ..base_data import BaseData, register_class
 
 
 def image_to_base64(img: Image.Image) -> str:
@@ -31,7 +31,7 @@ def create_thumbnail(img: Image.Image, max_file_size_mb: float) -> Image.Image:
     img.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
     return img
 
-
+@register_class
 class ImageData(BaseData):
     """BaseData for an image class with additional data about the image properties"""
     model_config: ConfigDict = {

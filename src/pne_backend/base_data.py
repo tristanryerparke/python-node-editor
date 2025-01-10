@@ -34,7 +34,7 @@ class BaseData(BaseModel):
     metadata: dict = Field(default_factory=lambda: {})
 
     # Class variables
-    max_file_size_mb: ClassVar[float] = 0.1
+    max_file_size_mb: ClassVar[float] = 0.5
     cache_set: ClassVar[Callable] = None
     cache_get: ClassVar[Callable] = None
     cache_key_exists: ClassVar[Callable] = None
@@ -88,9 +88,10 @@ class BaseData(BaseModel):
 
         if input_values.get('id') is None:
             input_values['id'] = str(uuid.uuid4())
+        
+        context = info.context or {}
 
-        # this means we are creating the instance on the backend
-        if info.mode == 'python':
+        if info.mode == 'python' and not context.get('state') == 'deserializing':
             return input_values
         
         # this means we are deserializing the from the frontend
@@ -130,7 +131,7 @@ class BaseData(BaseModel):
         return self_as_dict
 
 # Default values for the class variables
-BaseData.max_file_size_mb = 0.1
+BaseData.max_file_size_mb = 0.5
 BaseData.cache_get = cache_get
 BaseData.cache_set = cache_set
 BaseData.cache_key_exists = cache_key_exists

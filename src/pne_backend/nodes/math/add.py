@@ -2,7 +2,7 @@ from typing import Union
 from ...base_node import BaseNode, node_definition
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import IntData, FloatData
-
+from functools import lru_cache
 MAXSIZE = 10
 
 class AddNode(BaseNode):
@@ -37,6 +37,7 @@ class AddNode(BaseNode):
             OutputNodeField(label='result')
         ]
     )
+    @lru_cache(maxsize=MAXSIZE)
     def exec(cls, a: Union[IntData, FloatData], b: Union[IntData, FloatData]) -> FloatData:
         if isinstance(a, IntData) and isinstance(b, IntData):
             result = a.payload + b.payload

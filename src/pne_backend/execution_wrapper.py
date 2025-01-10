@@ -88,7 +88,7 @@ class ExecutionWrapper:
             namespace = node['data']['namespace']
             NodeClass = next((cls for cls in self.node_classes.get(namespace, []) if cls.__name__ == node_type), None)
             if NodeClass:
-                instance = NodeClass.model_validate(node)
+                instance = NodeClass.model_validate(node, context={'state': 'deserializing'})
                 self.node_instances[id] = instance
         node_instantiation_end = time.time()
         print(f"Node instantiation took {node_instantiation_end - node_instantiation_start:.4f} seconds")

@@ -1,8 +1,9 @@
 from typing import Union
-# from functools import lru_cache
+from functools import lru_cache
 from ...base_node import BaseNode, node_definition
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import IntData, FloatData
+
 
 MAXSIZE = 10
 
@@ -14,21 +15,30 @@ class SubtractNode(BaseNode):
             InputNodeField(
                 label='a', 
                 user_label='A',
-                dtype='number', 
-                data=FloatData(payload=0)
+                allowed_types=['IntData', 'FloatData'],
+                default_generator_type='IntData',
+                data=IntData(payload=1),
+                metadata={
+                    'max': 100,
+                    'min': -100
+                }
             ),
             InputNodeField(
                 label='b', 
-                user_label='B',
-                dtype='number', 
-                data=FloatData(payload=0)
+                allowed_types=['IntData', 'FloatData'],
+                default_generator_type='IntData',
+                data=IntData(payload=2),
+                metadata={
+                    'max': 100,
+                    'min': -100
+                }
             )
         ],
         outputs=[
             OutputNodeField(label='result', user_label='Result')
         ]
     )
-    # @lru_cache(maxsize=MAXSIZE)
+    @lru_cache(maxsize=MAXSIZE)
     def exec(cls, a: Union[IntData, FloatData], b: Union[IntData, FloatData]) -> FloatData:
         # if both are ints, return an int
         if isinstance(a, IntData) and isinstance(b, IntData):

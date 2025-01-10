@@ -8,7 +8,7 @@ import importlib.util
 from pathlib import Path
 
 from .base_data import BaseData
-from .datatypes.compound import CLASS_REGISTRY, AnyData
+from .datatypes.compound import CLASS_REGISTRY
 
 class ModelNotFoundError(Exception):
     pass
@@ -30,7 +30,7 @@ class InputNodeField(BaseModel):
 
     @model_validator(mode='before')
     @classmethod
-    def validate_data(cls, values):
+    def validate_data(cls, values, info):
         allowed = values.get('allowed_types', ['AnyData'])
         if allowed == ['AnyData']:
             allowed_classes = list(CLASS_REGISTRY.keys())
@@ -43,7 +43,7 @@ class InputNodeField(BaseModel):
             if discriminator in allowed_classes:
                 data_class = CLASS_REGISTRY.get(discriminator)
                 if data_class:
-                    values['data'] = data_class.model_validate(data)
+                    values['data'] = data_class.model_validate(data, context={'state': 'deserializing'})
                 else:
                     raise ValueError(f"Discriminator '{discriminator}' not found in CLASS_REGISTRY.")
             else:

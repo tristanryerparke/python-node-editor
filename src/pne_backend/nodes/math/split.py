@@ -12,12 +12,31 @@ class SplitNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='number', dtype='number', data=FloatData(payload=1.0)),
-            InputNodeField(label='t', dtype='number', data=FloatData(payload=0.5))
+            InputNodeField(
+                label='number', 
+                user_label='Number',
+                allowed_types=['IntData', 'FloatData'],
+                default_generator_type='IntData',
+                data=IntData(payload=1),
+                metadata={
+                    'max': 100,
+                    'min': -100
+                }
+            ),
+            InputNodeField(
+                label='t', 
+                allowed_types=['FloatData'],
+                default_generator_type='FloatData',
+                data=FloatData(payload=0.5),
+                metadata={
+                    'max': 1.0,
+                    'min': 0.0
+                }
+            )
         ],
         outputs=[
-            OutputNodeField(label='split_t', dtype='number'),
-            OutputNodeField(label='split_1_minus_t', dtype='number')
+            OutputNodeField(label='split_t'),
+            OutputNodeField(label='split_1_minus_t')
         ]
     )
     @lru_cache(maxsize=MAXSIZE)

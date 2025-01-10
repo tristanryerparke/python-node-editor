@@ -6,16 +6,20 @@ import numpy as np
 
 from ..base_data import BaseData, register_class
 
+class HashableData(BaseData):
+    def __hash__(self):
+        return hash(self.payload)
+
 @register_class
-class IntData(BaseData):
+class IntData(HashableData):
     payload: int
 
 @register_class
-class FloatData(BaseData):
+class FloatData(HashableData):
     payload: float
 
 @register_class
-class StringData(BaseData):
+class StringData(HashableData):
     payload: str
 
 @register_class

@@ -1,8 +1,9 @@
 from typing import Any, List, Union, Type, Dict
 from pydantic import BaseModel, Field, computed_field, model_validator, model_serializer, field_validator
 from devtools import debug as d
-
+import numpy as np
 from pne_backend.datatypes.basic import IntData, FloatData, StringData
+from pne_backend.datatypes.image import ImageData
 from pne_backend.datatypes.compound import ListData
 from pne_backend.base_data import register_class, CLASS_REGISTRY
 
@@ -146,7 +147,7 @@ class Document(ModelData):
 def test_model_data():
 
     doc = Document(
-        image= StringData(payload='sofhdiuhfsiojdoidfjoisdjoi'),
+        image= ImageData(payload=np.zeros((100, 100, 3))),
         width= FloatData(payload=10),
         height= FloatData(payload=10),
         units= StringData(payload='mm')
