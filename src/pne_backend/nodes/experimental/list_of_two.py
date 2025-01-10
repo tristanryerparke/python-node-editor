@@ -11,9 +11,14 @@ class ListOfTwoNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[InputNodeField(
-            label='a', dtype='number', data=FloatData(payload=0)
+            label='a',
+            data=FloatData(payload=0),
+            allowed_types=['FloatData']
         )],
-        outputs=[OutputNodeField(label='result', dtype='ListData')],
+        outputs=[OutputNodeField(
+            label='result',
+            allowed_types=['ListData']
+        )],
     )
     def exec(cls, a: FloatData) -> ListData:
         return ListData(payload=[a]*2)

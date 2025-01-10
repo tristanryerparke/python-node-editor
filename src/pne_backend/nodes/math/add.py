@@ -16,7 +16,7 @@ class AddNode(BaseNode):
                 user_label='A',
                 allowed_types=['IntData', 'FloatData'],
                 default_generator_type='IntData',
-                data=IntData(payload=0),
+                data=IntData(payload=1),
                 metadata={
                     'max': 100,
                     'min': -100
@@ -26,7 +26,7 @@ class AddNode(BaseNode):
                 label='b', 
                 allowed_types=['IntData', 'FloatData'],
                 default_generator_type='IntData',
-                data=IntData(payload=0),
+                data=IntData(payload=2),
                 metadata={
                     'max': 100,
                     'min': -100

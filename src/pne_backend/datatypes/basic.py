@@ -4,17 +4,21 @@ from pydantic import ConfigDict, WithJsonSchema
 import numpy as np
 
 
-from ..base_data import BaseData
+from ..base_data import BaseData, register_class
 
+@register_class
 class IntData(BaseData):
     payload: int
 
+@register_class
 class FloatData(BaseData):
     payload: float
 
+@register_class
 class StringData(BaseData):
     payload: str
 
+@register_class
 class NumpyData(BaseData):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     payload: Annotated[np.ndarray, WithJsonSchema({'type': 'ndarray'})]
@@ -35,5 +39,6 @@ class NumpyData(BaseData):
         return payload.__repr__()
     
 
+@register_class
 class UnitsData(StringData):
     payload: str = Literal['mm', 'in']

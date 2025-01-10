@@ -54,11 +54,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 data = await websocket.receive_json()
                 if data.get("action") == "execute":
                     EXECUTION_WRAPPER.cancel_flag = False
-                    flow_file = data["flow_file"]
-                    print(f'Executing {flow_file["metadata"]["filename"]}')
+                    flow = data["flow"]
+                    # print(f'Executing {flow["metadata"]["filename"]}')
+                    print(f'Executing flow')
                     task = asyncio.create_task(EXECUTION_WRAPPER.execute_graph(
-                        flow_file, 
-                        data["quiet"]
+                        flow, 
                     ))
                     tasks.append(task)
                     await websocket.send_json({"event": 'execution_started'})
@@ -91,9 +91,6 @@ def get_all_nodes():
     
     return nodes_dict
 
-@app.get("/all_datatypes")
-def get_all_datatypes():
-    return {k: v.model_json_schema() for k, v in DATATYPE_REGISTRY.items()}
 
 if __name__ == "__main__":
     import uvicorn

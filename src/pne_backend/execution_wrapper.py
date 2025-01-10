@@ -43,7 +43,7 @@ class ExecutionWrapper:
             print(f"Websocket not set, cannot send message: {message}")
 
     async def execute_graph(self, graph_def: dict, quiet: bool = False, headless: bool = False):
-        autosave(graph_def)
+        # autosave(graph_def)
         
         print("quiet", quiet)
         updated_nodes = []
@@ -120,11 +120,7 @@ class ExecutionWrapper:
 
             # send a status update
             if not quiet and not headless:
-                await self.send_update({"event": "node_data_update", "node_id": node_id, "updates": {
-                    "status": node_instance.data.status,
-                    "terminal_output": node_instance.data.terminal_output,
-                    "error_output": node_instance.data.error_output,
-                }})
+                await self.send_update({"event": "node_update", "node": node_instance.model_dump_json()})
 
             # Allow other tasks to run
             await asyncio.sleep(0)
@@ -137,7 +133,7 @@ class ExecutionWrapper:
 
                     for item in node_instance.meta_exec_stream():
                         if not quiet and not headless:
-                            await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
+                            await self.send_update({"event": "node_update", "node": node_instance.model_dump_json()})
                         await asyncio.sleep(0)
                         await check_cancel_flag()
 
@@ -161,7 +157,7 @@ class ExecutionWrapper:
 
             # send a full update
             if not quiet and not headless:
-                await self.send_update({"event": "full_node_update", "node": node_instance.model_dump_json()})
+                await self.send_update({"event": "node_update", "node": node_instance.model_dump_json()})
             else:
                 updated_nodes.append(node_instance.model_dump())
 

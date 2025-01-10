@@ -4,6 +4,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import '@mantine/core/styles.css';
 import '@xyflow/react/dist/style.css';
 import NodeGraph from './components/nodeGraph/NodeGraph';
+import ExecuteMenu from './components/ExecuteMenu';
 
 const theme = createTheme({
   primaryColor: 'dark',
@@ -17,9 +18,17 @@ function App() {
         <ReactFlowProvider>
           <div style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
             <div style={{
-              width: 400, height: '100%'}}>
+              width: 400, 
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              // padding: '10px'
+            }}>
               {/* <h1>PNE Frontend 2</h1> */}
               <NodePicker />
+              <div style={{height: '1px', width: '100%', backgroundColor: 'black'}}/>
+              <ExecuteMenu />
             </div>
             <div style={{width: '1px', height: '100%', backgroundColor: 'black'}}/>
             <div style={{

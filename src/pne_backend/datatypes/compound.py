@@ -4,13 +4,20 @@ import uuid
 from ..base_data import BaseData, register_class, CLASS_REGISTRY
 from devtools import debug as d
 
+# Import all relevant data types from basic.py
+from .basic import IntData, FloatData, StringData, NumpyData, UnitsData
+# If there are other subclasses of ModelData, import them here
+# from .other_datatypes import ...
+
+# Define AnyData as a union of all data types
+
 @register_class
 class ListData(BaseData):
     payload: List[Any] = Field(discriminator='class_name')
 
     @field_validator('payload', mode='before')
     @classmethod
-    def validate_payload(cls, value):
+    def validate_payload(cls, value, info):
         if isinstance(value, list):
             new_list = []
             for item in value:
@@ -44,3 +51,6 @@ class ModelData(BaseModel):
         self_as_dict = {k: getattr(self, k) for k in self.model_computed_fields}
         self_as_dict |= self.__dict__.copy()
         return self_as_dict
+    
+AnyData = Union[IntData, FloatData, StringData, NumpyData, UnitsData, ListData, ModelData]
+

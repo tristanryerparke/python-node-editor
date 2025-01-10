@@ -21,7 +21,6 @@ t1 = TestModel(
     ])
 )
 
-print(t1.model_dump_json())
 
 class TestModelNode(BaseNode):
     group: str = 'Basic'
@@ -30,15 +29,17 @@ class TestModelNode(BaseNode):
     @node_definition(
         inputs=[
             InputNodeField(
-                allowed_types=['TestModel'],
-                default_generator_type='TestModel',
                 data=t1,
-                label='inputA',
+                label='input',
             ),
         ],
         outputs=[
-            OutputNodeField(field_type='output', label='c', dtype='number')
+            OutputNodeField(label='output',)
         ]
     )
-    def exec(cls, a: FloatData, b: FloatData) -> FloatData:
-        return FloatData(payload=a.payload + b.payload)
+    def exec(cls, input: TestModel) -> TestModel:
+        copy = input.model_copy(deep=True)
+        copy.a.payload += 1
+        copy.b.payload[0].payload += 1
+        copy.b.payload[1].payload += 1
+        return copy
