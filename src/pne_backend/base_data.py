@@ -1,5 +1,5 @@
 from typing import Any, ClassVar, Union, Callable, Optional, Dict, Type
-from pydantic import BaseModel, computed_field, model_validator,model_serializer, Field
+from pydantic import BaseModel, computed_field, model_validator,model_serializer, Field, ValidationInfo
 from sys import getsizeof
 from functools import cached_property
 import uuid
@@ -83,11 +83,13 @@ class BaseData(BaseModel):
         
     @model_validator(mode='before')
     @classmethod
-    def validate_payload(cls, input_values, info):
+    def validate_payload(cls, input_values, info: ValidationInfo):
         '''if the data is cached (id is in the cache), retrieve it from the cache'''
 
+        context = info.context or {}
+
         # this means we are creating the instance on the backend
-        if info.mode == 'python':
+        if info.mode == 'python' and context.get('state', '') != 'deserializing':
             return input_values
         
         # this means we are deserializing the from the frontend

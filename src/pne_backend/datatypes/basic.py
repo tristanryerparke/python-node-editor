@@ -1,6 +1,5 @@
-
-from typing import Annotated, Literal
-from pydantic import ConfigDict, WithJsonSchema
+from typing import Annotated, Literal, Any
+from pydantic import ConfigDict, WithJsonSchema, model_validator, ValidationInfo
 import numpy as np
 
 
@@ -13,7 +12,7 @@ class HashableData(BaseData):
 @register_class
 class IntData(HashableData):
     payload: int
-
+    
 @register_class
 class FloatData(HashableData):
     payload: float
@@ -42,7 +41,15 @@ class NumpyData(BaseData):
         '''return a string representation of the numpy array'''
         return payload.__repr__()
     
-
 @register_class
-class UnitsData(StringData):
-    payload: str = Literal['mm', 'in']
+class LiteralData(BaseData):
+    payload: Any
+    options: list[Any]
+
+
+    @model_validator(mode='after')
+    def validate_payload(self, info: ValidationInfo):
+        if self.payload not in self.options:
+            raise ValueError(f"Payload {self.payload} is not in options {self.options}")
+        return self
+

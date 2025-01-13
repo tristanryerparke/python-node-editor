@@ -1,4 +1,4 @@
-import { AnyData,  BaseData, ListData, ModelData, ImageData } from "../types/dataTypes";
+import { AnyData, BaseData, ListData, ModelData, ImageData, NumpyData } from "../types/dataTypes";
 
 export const isBasicData = (data: AnyData): data is BaseData => {
   return ['IntData', 'FloatData', 'StringData', 'BoolData'].includes(data.class_name);
@@ -21,4 +21,8 @@ export const isImageData = (data: AnyData): data is ImageData => {
     return imageData.class_name === 'ImageData';
   }
   return false;
+}
+
+export const isNumpyData = (data: AnyData): data is NumpyData => {
+  return data.class_name === 'NumpyData';
 }

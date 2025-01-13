@@ -59,5 +59,11 @@ export const ModelDataSchema = z.object({
 
 export type ModelData = z.infer<typeof ModelDataSchema>;
 
+export const NumpyDataSchema = BaseDataSchema.extend({
+  class_name: z.literal('NumpyData'),
+  payload: z.array(z.array(z.number())) // Assuming 2D array for simplicity
+});
 
-export type AnyData = BaseData | ListData | ModelData | ImageData;
+export type NumpyData = z.infer<typeof NumpyDataSchema>;
+
+export type AnyData = BaseData | ListData | ModelData | ImageData | NumpyData;

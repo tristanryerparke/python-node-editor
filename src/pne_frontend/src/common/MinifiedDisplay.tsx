@@ -1,9 +1,5 @@
-import {  AnyData, ImageData, ModelData } from "../types/dataTypes";
-import { isBasicData, isImageData, isListData, isModelData } from "../utils/dataUtils";
-
-
-
-
+import { AnyData, ImageData, ModelData } from "../types/dataTypes";
+import { isBasicData, isImageData, isListData, isModelData, isNumpyData } from "../utils/dataUtils";
 
 export default function MinifiedDisplay({ data }: { data: AnyData }) {
 
@@ -29,10 +25,13 @@ export default function MinifiedDisplay({ data }: { data: AnyData }) {
     return <div>
       {`${imageData.class_name.replace('Data', '')}(${imageData.description})`}
     </div>;
+  } else if (isNumpyData(data)) {
+    return <div>
+      {`${data.class_name.replace('Data', '')}: ${JSON.stringify(data.payload)}`}
+    </div>;
   }
 
   return <div>
     {`unknown data type: ${JSON.stringify(data)}`}
   </div>;
-
 }

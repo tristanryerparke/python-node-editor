@@ -1,5 +1,5 @@
 import { BaseData, ModelData, ImageData } from "../types/dataTypes";
-import { isBasicData, isListData, isModelData, isImageData } from "../utils/dataUtils";
+import { isBasicData, isListData, isModelData, isImageData, isNumpyData } from "../utils/dataUtils";
 
 function Render(
   data: BaseData | ModelData | ImageData, 
@@ -18,7 +18,6 @@ function Render(
     // Handle unexpected data types
     return `${indentStr}${keyDisplay}invalid data type ${typeof data}\n`;
   }
-
 
   if (isBasicData(data)) {
     return `${indentStr}${keyDisplay}${data.class_name}: ${data.payload}\n`;
@@ -58,12 +57,13 @@ function Render(
     });
     lines.push(`${indentStr})\n`);
     return lines.join('');
+  } else if (isNumpyData(data)) {
+    return `${indentStr}${keyDisplay}${data.class_name}: ${JSON.stringify(data.payload)}\n`;
   } else {
     // Default case to handle unexpected data types
     return `${indentStr}${keyDisplay}unknown data type\n`;
   }
 }
-
 
 export default function DebugDisplay({ data }: { data: unknown }) {
   // console.log(data);

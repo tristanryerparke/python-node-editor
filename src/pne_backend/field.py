@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ValidationInfo
 from typing import Literal, Any, ClassVar, Union, Optional, List
 import uuid
 import importlib
@@ -30,7 +30,7 @@ class InputNodeField(BaseModel):
 
     @model_validator(mode='before')
     @classmethod
-    def validate_data(cls, values, info):
+    def validate_data(cls, values, info: ValidationInfo):
         allowed = values.get('allowed_types', ['AnyData'])
         if allowed == ['AnyData']:
             allowed_classes = list(CLASS_REGISTRY.keys())

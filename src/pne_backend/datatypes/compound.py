@@ -5,7 +5,7 @@ from ..base_data import BaseData, register_class, CLASS_REGISTRY
 from devtools import debug as d
 
 # Import all relevant data types from basic.py
-from .basic import IntData, FloatData, StringData, NumpyData, UnitsData
+from .basic import IntData, FloatData, StringData, NumpyData
 # If there are other subclasses of ModelData, import them here
 # from .other_datatypes import ...
 

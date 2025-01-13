@@ -2,7 +2,7 @@ from typing import Tuple
 import numpy as np
 
 from ...field import InputNodeField, OutputNodeField
-from ...datatypes.basic import StringData, FloatData, UnitsData
+from ...datatypes.basic import StringData, FloatData
 from ...datatypes.image import ImageData
 from ...base_data import register_class
 from ...base_node import BaseNode, node_definition
@@ -11,7 +11,7 @@ from ...datatypes.compound import ModelData
 @register_class
 class Document(ModelData):
     image: ImageData
-    units: UnitsData
+    units: StringData
     width: FloatData
     height: FloatData
     
@@ -25,14 +25,14 @@ class ConstructDocumentNode(BaseNode):
         inputs=[
             InputNodeField(label='image', data=ImageData(payload=np.zeros((100, 100, 3)))),
             InputNodeField(label='units', data=StringData(payload='mm')),
-            InputNodeField(label='width', data=FloatData(payload=100)),
-            InputNodeField(label='height', data=FloatData(payload=100))
+            InputNodeField(label='width', data=FloatData(payload=10)),
+            InputNodeField(label='height', data=FloatData(payload=10))
         ],
         outputs=[
             OutputNodeField(label='document')
         ]
     )
-    def exec(cls, image: ImageData, units: UnitsData, width: FloatData, height: FloatData) -> Document:
+    def exec(cls, image: ImageData, units: StringData, width: FloatData, height: FloatData) -> Document:
         return Document(
             image=image,
             units=units,
@@ -44,13 +44,18 @@ class DeconstructDocumentNode(BaseNode):
     '''Deconstructs a document into its image, units, width, and height.'''
     @classmethod
     @node_definition(
-        inputs=[InputNodeField(label='document', dtype='object')],
+        inputs=[InputNodeField(label='document', data=Document(
+            image=ImageData(payload=np.zeros((100, 100, 3))), 
+            units=StringData(payload='mm'), 
+            width=FloatData(payload=10), 
+            height=FloatData(payload=10)
+        ))],
         outputs=[
-            OutputNodeField(label='image', dtype='image'),
-            OutputNodeField(label='units', dtype='string'),
-            OutputNodeField(label='width', dtype='number'),
-            OutputNodeField(label='height', dtype='number')
+            OutputNodeField(label='image'),
+            OutputNodeField(label='units'),
+            OutputNodeField(label='width'),
+            OutputNodeField(label='height')
         ]
     )
-    def exec(cls, document: Document) -> Tuple[ImageData, UnitsData, FloatData, FloatData]:
+    def exec(cls, document: Document) -> Tuple[ImageData, StringData, FloatData, FloatData]:
         return document.image, document.units, document.width, document.height

@@ -4,7 +4,7 @@ from devtools import debug as d
 import numpy as np
 from pne_backend.datatypes.basic import IntData, FloatData, StringData
 from pne_backend.datatypes.image import ImageData
-from pne_backend.datatypes.compound import ListData
+from pne_backend.datatypes.compound import ListData, ModelData
 from pne_backend.base_data import register_class, CLASS_REGISTRY
 
 # class BaseData(BaseModel):
@@ -120,25 +120,10 @@ def test_nested_list_data():
 
 # test_nested_list_data()
 
-class ModelData(BaseModel):
-    '''Modeldata is subclassed to allow creation of classes that can be serialized and deserialized'''
-    class_parent: str = 'ModelData'
-
-    @computed_field(repr=True)
-    @property
-    def class_name(self) -> str:
-        return self.__class__.__name__
-
-    @model_serializer()
-    def serialize(self):
-        self_as_dict = {k: getattr(self, k) for k in self.model_computed_fields}
-        self_as_dict |= self.__dict__.copy()
-        return self_as_dict
-
 # Register subclasses of ModelData
 @register_class
 class Document(ModelData):
-    image: StringData
+    image: ImageData
     width: FloatData
     height: FloatData
     units: StringData
@@ -147,15 +132,16 @@ class Document(ModelData):
 def test_model_data():
 
     image = ImageData(payload=np.zeros((100, 100, 3)))
+    units = StringData(payload='mm')
     width = FloatData(payload=10)
     height = FloatData(payload=10)
-    units = StringData(payload='mm')
+    
 
     doc = Document(
         image=image,
+        units=units,
         width=width,
         height=height,
-        units=units
     )
 
     d(doc)
