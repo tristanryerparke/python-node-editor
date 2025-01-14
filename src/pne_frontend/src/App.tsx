@@ -5,6 +5,7 @@ import '@mantine/core/styles.css';
 import '@xyflow/react/dist/style.css';
 import NodeGraph from './components/nodeGraph/NodeGraph';
 import ExecuteMenu from './components/ExecuteMenu';
+import SaveButton from './components/SaveButton';
 
 const theme = createTheme({
   primaryColor: 'dark',
@@ -28,7 +29,10 @@ function App() {
               {/* <h1>PNE Frontend 2</h1> */}
               <NodePicker />
               <div style={{height: '1px', width: '100%', backgroundColor: 'black'}}/>
-              <ExecuteMenu />
+              <div className='pne-div shrink' style={{padding: '0.25rem', gap: '0.25rem'}}>
+                <ExecuteMenu />
+                <SaveButton />
+              </div>
             </div>
             <div style={{width: '1px', height: '100%', backgroundColor: 'black'}}/>
             <div style={{

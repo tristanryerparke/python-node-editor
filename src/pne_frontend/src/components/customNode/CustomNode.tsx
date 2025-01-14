@@ -5,6 +5,9 @@ import NodeHeader from './NodeHeader';
 import { type InputField } from '../../types/nodeTypes';
 import InputFieldComponent from './InputField';
 import OutputFieldComponent from './OutputField';
+
+import './node_styles.css';
+
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {

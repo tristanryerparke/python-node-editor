@@ -63,9 +63,9 @@ class BaseNodeData(BaseModel):
         'evaluated', 
         'error'
     ] = 'not evaluated'
-    terminal_output: str = ''
-    error_output: str = ''
-    description: Optional[str] = ''
+    terminal_output: Optional[str] = None
+    error_output: Optional[str] = None
+    description: Optional[str] = None
     inputs: List[InputNodeField] = []
     outputs: List[OutputNodeField] = []
     streaming: bool = False

@@ -1,18 +1,11 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { useReactFlow, type ReactFlowJsonObject } from '@xyflow/react';
-
-
-
-
 
 
 
 export default function useExecuteFlow() {
   const websocketRef = useRef<WebSocket | null>(null);
   const reactFlow = useReactFlow()
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [lastAutosaved, setLastAutosaved] = useState<Date | null>(null);
 
 
   const sendExecuteMessage = useCallback(() => {
@@ -42,7 +35,6 @@ export default function useExecuteFlow() {
       websocketRef.current = new WebSocket('ws://localhost:8000/execute');
       websocketRef.current.onopen = () => {
         console.log('WebSocket connection established');
-        setIsExecuting(true);
         sendExecuteMessage();
       };
 
@@ -69,22 +61,17 @@ export default function useExecuteFlow() {
             })
           );
         } else if (data.event === 'execution_finished') {
-          setIsExecuting(false);
-          setLastAutosaved(new Date());
-        } else if (data.event === "execution_cancelled") {
-          setIsExecuting(false);
-          setIsCancelling(false);
+          // Handle execution finished event
+          console.log('Execution finished');
         }
       };
 
       websocketRef.current.onerror = (error) => {
         console.error('WebSocket error:', error);
-        setIsExecuting(false);
       };
       websocketRef.current.onclose = () => {
         console.log('WebSocket connection closed');
         websocketRef.current = null;
-        setIsExecuting(false);
       };
     }
   }, [reactFlow, sendExecuteMessage]);

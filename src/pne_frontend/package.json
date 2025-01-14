@@ -14,6 +14,7 @@
     "@mantine/hooks": "^7.15.2",
     "@tabler/icons-react": "3.17.0",
     "@xyflow/react": "^12.3.6",
+    "file-saver": "^2.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-resizable-panels": "^2.1.7",

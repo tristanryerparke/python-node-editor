@@ -94,3 +94,15 @@ div.center {
   width: 100%;
 }
 
+.mantine-Switch-track {
+  border-color: black;
+  background-color: white;
+}
+
+.mantine-Switch-thumb {
+  border-color: black;
+  background-color: black;
+}
+
+
+

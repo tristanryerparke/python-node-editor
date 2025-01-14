@@ -5,6 +5,7 @@ import ChevronButton from '../../common/ChevronButton';
 import type { Direction } from '../../common/ChevronButton';
 import MinifiedDisplay from '../../common/MinifiedDisplay';
 import DebugDisplay from '../../common/DebugDisplay';
+import ExpandedDisplay from './ExpandedDisplay';
 import { AnyData } from '../../types/dataTypes';
 
 interface InputFieldProps {
@@ -47,17 +48,14 @@ export default function InputFieldComponent({ field, index, updateField }: Input
           <div className='pne-div node-label-display left'>
             <strong>{`${field.user_label ?? field.label}:  `}</strong>
             <MinifiedDisplay data={field.data as AnyData } />
-            
-            
           </div>
           <ChevronButton 
             direction={isExpanded ? 'down' : 'up'}
             onChange={(direction) => handleDirectionChange(direction)}
           />
         </div>
-        {isExpanded && <DebugDisplay data={field.data} />}
+        {isExpanded && <ExpandedDisplay field={field} updateField={updateField} index={index} />}
       </div>
-      
     </div>
   );
 }

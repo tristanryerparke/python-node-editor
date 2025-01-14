@@ -1,11 +1,13 @@
 import { BaseData } from "./dataTypes";
+import { ModelData } from "./dataTypes";
+import { ImageData } from "./dataTypes";
 
 
 
 export interface InputField {
   label: string;
   user_label: string;
-  data: BaseData | null;
+  data: BaseData | ModelData | ImageData;
   allowed_types: string[];
   input_display_generate: string;
   display_type: string;
