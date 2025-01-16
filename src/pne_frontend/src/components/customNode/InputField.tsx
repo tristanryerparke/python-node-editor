@@ -1,12 +1,11 @@
 import { Handle, Position, useNodeId } from '@xyflow/react';
 import { type InputField } from '../../types/nodeTypes';
 import { useEdgeConnection } from '../../hooks/useEdgeConnection';
-import ChevronButton from '../../common/ChevronButton';
-import type { Direction } from '../../common/ChevronButton';
+import { type Direction, ChevronButton } from '../../common/ChevronButton';
 import MinifiedDisplay from '../../common/MinifiedDisplay';
-import DebugDisplay from '../../common/DebugDisplay';
 import ExpandedDisplay from './ExpandedDisplay';
-import { AnyData } from '../../types/dataTypes';
+import { AnyData } from '../../types/dataTypes/anyData';
+import { FieldContext } from '../../contexts/FieldContext';
 
 interface InputFieldProps {
   field: InputField;
@@ -43,19 +42,21 @@ export default function InputFieldComponent({ field, index, updateField }: Input
         position={Position.Left}
         id={`${nodeId}-input-${index}`}
       />
-      <div className='pne-div node-field-internals left'>
-        <div className='pne-div node-field-minified'>
-          <div className='pne-div node-label-display left'>
-            <strong>{`${field.user_label ?? field.label}:  `}</strong>
-            <MinifiedDisplay data={field.data as AnyData } />
+      <FieldContext.Provider value={{ field, updateField, index }}>
+        <div className='pne-div node-field-internals left'>
+          <div className='pne-div node-field-minified'>
+            <div className='pne-div node-label-display left'>
+              <strong>{`${field.user_label ?? field.label}:  `}</strong>
+              <MinifiedDisplay data={field.data as AnyData } />
+            </div>
+            <ChevronButton 
+              direction={isExpanded ? 'down' : 'up'}
+              onChange={(direction) => handleDirectionChange(direction)}
+            />
           </div>
-          <ChevronButton 
-            direction={isExpanded ? 'down' : 'up'}
-            onChange={(direction) => handleDirectionChange(direction)}
-          />
+          {isExpanded && <ExpandedDisplay field={field} updateField={updateField} index={index} />}
         </div>
-        {isExpanded && <ExpandedDisplay field={field} updateField={updateField} index={index} />}
-      </div>
+      </FieldContext.Provider>
     </div>
   );
 }

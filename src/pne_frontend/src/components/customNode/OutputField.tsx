@@ -1,6 +1,6 @@
 import { Handle, Position, useNodeId } from '@xyflow/react';
 import { type OutputField } from '../../types/nodeTypes';
-import ChevronButton from '../../common/ChevronButton';
+import { ChevronButton } from '../../common/ChevronButton';
 import type { Direction } from '../../common/ChevronButton';
 import { AnyData } from '../../types/dataTypes';
 

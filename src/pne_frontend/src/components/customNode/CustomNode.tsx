@@ -14,6 +14,11 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
   const reactFlow = useReactFlow();
   // Function to update the field that is passed to the InputField component
   const setInputField = useCallback((newField: InputField, index: number) => {
+    console.log('Input field update:', {
+      old: data.inputs[index],
+      new: newField
+    });
+    
     const newData = { ...data };
 
     newData.inputs = [...newData.inputs];

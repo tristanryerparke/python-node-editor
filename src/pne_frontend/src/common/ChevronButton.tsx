@@ -10,7 +10,7 @@ interface ChevronButtonProps {
   onChange?: (direction: Direction) => void;
 }
 
-export default function ChevronButton({ 
+export function ChevronButton({ 
   initialDirection = 'up',
   direction: controlledDirection,
   onChange,
