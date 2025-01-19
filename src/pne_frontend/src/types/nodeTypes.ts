@@ -1,13 +1,11 @@
-import { BaseData } from "./dataTypes";
-import { ModelData } from "./dataTypes";
-import { ImageData } from "./dataTypes";
-
+import { AnyData } from "./dataTypes";
 
 
 export interface InputField {
   label: string;
   user_label: string;
-  data: BaseData | ModelData | ImageData;
+  data?: AnyData;
+  default_generator_type: string;
   allowed_types: string[];
   input_display_generate: string;
   display_type: string;
@@ -19,7 +17,7 @@ export interface InputField {
 export interface OutputField {
   label: string;
   user_label: string;
-  data: BaseData | null;
+  data?: AnyData;
   display_type: string;
   metadata: Record<string, unknown>;
 }

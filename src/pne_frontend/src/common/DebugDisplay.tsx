@@ -1,8 +1,14 @@
-import { BaseData, ModelData, ImageData } from "../types/dataTypes";
-import { isBasicData, isListData, isModelData, isImageData, isNumpyData } from "../utils/dataUtils";
+import { type AnyData, type BasicData, isBasicData } from "../types/dataTypes/anyData";
+import { isNumpyData } from "../types/dataTypes/numpyData";
+import { isListData } from "../types/dataTypes/listData";
+import { isModelData } from "../types/dataTypes/modelData";
+import { isImageData } from "../types/dataTypes/imageData";
+import { Resizable } from 're-resizable';
+import { IconArrowsDiagonal } from "@tabler/icons-react";
+import * as React from 'react';
 
 function Render(
-  data: BaseData | ModelData | ImageData, 
+  data: AnyData, 
   runningIndent: number = 0, 
   padObject: string = '   ', 
   currentKey?: string
@@ -20,13 +26,14 @@ function Render(
   }
 
   if (isBasicData(data)) {
-    return `${indentStr}${keyDisplay}${data.class_name}: ${data.payload}\n`;
+    const basicData = data as BasicData;
+    return `${indentStr}${keyDisplay}${basicData.class_name}: ${basicData.payload}\n`;
   } else if (isListData(data)) {
     const lines: string[] = [];
     lines.push(`${indentStr}${keyDisplay}${data.class_name}[\n`);
     data.payload.forEach(item => {
       if (typeof item === 'object' && item !== null) {
-        lines.push(Render(item as BaseData, runningIndent + 1, padObject));
+        lines.push(Render(item as AnyData, runningIndent + 1, padObject));
       } else {
         lines.push(`${indentStr}${padObject}invalid item type\n`);
       }
@@ -39,7 +46,7 @@ function Render(
     Object.entries(data).forEach(([key, value]) => {
       // Skip rendering class_name and class_parent
       if (key !== 'class_name' && key !== 'class_parent' && typeof value === 'object' && value !== null) {
-        lines.push(Render(value as BaseData, runningIndent + 1, padObject, key));
+        lines.push(Render(value as AnyData, runningIndent + 1, padObject, key));
       } else if (key !== 'class_name' && key !== 'class_parent') {
         lines.push(`${indentStr}${padObject}${key}: ${value}\n`);
       }
@@ -48,9 +55,8 @@ function Render(
     return lines.join('');
   } else if (isImageData(data)) {
     const lines: string[] = [];
-    const imageData = data as ImageData;
-    lines.push(`${indentStr}${keyDisplay}${imageData.class_name}(\n`);
-    Object.entries(imageData).forEach(([key, value]) => {
+    lines.push(`${indentStr}${keyDisplay}${data.class_name}(\n`);
+    Object.entries(data).forEach(([key, value]) => {
       if (key !== 'class_name') {
         lines.push(`${indentStr}${padObject}${key}: ${value}\n`);
       }
@@ -65,23 +71,64 @@ function Render(
   }
 }
 
-export default function DebugDisplay({ data }: { data: unknown }) {
-  // console.log(data);
-  return <div
-    className='pne-div nodrag nopan nowheel'
+
+const CustomHandle = props => (
+  <div
     style={{
-      cursor: 'text',
-      WebkitUserSelect: 'text', // Add webkit prefix
-      userSelect: 'text',
-      padding: '0.5rem', 
-      border: '1px solid black',
-      borderRadius: '0.25rem',
-      display: 'flex',
-      whiteSpace: 'pre',
-      overflow: 'scroll',
-      MozUserSelect: 'text', // Add Firefox support
-      msUserSelect: 'text', // Add IE support
+      background: '#fff',
+      height: '100%',
+      width: '100%',
+      padding: 0,
+      transform: 'translate(-50%, -50%)',
     }}
-  >{Render(data as BaseData)}</div>;
+    {...props}
+  />
+);
+
+const BottomRightHandle = () => (
+  <CustomHandle className='nodrag nopan nowheel'>
+    <IconArrowsDiagonal size={16} style={{
+      transform: 'rotate(90deg)',
+      opacity: 0.5,
+    }}/>
+  </CustomHandle>
+);
+
+export default function DebugDisplay({ data }: { data: unknown }) {
+  return (
+    <Resizable
+      defaultSize={{
+        width: 150,
+        height: 150,
+      }}
+      className='nodrag nopan nowheel'
+      minWidth={150}
+      style={{
+        border: '1px solid black',
+        borderRadius: '0.25rem',
+        overflow: 'auto',
+        position: 'relative',
+        display: 'flex',
+        whiteSpace: 'pre',
+        cursor: 'text',
+        padding: '0.5rem',
+      }}
+      enable={{
+        top: false,
+        right: false,
+        bottom: false,
+        left: false,
+        topRight: false,
+        bottomRight: true,
+        bottomLeft: false,
+        topLeft: false,
+      }}
+      handleComponent={{
+        bottomRight: <BottomRightHandle />,
+      }}
+    >
+      {Render(data as AnyData)}
+    </Resizable>
+  );
 }
 

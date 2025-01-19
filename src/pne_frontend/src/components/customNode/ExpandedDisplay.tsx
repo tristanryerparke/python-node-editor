@@ -10,36 +10,21 @@ import { useState } from 'react';
 interface ExpandedDisplayProps {
   field: InputField,
   updateField: (field: InputField, index: number) => void,
-  index: number
+  index: number,
+  displayMode: 'Debug' | 'Pretty',
+  setDisplayMode: React.Dispatch<React.SetStateAction<'Debug' | 'Pretty'>>
 }
-
 
 export default function ExpandedDisplay({ 
   field, 
   updateField,
-  index 
+  index,
+  displayMode,
+  setDisplayMode
 }: ExpandedDisplayProps) {
-  const [displayType, setDisplayType] = useState<'Debug' | 'Pretty'>('Debug');
-  
   return <div className="pne-div" style={{gap: '0.25rem'}}>
-    <div className='pne-div' style={{alignItems: 'center'}}>
-      <div className="pne-div shrink" style={{
-        flexDirection: 'row', 
-        justifyItems: 'space-between',
-        alignItems: 'center',
-        gap: '0.25rem'
-      }}>
-        <div>Debug</div>
-        <Switch
-          variant="outline"
-          value={displayType}
-          onChange={(event) => setDisplayType(event.target.checked ? 'Pretty' : 'Debug')}
-        />
-          <div>Pretty</div>
-        </div>
-      </div>
-    {displayType === 'Debug' && <DebugDisplay data={field.data} />}
-    {displayType === 'Pretty' && (
+    {displayMode === 'Debug' && <DebugDisplay data={field.data} />}
+    {displayMode === 'Pretty' && (
       <PrettyDisplay 
         field={field} 
         updateField={updateField} 

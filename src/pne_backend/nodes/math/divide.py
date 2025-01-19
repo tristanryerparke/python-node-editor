@@ -25,7 +25,7 @@ class DivideNode(BaseNode):
                 label='b', 
                 allowed_types=['IntData', 'FloatData'],
                 default_generator_type='IntData',
-                data=IntData(payload=1),  # Ensure default is not zero to avoid division by zero
+                # data=IntData(payload=1),  # Ensure default is not zero to avoid division by zero
                 metadata={
                     'max': 100,
                     'min': -100

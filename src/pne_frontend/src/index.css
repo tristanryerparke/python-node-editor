@@ -64,12 +64,14 @@ html, body, #root {
   /* padding: 5px; */
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 }
 
 .node-label-display {
   flex-direction: row;
   font-size: 14px;
   gap: 0.25rem;
+  align-items: center;
 }
 
 .node-label-display.left {
@@ -86,22 +88,17 @@ div.center {
   justify-content: center;
 }
 
-.mantine-TextInput-input {
-  border-color: black;
-}
-
-.mantine-TextInput-root {
+.mantine-Input-root {
   width: 100%;
 }
 
-.mantine-Switch-track {
+.mantine-Input-input {
+  width: 100%;
   border-color: black;
-  background-color: white;
 }
 
-.mantine-Switch-thumb {
+.mantine-NumberInput-control {
   border-color: black;
-  background-color: black;
 }
 
 

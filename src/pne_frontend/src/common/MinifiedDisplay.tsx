@@ -1,5 +1,8 @@
-import { AnyData, ImageData, ModelData } from "../types/dataTypes";
-import { isBasicData, isImageData, isListData, isModelData, isNumpyData } from "../utils/dataUtils";
+import { type AnyData, type BasicData, isBasicData } from "../types/dataTypes/anyData";
+import { isListData } from "../types/dataTypes/listData";
+import { isModelData, type ModelData } from "../types/dataTypes/modelData";
+import { isImageData, type ImageData } from "../types/dataTypes/imageData";
+import { isNumpyData } from "../types/dataTypes/numpyData";
 
 export default function MinifiedDisplay({ data }: { data: AnyData }) {
 
@@ -8,8 +11,9 @@ export default function MinifiedDisplay({ data }: { data: AnyData }) {
   }
 
   if (isBasicData(data)) {
+    const basicData = data as BasicData;
     return <div>
-      {`${data.class_name.replace('Data', '')}: ${data.payload ?? 'no data'}`}
+      {`${basicData.class_name.replace('Data', '')}: ${basicData.payload ?? 'no data'}`}
     </div>;
   } else if (isListData(data)) {
     return <div>

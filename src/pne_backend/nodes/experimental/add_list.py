@@ -18,15 +18,11 @@ class AddListNode(BaseNode):
                 allowed_types=['ListData'],
                 default_generator_type='ListData',
                 data=ListData(payload=[
+                    IntData(payload=0),
+                    IntData(payload=1),
                     ListData(payload=[
-                        IntData(payload=0),
-                        IntData(payload=1),
                         IntData(payload=2),
-                    ]),
-                    ListData(payload=[
                         IntData(payload=3),
-                        IntData(payload=4),
-                        IntData(payload=5),
                     ]),
                 ]),
             ),

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+import { AnyData } from './anyData';
 
 // Zod Schemas
 export const ModelDataSchema = z.object({
@@ -9,3 +9,10 @@ export const ModelDataSchema = z.object({
 });
 
 export type ModelData = z.infer<typeof ModelDataSchema>;
+
+export const isModelData = (data: AnyData): boolean => {
+  if ('class_parent' in data && data.class_parent === 'ModelData') {
+    return true;
+  }
+  return false;
+}

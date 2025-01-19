@@ -1,54 +1,42 @@
 import { NumberInput as MantineNumberInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useField } from "../../contexts/FieldContext";
-import { createIntData, createFloatData } from "../../types/dataTypes/numberData";
+import { createIntData, createFloatData, FloatData, IntData } from "../../types/dataTypes/numberData";
 import { useState, useEffect, useRef } from 'react';
+import { useDataUpdate } from "../../contexts/inputDataContext";
 
-export default function NumberInput() {
-  const { field, updateField, index } = useField();
-  const [value, setValue] = useState<number | undefined>(field.data.payload as number);
+interface NumberInputProps {
+  oldData: FloatData | IntData
+}
+
+export default function NumberInput({ oldData }: NumberInputProps) {
+  const { field } = useField();
+  const { updateData } = useDataUpdate();
+  const [value, setValue] = useState<number | null>(oldData.payload as number);
   const [debouncedValue] = useDebouncedValue(value, 100);
   const isInitialMount = useRef(true);
 
-  const isIntOnly = field.allowed_types.length === 1 && field.allowed_types[0] === 'IntData';
-  const isFloatOnly = field.allowed_types.length === 1 && field.allowed_types[0] === 'FloatData';
 
+  // Watch for changes in the debounced value and update the data
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
     }
-    
-    if (debouncedValue !== undefined && debouncedValue !== field.data.payload) {
-      let newData;
-      if (isIntOnly) {
-        newData = createIntData(Math.round(debouncedValue));
-      } else if (isFloatOnly) {
-        newData = createFloatData(debouncedValue);
-      } else {
-        newData = Number.isInteger(debouncedValue) 
-          ? createIntData(debouncedValue)
-          : createFloatData(debouncedValue);
-      }
-      
-      updateField({
-        ...field,
-        data: newData
-      }, index);
-    }
-  }, [debouncedValue, field, updateField, index, isIntOnly, isFloatOnly]);
 
-  return <MantineNumberInput 
+    // Check for null explicitly
+    if (debouncedValue !== null && debouncedValue !== oldData.payload) {
+      const newData = Number.isInteger(debouncedValue)
+        ? createIntData(debouncedValue)
+        : createFloatData(debouncedValue);
+      updateData(newData);
+    }
+  }, [debouncedValue, updateData, oldData.payload]);
+
+  return <MantineNumberInput
     value={value}
-    allowDecimal={!isIntOnly}
-    fixedDecimalScale={!isIntOnly}
-    decimalScale={!isIntOnly ? 3 : undefined}
-    onChange={(val) => {
-      if (typeof val === 'string') {
-        setValue(val === '' ? undefined : isIntOnly ? Math.round(parseFloat(val)) : parseFloat(val));
-      } else {
-        setValue(isIntOnly ? Math.round(val) : val);
-      }
-    }}
+    size='xs'
+    disabled={field.is_edge_connected}
+    onChange={(val) => setValue(val as number)}
   />;
 }
