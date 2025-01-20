@@ -9,6 +9,23 @@ The important things about python-node-editor are the following:
 - Buttons for direct access to the source code on each node.
 - Saving of flows with embedded (even large) data.
 
+# Setup:
+
+Requirements:
+- conda / venv @ python 3.12
+- npm / bun
+
+Steps:
+- clone the repo
+- `python -m pip install .`
+- `cd frontend && bun install (or npm install)`
+
+# Running:
+- `python -m pne_backend.main`
+- `cd frontend && bun run dev` or `cd frontend && npm run dev`
+
+
+
 
 # Profile with:
 `tuna execution_profile.pstat`
