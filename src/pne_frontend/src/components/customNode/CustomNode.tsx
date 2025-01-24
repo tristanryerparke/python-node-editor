@@ -20,13 +20,13 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
     });
     
     // Show the path of the changed value (metadata) along with old/new
-    const oldField = data.inputs[index];
-    if (JSON.stringify(oldField.metadata) !== JSON.stringify(newField.metadata)) {
-      console.log(`[ data.inputs[${index}].metadata ] changed`, {
-        old: oldField.metadata,
-        new: newField.metadata
-      });
-    }
+    // const oldField = data.inputs[index];
+    // if (JSON.stringify(oldField.metadata) !== JSON.stringify(newField.metadata)) {
+    //   console.log(`[ data.inputs[${index}].metadata ] changed`, {
+    //     old: oldField.metadata,
+    //     new: newField.metadata
+    //   });
+    // }
 
     const newData = { ...data };
 

@@ -39,7 +39,7 @@ function RenderData(
                 >
                   <div style={{ marginRight: '5px', minWidth: '15px' }}>{idx}:</div>
                   <InputDataUpdateContext.Provider
-                    value={{ updateData: newVal => handleItemUpdate(idx, newVal) }}
+                    value={{ updateData: newVal => handleItemUpdate(idx, newVal)}}
                   >
                     {RenderData(item, newVal => handleItemUpdate(idx, newVal))}
                   </InputDataUpdateContext.Provider>
@@ -85,4 +85,10 @@ export default function PrettyDisplay(): ReactNode {
       {RenderData(field.data, baseLevelDataUpdate)}
     </div>
   );
+
+  // setState(state)
 }
+
+/*
+RenderData(nodeId, baseLevelDataUpdate)
+*/

@@ -18,6 +18,8 @@ import {
 import { useCallback, useState } from 'react';
 import { BaseNodeData } from '../../types/nodeTypes';
 import CustomNode from '../customNode/CustomNode';
+import { store } from '../../hooks/store';
+import { useSnapshot } from 'valtio';
 
 const nodeTypes: NodeTypes = {customNode: CustomNode};
 
@@ -62,6 +64,13 @@ function NodeGraph() {
         width: node_data.width,
       };
       setNodes((nds) => [...nds, newNode as Node]);
+      
+      // Update the store with the new node
+      store.nodesStoreProxy.push({
+        nodes: [newNode],
+        edges: []
+      });
+      console.log(store.nodesStoreProxy[0])
     },
     [screenToFlowPosition, setNodes]
   );
