@@ -5,20 +5,20 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi",
-    "uvicorn[standard]",
-    "devtools",
-    "requests", 
-    "pywebview",
-    "annotated-types",
-    "Pillow",
-    "opencv-python-headless",
-    "cachetools",
-    "python-multipart",
-    "redis",
-    "pytest",
-    "pytest-asyncio",
-    "tuna"
+    "fastapi==0.111.1",
+    "pydantic==2.8.2",
+    "uvicorn[standard]==0.30.6",
+    "devtools==0.12.2",
+    "requests==2.32.3", 
+    "annotated-types==0.7.0",
+    "Pillow==10.4.0",
+    "opencv-python-headless==4.10.0.84",
+    "cachetools==5.5.0",
+    "python-multipart==0.0.7",
+    "redis==5.0.8",
+    "pytest==8.3.3",
+    "pytest-asyncio==0.24.0",
+    "tuna==0.5.11"
 ]
 
 [tool.pytest]
