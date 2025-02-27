@@ -6,6 +6,9 @@ export const ModelDataSchema = z.object({
   class_parent: z.literal('ModelData'),
   class_name: z.string(),   
   id: z.string(),
+  metadata: z.object({
+    expanded: z.boolean().optional(),
+  }).optional(),
 });
 
 export type ModelData = z.infer<typeof ModelDataSchema>;

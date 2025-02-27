@@ -2,3 +2,52 @@
   width: fit-content;
   display: inline-block;
 }
+
+.list-wrapper {
+  min-width: 100px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  outline: 1px solid black;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+.list-key {
+  min-width: 20px;
+  max-width: fit-content;
+  width: auto; /* Change this line */
+  max-width: none; /* Change this line */
+  overflow: visible;
+}
+
+.list-title {
+  width: 100%;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+  align-items: space-between;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.item-list {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  /* border: 1px solid black;
+  border-radius: 5px; */
+  padding: 5px;
+  gap: 5px;
+  align-items: flex-start;
+}
+
+.list-item {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}

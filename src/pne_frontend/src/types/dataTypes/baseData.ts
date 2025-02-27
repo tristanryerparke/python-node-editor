@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const BaseDataSchema = z.object({
   class_name: z.string(),
   id: z.string(),
-  payload: z.unknown()
+  metadata: z.record(z.string(), z.any()),
 });
 
 // Type Definitions

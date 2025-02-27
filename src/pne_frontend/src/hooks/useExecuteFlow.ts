@@ -40,11 +40,24 @@ export default function useExecuteFlow() {
 
       websocketRef.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        console.log("DEBUG: Received websocket message:", data.event);
 
-        // this is an update
-
-        if (data.event === 'node_update') {
-          console.log('node update', JSON.parse(data.node))
+        if (data.event === 'nodes_status_update') {
+          // Handle batch status updates
+          const { updates } = data;
+          reactFlow.setNodes(nds => 
+            nds.map(node => {
+              const statusUpdate = updates.find((u: {node_id: string}) => u.node_id === node.id);
+              if (statusUpdate) {
+                console.log(`DEBUG: Updating status for node ${node.id} to ${statusUpdate.status}`);
+                return { ...node, data: { ...node.data, status: statusUpdate.status }};
+              }
+              return node;
+            })
+          );
+        } else if (data.event === 'node_update') {
+          // Handle full node update
+          console.log('DEBUG: Full node update received');
           const { node } = data;
           const updatedNode = JSON.parse(node);
           reactFlow.setNodes(nds => 

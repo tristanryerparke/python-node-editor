@@ -2,7 +2,6 @@ import { Handle, Position, useNodeId } from '@xyflow/react';
 import { type InputField } from '../../types/nodeTypes';
 import { useEdgeConnection } from '../../hooks/useEdgeConnection';
 import { type Direction, ChevronButton } from '../../common/ChevronButton';
-import ExpandedDisplay from './ExpandedDisplay';
 import { AnyData } from '../../types/dataTypes/anyData';
 import { FieldContext } from '../../contexts/FieldContext';
 import { DisplayModeButton } from '../../common/DisplayModeButton';
@@ -19,7 +18,7 @@ export default function InputFieldComponent({ field, index, updateField }: Input
   const nodeId = useNodeId();
   const isConnected = useEdgeConnection({ field, index, updateField });
   const isExpanded = field.metadata?.expanded ?? false;
-  const displayMode = (field.metadata?.displayMode ?? 'Debug') as 'Debug' | 'Pretty';
+  const displayMode = (field.metadata?.displayMode ?? 'Pretty') as 'Debug' | 'Pretty';
 
   const handleDirectionChange = (direction: Direction) => {
     updateField({
@@ -66,24 +65,15 @@ export default function InputFieldComponent({ field, index, updateField }: Input
                 <DebugDisplay data={field.data as AnyData} />
               )}
             </div>
-            <ChevronButton 
+            {/* <ChevronButton 
               direction={isExpanded ? 'down' : 'up'}
               onChange={(direction) => handleDirectionChange(direction)}
-            />
+            /> */}
             <DisplayModeButton
               displayMode={displayMode}
               setDisplayMode={handleDisplayModeChange}
             />
           </div>
-          {isExpanded && (
-            <ExpandedDisplay 
-              field={field} 
-              updateField={updateField} 
-              index={index}
-              displayMode={displayMode}
-              setDisplayMode={handleDisplayModeChange}
-            />
-          )}
         </div>
       </FieldContext.Provider>
     </div>
