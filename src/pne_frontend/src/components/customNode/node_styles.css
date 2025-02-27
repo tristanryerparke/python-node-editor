@@ -10,8 +10,8 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  outline: 1px solid black;
-  border-radius: 3px;
+  border: 1px solid black;
+  border-radius: 5px;
   padding: 5px;
 }
 

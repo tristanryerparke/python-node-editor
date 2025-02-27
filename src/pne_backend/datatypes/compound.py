@@ -20,8 +20,8 @@ class ListData(BaseData):
         if not isinstance(other, ListData):
             raise TypeError(f"unsupported operand type(s) for +: '{type(self)}' and '{type(other)}'")
         # Combine payloads and merge metadata
-        combined_metadata = {**self.metadata, **other.metadata}
-        return ListData(payload=self.payload + other.payload, metadata=combined_metadata)
+        # combined_metadata = {**self.metadata, **other.metadata}
+        return ListData(payload=self.payload + other.payload)
 
     @field_validator('payload', mode='before')
     @classmethod

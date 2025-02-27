@@ -43,7 +43,5 @@ class AddListNode(BaseNode):
         ]
     )
     def exec(cls, a: ListData, b: ListData) -> ListData:
-        result = a.payload + b.payload
-        # Create new ListData with combined metadata from both inputs
-        combined_metadata = {**a.metadata, **b.metadata}
-        return ListData(payload=result, metadata=combined_metadata)
+        result = a + b
+        return result
