@@ -1,5 +1,5 @@
 import { ActionIcon } from '@mantine/core';
-import { IconDeviceDesktop, IconHandFinger, IconFileCode } from '@tabler/icons-react';
+import { IconHandFinger, IconFileCode } from '@tabler/icons-react';
 
 interface DisplayModeButtonProps {
   displayMode: 'Debug' | 'Pretty';

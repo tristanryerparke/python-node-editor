@@ -10,28 +10,30 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mantine/core": "^7.15.2",
-    "@mantine/hooks": "^7.15.2",
+    "@mantine/core": "^7.17.1",
+    "@mantine/hooks": "^7.17.1",
     "@tabler/icons-react": "3.17.0",
-    "@xyflow/react": "^12.3.6",
+    "@types/file-saver": "^2.0.7",
+    "@xyflow/react": "^12.4.4",
     "file-saver": "^2.0.5",
-    "re-resizable": "^6.10.3",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "immer": "^10.1.1",
+    "re-resizable": "^6.11.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-resizable-panels": "^2.1.7",
-    "uuid": "^11.0.5",
-    "zod": "^3.24.1"
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vitejs/plugin-react-swc": "^3.3.2",
-    "eslint": "^8.45.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-react-swc": "^3.8.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "typescript": "^5.8.2",
+    "vite": "^4.5.9"
   }
 }

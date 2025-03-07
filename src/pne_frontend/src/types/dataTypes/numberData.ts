@@ -34,7 +34,8 @@ export function createFloatData(numberValue: number): FloatData {
   return {
     class_name: 'FloatData',
     id: uuidv4(),
-    payload: numberValue
+    payload: numberValue,
+    metadata: {}
   };
 }
 
@@ -42,6 +43,7 @@ export function createIntData(numberValue: number): IntData {
   return {
     class_name: 'IntData',
     id: uuidv4(),
-    payload: numberValue
+    payload: numberValue,
+    metadata: {}
   };
 }

@@ -1,31 +1,37 @@
 import { AnyData } from "../types/dataTypes/anyData";
 import { ModelData as ModelDataType } from "../types/dataTypes/modelData";
 import { ChevronButton } from "../common/ChevronButton.tsx";
+import { updateNodeData, getNodeData } from "../utils/updateNodeData";
 
 interface ModelDataProps {
   data: AnyData;
   path: (string | number)[];
   renderData: (data: AnyData, path: (string | number)[]) => JSX.Element;
-  onChange: (path: (string | number)[], newData: AnyData) => void;
 }
 
 const ModelDataDisplay = ({
   data,
   path,
   renderData,
-  onChange,
 }: ModelDataProps): JSX.Element => {
   const modelData = data as ModelDataType;
-
-  const metadata = (modelData as { metadata?: { expanded?: boolean } }).metadata || {};
-  const expanded = metadata.expanded ?? false;
+  
+  // Add validation for path
+  if (!path || !Array.isArray(path)) {
+    console.error("Invalid path received in ModelDataDisplay:", path);
+    // Return a fallback UI when path is invalid
+    return <div className="error-state">Invalid path data</div>;
+  }
+  
+  // Now safely use path since we've validated it
+  const expandedData = getNodeData([...path, 'metadata', 'expanded']);
+  const expanded = (expandedData ?? false) as boolean;
   const setExpanded = (expanded: boolean) => {
-    const newData = { ...modelData, metadata: { ...metadata, expanded } };
-    onChange(path, newData);
+    updateNodeData({ path: [...path, 'metadata', 'expanded'], newData: expanded });
   };
 
   return (
-    <div className="list-wrapper">
+    <div className={`list-wrapper ${!expanded ? 'small' : ''}`}>
       <div className="list-title">
         {modelData.class_name}({modelData.class_parent})
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
@@ -39,7 +45,11 @@ const ModelDataDisplay = ({
                 return (
                   <div key={key} className="list-item">
                     <div className="list-key">{key}:</div>
-                    {renderData(value as AnyData, [...path, key])}
+                    {/* Add additional validation here too */}
+                    {Array.isArray(path) ? 
+                      renderData(value as AnyData, [...path, key]) : 
+                      <div className="error-state">Invalid path</div>
+                    }
                   </div>
                 );
               }

@@ -56,8 +56,8 @@ class ExecutionWrapper:
                 raise ExecutionCancelled("Execution was cancelled")
 
 
-        profiler = cProfile.Profile()
-        profiler.enable()
+        # profiler = cProfile.Profile()
+        # profiler.enable()
         start_time = time.time()
         self.node_instances = {}
 
@@ -75,10 +75,11 @@ class ExecutionWrapper:
             # Set data to None for connected inputs
             for edge in graph_def.edges:
                 if edge['target'] == id:
-                    target_handle = edge['targetHandle'].split('-')[-1]
+                    target_handle_parts = edge['targetHandle'].split(':')
+                    target_handle = target_handle_parts[2] if len(target_handle_parts) >= 3 else target_handle_parts[-1]
                     if 'data' in node and 'inputs' in node['data']:
                         for input in node['data']['inputs']:
-                            if input['label'] == target_handle:
+                            if input['label'] == target_handle or str(input.get('index', '')) == target_handle:
                                 input['data'] = None
 
             # Set outputs to None
@@ -161,6 +162,28 @@ class ExecutionWrapper:
                 print(f"Traceback:\n{traceback.format_exc()}")
             
             # Edge processing...
+            for edge in graph_def.edges:
+                if edge['source'] == node_id:
+                    source_node = self.node_instances[str(edge['source'])]
+                    target_node = self.node_instances[str(edge['target'])]
+                    
+                    # Extract indices from the new handle format
+                    source_handle_parts = edge['sourceHandle'].split(':')
+                    target_handle_parts = edge['targetHandle'].split(':')
+                    
+                    # The index is now the third part in the handle ID
+                    source_index = source_handle_parts[2] if len(source_handle_parts) >= 3 else source_handle_parts[-1]
+                    target_index = target_handle_parts[2] if len(target_handle_parts) >= 3 else target_handle_parts[-1]
+                    
+                    # Find the corresponding output and input
+                    source_output = next((o for i, o in enumerate(source_node.data.outputs) 
+                                         if str(i) == source_index or o.label == source_index), None)
+                    target_input = next((i for j, i in enumerate(target_node.data.inputs) 
+                                        if str(j) == target_index or i.label == target_index), None)
+                    
+                    if source_output and target_input:
+                        # Transfer data from source output to target input
+                        target_input.data = source_output.data
         
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")
@@ -183,7 +206,7 @@ class ExecutionWrapper:
 
 
 
-        profiler.disable()
-        profiler.dump_stats("execution_profile.pstat")
+        # profiler.disable()
+        # profiler.dump_stats("execution_profile.pstat")
 
         return updated_nodes

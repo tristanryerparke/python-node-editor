@@ -1,44 +1,28 @@
-import { Handle, Position, useNodeId } from '@xyflow/react';
+import { Handle, Position, useNodeConnections } from '@xyflow/react';
 import { type InputField } from '../../types/nodeTypes';
-import { useEdgeConnection } from '../../hooks/useEdgeConnection';
-import { type Direction, ChevronButton } from '../../common/ChevronButton';
-import { AnyData } from '../../types/dataTypes/anyData';
-import { FieldContext } from '../../contexts/FieldContext';
 import { DisplayModeButton } from '../../common/DisplayModeButton';
-import PrettyDisplay from '../../common/PrettyDisplay';
-import DebugDisplay from '../../common/DebugDisplay';
+import RichDisplay from '../../common/RichDisplay';
 
 interface InputFieldProps {
+  path: (string | number)[];
   field: InputField;
-  index: number;
-  updateField: (newField: InputField, index: number) => void;
 }
 
-export default function InputFieldComponent({ field, index, updateField }: InputFieldProps) {
-  const nodeId = useNodeId();
-  const isConnected = useEdgeConnection({ field, index, updateField });
-  const isExpanded = field.metadata?.expanded ?? false;
+export default function InputFieldComponent({ path, field }: InputFieldProps) {
+  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
+
+  // Use the xyflow hook to get connections
+  const connections = useNodeConnections({
+    handleType: 'target',
+    handleId: handleId,
+  });
+
+  // Determine if connected based on connections array length and target node id
+  const isConnected = connections.length > 0 && connections[0].targetHandle === handleId;
   const displayMode = (field.metadata?.displayMode ?? 'Pretty') as 'Debug' | 'Pretty';
 
-  const handleDirectionChange = (direction: Direction) => {
-    updateField({
-      ...field,
-      metadata: {
-        ...field.metadata,
-        expanded: direction === 'down'
-      }
-    }, index);
-  };
-
-  function handleDisplayModeChange(newMode: 'Debug' | 'Pretty') {
-    updateField({
-      ...field,
-      metadata: {
-        ...field.metadata,
-        displayMode: newMode
-      }
-    }, index);
-  }
+  // Set handle color based on connection state
+  const handleColor = isConnected ? '#4CAF50' : 'white';
 
   return (
     <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
@@ -46,36 +30,22 @@ export default function InputFieldComponent({ field, index, updateField }: Input
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: isConnected ? '#4CAF50' : 'white',
+          backgroundColor: handleColor,
           border: '1px solid black',
           borderRadius: '50%'
         }} 
         type="target" 
         position={Position.Left}
-        id={`${nodeId}-input-${index}`}
+        id={handleId}
       />
-      <FieldContext.Provider value={{ field, updateField, index }}>
-        <div className='pne-div node-field-internals left'>
-          <div className='pne-div node-field-minified'>
-            <div className='pne-div node-label-display left'>
-              <strong>{`${field.user_label ?? field.label}:  `}</strong>
-              {displayMode === 'Pretty' ? (
-                <PrettyDisplay field={field} updateField={updateField} index={index} />
-              ) : (
-                <DebugDisplay data={field.data as AnyData} />
-              )}
-            </div>
-            {/* <ChevronButton 
-              direction={isExpanded ? 'down' : 'up'}
-              onChange={(direction) => handleDirectionChange(direction)}
-            /> */}
-            <DisplayModeButton
-              displayMode={displayMode}
-              setDisplayMode={handleDisplayModeChange}
-            />
-          </div>
-        </div>
-      </FieldContext.Provider>
+      <div className='pne-div node-field-internals left'>
+        <strong style={{height: '20px'}}>{`${field.user_label ?? field.label}:  `}</strong>
+        <RichDisplay path={path} field={field} />
+          <DisplayModeButton
+            displayMode={displayMode}
+            setDisplayMode={() => {}}
+          />
+      </div>
     </div>
   );
 }

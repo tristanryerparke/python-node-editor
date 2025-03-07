@@ -18,6 +18,7 @@ export function SearchBar({ searchTerm, onSearchChange, onRefresh }: SearchBarPr
       padding: '0.25rem',
     }}>
       <TextInput
+        w='100%'
         leftSection={<IconSearch size={16} color='black'/>}
         size='xs'
         value={searchTerm}

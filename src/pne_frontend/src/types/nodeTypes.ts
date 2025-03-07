@@ -1,4 +1,4 @@
-import { AnyData } from "./dataTypes";
+import { AnyData } from "../types/dataTypes/anyData";
 
 
 export interface InputField {

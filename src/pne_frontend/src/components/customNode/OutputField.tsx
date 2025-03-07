@@ -1,42 +1,34 @@
-import { Handle, Position, useNodeId } from '@xyflow/react';
+import { Handle, Position, useNodeConnections } from '@xyflow/react';
 import { type OutputField } from '../../types/nodeTypes';
-import { ChevronButton } from '../../common/ChevronButton';
-import type { Direction } from '../../common/ChevronButton';
 
-import PrettyDisplay from '../../common/PrettyDisplay';
+
+import RichDisplay from '../../common/RichDisplay';
 
 
 interface OutputFieldComponentProps {
+  path: (string | number)[];
   field: OutputField;
-  index: number;
-  updateField: (newField: OutputField, index: number) => void;
 }
 
-export default function OutputFieldComponent({ field, index, updateField }: OutputFieldComponentProps) {
-  const nodeId = useNodeId();
-  const isExpanded = field.metadata?.expanded ?? false;
+export default function OutputFieldComponent({ path, field }: OutputFieldComponentProps) {
 
-  const handleDirectionChange = (direction: Direction) => {
-    updateField({
-      ...field,
-      metadata: {
-        ...field.metadata,
-        expanded: direction === 'down'
-      }
-    }, index);
-  };
+  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
 
+  // Use the xyflow hook to get connections
+  const connections = useNodeConnections({
+    handleType: 'source',
+    handleId: handleId,
+  });
+
+  const isConnected = connections.length > 0 && connections[0].sourceHandle === handleId;
+  
   return (
     <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
       <div className='pne-div node-field-internals'>
         <div className='pne-div node-field-minified'>
-          <ChevronButton 
-            direction={isExpanded ? 'down' : 'up'}
-            onChange={(direction) => handleDirectionChange(direction)}
-          />
           <div className='pne-div node-label-display right'>
             <strong>{`${field.user_label ?? field.label}: `}</strong>
-            <PrettyDisplay field={field} updateField={updateField} index={index} />
+            <RichDisplay path={path} field={field} />
           </div>
         </div>
       </div>
@@ -46,13 +38,13 @@ export default function OutputFieldComponent({ field, index, updateField }: Outp
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: 'white',
+          backgroundColor: isConnected ? '#4CAF50' : 'white',
           border: '1px solid black',
           borderRadius: '50%'
         }} 
         type="source" 
         position={Position.Right}
-        id={`${nodeId}-output-${index}`}
+        id={handleId}
       />
     </div>
     

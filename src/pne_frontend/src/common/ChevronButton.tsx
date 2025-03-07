@@ -1,6 +1,5 @@
 import { ActionIcon } from '@mantine/core';
 import { IconChevronUp, IconChevronDown } from '@tabler/icons-react';
-import { useState } from 'react';
 
 interface ChevronButtonProps {
   expanded: boolean;

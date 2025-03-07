@@ -13,7 +13,7 @@ class BlurImageNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='image', dtype='image'),
+            InputNodeField(label='image', dtype='image', default_generator_type='ImageData'),
             InputNodeField(label='radius', dtype='number', data=IntData(payload=6), metadata={
                 'min': 0,
                 'max': 100,

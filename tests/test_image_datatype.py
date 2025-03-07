@@ -59,14 +59,17 @@ def test_image_data_from_frontend():
     image_base64 = image_to_base64(image)
     d(image_base64[:100])
 
-    data_json = json.dumps({
+    data_json_as_if_from_frontend = json.dumps({
         'class_name': 'ImageData',
         'payload': image_base64
     })
 
-    d(data_json)
+    d(data_json_as_if_from_frontend)
+    # this works:
+    img_data = ImageData.model_validate_json(data_json_as_if_from_frontend)
 
-    img_data = ImageData.model_validate_json(data_json)
+    # this does not:
+    img_data = ImageData.model_validate(json.loads(data_json_as_if_from_frontend))
 
     d(img_data)
 

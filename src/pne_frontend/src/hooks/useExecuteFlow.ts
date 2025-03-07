@@ -1,28 +1,25 @@
 import { useCallback, useRef } from "react";
-import { useReactFlow, type ReactFlowJsonObject, Node } from '@xyflow/react';
-import { BaseNodeData, InputField, OutputField } from '../types/nodeTypes';
-import { preserveExpandedState } from '../utils/preserveMetadata';
+import { Node } from '@xyflow/react';
+import { BaseNodeData } from '../types/nodeTypes';
+import useStore from '../components/store';
+import { produce } from 'immer';
 
-
-// Define TypeScript interfaces for our data structures
-interface NodeData extends BaseNodeData {
-  inputs: InputField[];
-  outputs: OutputField[];
-  [key: string]: any;
-}
-
-interface CustomNode extends Node {
-  data: NodeData;
-}
+// Define a type that extends Node with our BaseNodeData
+// Using Record<string, unknown> & BaseNodeData to satisfy the constraint
+type CustomNode = Node<Record<string, unknown> & BaseNodeData>;
 
 export default function useExecuteFlow() {
   const websocketRef = useRef<WebSocket | null>(null);
-  const reactFlow = useReactFlow()
+  const nodes = useStore(state => state.nodes);
+  const edges = useStore(state => state.edges);
+  const setNodes = useStore(state => state.setNodes);
 
 
   const sendExecuteMessage = useCallback(() => {
-    const flow: ReactFlowJsonObject = reactFlow.toObject()
-
+    const flow = {
+      nodes: nodes,
+      edges: edges
+    }
 
     // prepare the data in an additional dict for sending
     const sendData = {
@@ -32,11 +29,10 @@ export default function useExecuteFlow() {
 
     websocketRef.current?.send(JSON.stringify(sendData))
     console.log('sent execute message:', sendData)
-  }, [reactFlow])
+  }, [nodes, edges])
 
 
   const execute = useCallback(() => {
-    const nodes = reactFlow.getNodes()
     if (nodes.length === 0) {
       console.log('No nodes to execute')
       return
@@ -57,56 +53,37 @@ export default function useExecuteFlow() {
         if (data.event === 'status_update') {
           // Handle batch status updates
           const { updates } = data;
-          reactFlow.setNodes(nds => 
-            nds.map(node => {
-              const statusUpdate = updates.find((u: {node_id: string}) => u.node_id === node.id);
-              if (statusUpdate) {
-                console.log(`DEBUG: Updating status for node ${node.id} to ${statusUpdate.status}`);
-                return { ...node, data: { ...node.data, status: statusUpdate.status }};
-              }
-              return node;
+          setNodes(
+            produce(nodes, (draft) => {
+              updates.forEach((update: {node_id: string, status: string}) => {
+                const nodeIndex = draft.findIndex(node => node.id === update.node_id);
+                if (nodeIndex !== -1) {
+                  console.log(`DEBUG: Updating status for node ${update.node_id} to ${update.status}`);
+                  draft[nodeIndex].data = {
+                    ...draft[nodeIndex].data,
+                    status: update.status
+                  };
+                }
+              });
             })
           );
         } else if (data.event === 'single_node_update') {
           // Handle full node update
-          
           const { node } = data;
           const updatedNode = JSON.parse(node) as CustomNode;
           console.log('DEBUG: Single node update received:', updatedNode);
           
-          // Replace the existing node update logic
-          reactFlow.setNodes(nds => 
-            nds.map(n => {
-              if (n.id === updatedNode.id) {
-                // Find existing node to preserve its expanded state
-                const existingNode = nds.find(existing => existing.id === updatedNode.id) as CustomNode;
-                if (existingNode) {
-                  // Process inputs
-                  const processedInputs = updatedNode.data.inputs.map((newInput: InputField, idx: number) => {
-                    return existingNode.data.inputs[idx] ? 
-                      { ...newInput, data: preserveExpandedState(existingNode.data.inputs[idx].data, newInput.data) } : 
-                      newInput;
-                  });
-                  
-                  // Process outputs
-                  const processedOutputs = updatedNode.data.outputs.map((newOutput: OutputField, idx: number) => {
-                    return existingNode.data.outputs[idx] ? 
-                      { ...newOutput, data: preserveExpandedState(existingNode.data.outputs[idx].data, newOutput.data) } : 
-                      newOutput;
-                  });
-                  
-                  return { 
-                    ...n, 
-                    data: { 
-                      ...updatedNode.data,
-                      inputs: processedInputs,
-                      outputs: processedOutputs
-                    } 
-                  };
-                }
-                return { ...n, data: updatedNode.data };
+          // Use Immer's produce for immutable updates
+          setNodes(
+            produce(nodes, (draft) => {
+              const nodeIndex = draft.findIndex(n => n.id === updatedNode.id);
+              if (nodeIndex !== -1) {
+                // Replace the entire data object with the updated one
+                // This ensures we don't keep any references to old data
+                draft[nodeIndex].data = { ...updatedNode.data };
+                
+                console.log('DEBUG: Updated node data:', draft[nodeIndex].data);
               }
-              return n;
             })
           );
         } else if (data.event === 'execution_finished') {
@@ -122,14 +99,11 @@ export default function useExecuteFlow() {
         console.log('WebSocket connection closed');
         websocketRef.current = null;
       };
+    } else {
+      // If the connection is already open, just send the execute message
+      sendExecuteMessage();
     }
-  }, [reactFlow, sendExecuteMessage]);
-
-
-
-  
-
-
+  }, [sendExecuteMessage, setNodes, nodes]);
 
   return { execute };
 }

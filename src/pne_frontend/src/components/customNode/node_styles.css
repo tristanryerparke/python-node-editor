@@ -15,6 +15,11 @@
   padding: 5px;
 }
 
+.list-wrapper.small {
+  max-height: var(--input-size);
+  flex-direction: row;
+}
+
 .list-key {
   min-width: 20px;
   max-width: fit-content;
@@ -28,7 +33,7 @@
   display: flex;
   flex-grow: 1;
   flex-direction: row;
-  align-items: space-between;
+  align-items: center;
   justify-content: space-between;
   gap: 5px;
 }
@@ -50,4 +55,16 @@
   flex-direction: row;
   align-items: center;
   gap: 5px;
+}
+
+.basic-output {
+  width: 100%;
+  height: var(--small-element-height);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 10px;
+  gap: 5px;
+  border: 1px solid black;
+  border-radius: 4px;
 }

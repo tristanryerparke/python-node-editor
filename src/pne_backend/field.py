@@ -26,7 +26,7 @@ class InputNodeField(BaseModel):
     is_edge_connected: bool = False
     # node_expanded: bool = False
     # inspector_expanded: bool = True
-    metadata: dict = {}
+    metadata: dict = {'expanded': False}
 
     @model_validator(mode='before')
     @classmethod
