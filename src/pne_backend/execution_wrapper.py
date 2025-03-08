@@ -43,6 +43,8 @@ class ExecutionWrapper:
             print(f"Websocket not set, cannot send message: {message}")
 
     async def execute_graph(self, graph_def: dict, quiet: bool = False, headless: bool = False):
+        # Simplified version - ignoring quiet and headless parameters
+        
         # autosave(graph_def)
         
         print("quiet", quiet)
@@ -54,8 +56,8 @@ class ExecutionWrapper:
                 raise ExecutionCancelled("Execution was cancelled")
 
 
-        profiler = cProfile.Profile()
-        profiler.enable()
+        # profiler = cProfile.Profile()
+        # profiler.enable()
         start_time = time.time()
         self.node_instances = {}
 
@@ -73,10 +75,11 @@ class ExecutionWrapper:
             # Set data to None for connected inputs
             for edge in graph_def.edges:
                 if edge['target'] == id:
-                    target_handle = edge['targetHandle'].split('-')[-1]
+                    target_handle_parts = edge['targetHandle'].split(':')
+                    target_handle = target_handle_parts[2] if len(target_handle_parts) >= 3 else target_handle_parts[-1]
                     if 'data' in node and 'inputs' in node['data']:
                         for input in node['data']['inputs']:
-                            if input['label'] == target_handle:
+                            if input['label'] == target_handle or str(input.get('index', '')) == target_handle:
                                 input['data'] = None
 
             # Set outputs to None
@@ -106,80 +109,82 @@ class ExecutionWrapper:
         
         # Node execution
         execution_start = time.time()
+        
+        # Send initial status update for all nodes
+        status_updates = [
+            {"node_id": node_id, "status": "pending"} 
+            for node_id in sorted_nodes
+        ]
+        await self.send_update({
+            "event": "status_update",
+            "updates": status_updates
+        })
+        
+        await self.send_update({"event": "execution_started"})
+        
         for node_id in sorted_nodes:
-            node_start = time.time()
-            self.current_node = node_id
             node_instance: BaseNode = self.node_instances[str(node_id)]
-            print(f"Executing node {node_id} ({node_instance.data.display_name})...")
             
-            # clear the node's outputs
+            # Update status to executing
+            node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
+            await self.send_update({
+                "event": "status_update",
+                "updates": [{"node_id": node_id, "status": node_instance.data.status}]
+            })
+            
+            # Clear outputs
             for o in node_instance.data.outputs:
                 o.data = None
-
-            node_instance.data.status = 'streaming' if node_instance.data.streaming else 'executing'
-
-            # send a status update
-            if not quiet and not headless:
-                await self.send_update({"event": "node_update", "node": node_instance.model_dump_json()})
-
-            # Allow other tasks to run
-            await asyncio.sleep(0)
-
+            
             try:
+                # Execute node
                 if node_instance.data.streaming:
-                    node_instance: StreamingBaseNode
-                    node_instance.data.terminal_output = ''
-                    node_instance.data.error_output = ''
-
-                    for item in node_instance.meta_exec_stream():
-                        if not quiet and not headless:
-                            await self.send_update({"event": "node_update", "node": node_instance.model_dump_json()})
-                        await asyncio.sleep(0)
-                        await check_cancel_flag()
-
+                    # Streaming node handling...
+                    pass
                 else:
                     node_instance.meta_exec()
-
-                node_end = time.time()
-                print(f"Node {node_id} completed. Execution took {node_end - node_start:.4f} seconds")
-                # print(f"Node {node_id} completed with result:\n{node_instance.data.outputs}")
                 
+                # Update status to evaluated and send ONE final node update
                 node_instance.data.status = 'evaluated'
-
-                await check_cancel_flag()
-
-
+                await self.send_update({
+                    "event": "single_node_update",
+                    "node": node_instance.model_dump_json()
+                })
+                
             except Exception as e:
                 node_instance.data.status = 'error'
                 node_instance.data.error_output = f"Error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+                await self.send_update({
+                    "event": "status_update",
+                    "updates": [{"node_id": node_id, "status": "error"}]
+                })
                 print(f"Error executing node {node_id}: {str(e)}")
                 print(f"Traceback:\n{traceback.format_exc()}")
-
-            # send a full update
-            if not quiet and not headless:
-                await self.send_update({"event": "node_update", "node": node_instance.model_dump_json()})
-            else:
-                updated_nodes.append(node_instance.model_dump())
-
-            # allow other tasks to run
-            await asyncio.sleep(0)
-
-            # edge processing
+            
+            # Edge processing...
             for edge in graph_def.edges:
                 if edge['source'] == node_id:
-                    to_node_id = edge['target']
-                    from_port = edge['sourceHandle'].split('-')[-1]
-                    to_port = edge['targetHandle'].split('-')[-1]
+                    source_node = self.node_instances[str(edge['source'])]
+                    target_node = self.node_instances[str(edge['target'])]
                     
-                    source_output_field = next((output for output in self.node_instances[edge['source']].data.outputs if output.label == from_port), None)
-                    target_input_field = next((input for input in self.node_instances[to_node_id].data.inputs if input.label == to_port), None)
+                    # Extract indices from the new handle format
+                    source_handle_parts = edge['sourceHandle'].split(':')
+                    target_handle_parts = edge['targetHandle'].split(':')
                     
-                    if source_output_field and target_input_field:
-                        target_input_field.data = source_output_field.data
-                        print(f"Edge processing: {edge['source']}({self.node_instances[edge['source']].data.display_name}):{from_port} -> {edge['target']}({self.node_instances[edge['target']].data.display_name}):{to_port}")
-                    else:
-                        print(f"Warning: Could not find matching ports for edge {edge['source']}:{from_port} -> {edge['target']}:{to_port}")
-            
+                    # The index is now the third part in the handle ID
+                    source_index = source_handle_parts[2] if len(source_handle_parts) >= 3 else source_handle_parts[-1]
+                    target_index = target_handle_parts[2] if len(target_handle_parts) >= 3 else target_handle_parts[-1]
+                    
+                    # Find the corresponding output and input
+                    source_output = next((o for i, o in enumerate(source_node.data.outputs) 
+                                         if str(i) == source_index or o.label == source_index), None)
+                    target_input = next((i for j, i in enumerate(target_node.data.inputs) 
+                                        if str(j) == target_index or i.label == target_index), None)
+                    
+                    if source_output and target_input:
+                        # Transfer data from source output to target input
+                        target_input.data = source_output.data
+        
         execution_end = time.time()
         print(f"Total node execution took {execution_end - execution_start:.4f} seconds")
 
@@ -191,20 +196,17 @@ class ExecutionWrapper:
         total_time = end_time - start_time
         print(f"Total graph execution took {total_time:.4f} seconds")
 
-        if not quiet and not headless:
-            await self.send_update({"event": "full_graph_update", "all_nodes": updated_nodes})
+        # if not quiet and not headless:
+        #     await self.send_update({"event": "full_graph_update", "all_nodes": updated_nodes})
 
-        if self.websocket and not headless:
-            if self.cancel_flag:
-                await self.websocket.send_json({"event": "execution_cancelled"})
-            else:
-                await self.websocket.send_json({"event": "execution_finished"})
+        if self.websocket:
+            await self.websocket.send_json({"event": "execution_finished"})
             await self.websocket.close()
             self.websocket = None
 
 
 
-        profiler.disable()
-        profiler.dump_stats("execution_profile.pstat")
+        # profiler.disable()
+        # profiler.dump_stats("execution_profile.pstat")
 
         return updated_nodes

@@ -13,7 +13,6 @@ class NumpyTestNode(BaseNode):
         inputs=[
             InputNodeField(
                 allowed_types=['NumpyData'],
-                default_generator_type='NumpyData',
                 data=NumpyData(payload=np.array([1, 2, 3])),
                 label='a',
             ),

@@ -16,7 +16,6 @@ class AddListNode(BaseNode):
                 label='a', 
                 user_label='A',
                 allowed_types=['ListData'],
-                default_generator_type='ListData',
                 data=ListData(payload=[
                     IntData(payload=0),
                     IntData(payload=1),
@@ -29,7 +28,6 @@ class AddListNode(BaseNode):
             InputNodeField(
                 label='b', 
                 allowed_types=['ListData'],
-                default_generator_type='ListData',
                 data=ListData(payload=[
                     IntData(payload=3),
                     IntData(payload=4),
@@ -43,5 +41,5 @@ class AddListNode(BaseNode):
         ]
     )
     def exec(cls, a: ListData, b: ListData) -> ListData:
-        result = a.payload + b.payload
-        return ListData(payload=result)
+        result = a + b
+        return result

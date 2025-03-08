@@ -17,7 +17,6 @@ class TestImageNode(BaseNode):
         inputs=[
             InputNodeField(
                 allowed_types=['ImageData'],
-                default_generator_type='ImageData',
                 data=ImageData(payload=np.random.randint(0, 255, (100, 100, 3))),
                 label='inputA',
             ),

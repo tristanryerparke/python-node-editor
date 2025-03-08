@@ -1,45 +1,28 @@
-import { Handle, Position, useNodeId } from '@xyflow/react';
+import { Handle, Position, useNodeConnections } from '@xyflow/react';
 import { type InputField } from '../../types/nodeTypes';
-import { useEdgeConnection } from '../../hooks/useEdgeConnection';
-import { type Direction, ChevronButton } from '../../common/ChevronButton';
-import ExpandedDisplay from './ExpandedDisplay';
-import { AnyData } from '../../types/dataTypes/anyData';
-import { FieldContext } from '../../contexts/FieldContext';
-import { DisplayModeButton } from '../../common/DisplayModeButton';
-import PrettyDisplay from '../../common/PrettyDisplay';
-import DebugDisplay from '../../common/DebugDisplay';
+import RichDisplay from '../../common/RichDisplay';
+
+import './field_styles.css';
 
 interface InputFieldProps {
+  path: (string | number)[];
   field: InputField;
-  index: number;
-  updateField: (newField: InputField, index: number) => void;
 }
 
-export default function InputFieldComponent({ field, index, updateField }: InputFieldProps) {
-  const nodeId = useNodeId();
-  const isConnected = useEdgeConnection({ field, index, updateField });
-  const isExpanded = field.metadata?.expanded ?? false;
-  const displayMode = (field.metadata?.displayMode ?? 'Debug') as 'Debug' | 'Pretty';
+export default function InputFieldComponent({ path, field }: InputFieldProps) {
+  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
 
-  const handleDirectionChange = (direction: Direction) => {
-    updateField({
-      ...field,
-      metadata: {
-        ...field.metadata,
-        expanded: direction === 'down'
-      }
-    }, index);
-  };
+  // Use the xyflow hook to get connections
+  const connections = useNodeConnections({
+    handleType: 'target',
+    handleId: handleId,
+  });
 
-  function handleDisplayModeChange(newMode: 'Debug' | 'Pretty') {
-    updateField({
-      ...field,
-      metadata: {
-        ...field.metadata,
-        displayMode: newMode
-      }
-    }, index);
-  }
+  // Determine if connected based on connections array length and target node id
+  const isConnected = connections.length > 0 && connections[0].targetHandle === handleId;
+
+  // Set handle color based on connection state
+  const handleColor = isConnected ? '#4CAF50' : 'white';
 
   return (
     <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
@@ -47,45 +30,20 @@ export default function InputFieldComponent({ field, index, updateField }: Input
         style={{
           width: '12px',
           height: '12px',
-          backgroundColor: isConnected ? '#4CAF50' : 'white',
+          backgroundColor: handleColor,
           border: '1px solid black',
           borderRadius: '50%'
         }} 
         type="target" 
         position={Position.Left}
-        id={`${nodeId}-input-${index}`}
+        id={handleId}
       />
-      <FieldContext.Provider value={{ field, updateField, index }}>
-        <div className='pne-div node-field-internals left'>
-          <div className='pne-div node-field-minified'>
-            <div className='pne-div node-label-display left'>
-              <strong>{`${field.user_label ?? field.label}:  `}</strong>
-              {displayMode === 'Pretty' ? (
-                <PrettyDisplay field={field} updateField={updateField} index={index} />
-              ) : (
-                <DebugDisplay data={field.data as AnyData} />
-              )}
-            </div>
-            <ChevronButton 
-              direction={isExpanded ? 'down' : 'up'}
-              onChange={(direction) => handleDirectionChange(direction)}
-            />
-            <DisplayModeButton
-              displayMode={displayMode}
-              setDisplayMode={handleDisplayModeChange}
-            />
-          </div>
-          {isExpanded && (
-            <ExpandedDisplay 
-              field={field} 
-              updateField={updateField} 
-              index={index}
-              displayMode={displayMode}
-              setDisplayMode={handleDisplayModeChange}
-            />
-          )}
+      <div className='field-wrapper left'>
+        <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
+        <div className='data-base-wrapper'>
+          <RichDisplay path={path} field={field} />
         </div>
-      </FieldContext.Provider>
+      </div>
     </div>
   );
 }

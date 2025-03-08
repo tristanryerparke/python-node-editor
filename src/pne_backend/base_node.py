@@ -76,7 +76,7 @@ class BaseNodeData(BaseModel):
 class BaseNode(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     data: BaseNodeData = BaseNodeData()
-    width: int = 250
+    # width: int = 250
     group: str = ''
 
 

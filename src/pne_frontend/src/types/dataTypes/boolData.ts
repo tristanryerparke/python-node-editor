@@ -23,6 +23,7 @@ export function createBoolData(booleanValue: boolean): BoolData {
   return {
     class_name: 'BoolData',
     id: uuidv4(),
-    payload: booleanValue
+    payload: booleanValue,
+    metadata: {}
   };
 }

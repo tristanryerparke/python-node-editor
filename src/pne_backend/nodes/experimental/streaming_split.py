@@ -11,12 +11,12 @@ class TestStreamingSplitNode(StreamingBaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='number', dtype='number', data=FloatData(payload=1.0)),
-            InputNodeField(label='t', dtype='number', data=FloatData(payload=0.5))
+            InputNodeField(label='number', allowed_types=['FloatData'], data=FloatData(payload=1.0)),
+            InputNodeField(label='t', allowed_types=['FloatData'], data=FloatData(payload=0.5))
         ],
         outputs=[
-            OutputNodeField(label='split_t', dtype='number'),
-            OutputNodeField(label='split_1_minus_t', dtype='number')
+            OutputNodeField(label='split_t', allowed_types=['FloatData']),
+            OutputNodeField(label='split_1_minus_t', allowed_types=['FloatData'])
         ]
     )
     def exec_stream(

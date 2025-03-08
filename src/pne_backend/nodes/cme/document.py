@@ -23,10 +23,10 @@ class ConstructDocumentNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='image', data=ImageData(payload=np.zeros((100, 100, 3)))),
-            InputNodeField(label='units', data=StringData(payload='mm')),
-            InputNodeField(label='width', data=FloatData(payload=10)),
-            InputNodeField(label='height', data=FloatData(payload=10))
+            InputNodeField(label='image', allowed_types=['ImageData']),
+            InputNodeField(label='units', allowed_types=['StringData'], data=StringData(payload='mm')),
+            InputNodeField(label='width', allowed_types=['FloatData'], data=FloatData(payload=10)),
+            InputNodeField(label='height', allowed_types=['FloatData'], data=FloatData(payload=10))
         ],
         outputs=[
             OutputNodeField(label='document')

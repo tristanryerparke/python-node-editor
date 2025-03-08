@@ -11,6 +11,7 @@ from ...datatypes.basic import IntData, FloatData
 class TestModel(ModelData):
     a: IntData
     b: ListData
+    gabagool1000: IntData
 
 
 t1 = TestModel(
@@ -18,7 +19,8 @@ t1 = TestModel(
     b=ListData(payload=[
         IntData(payload=2),
         IntData(payload=3),
-    ])
+    ]),
+    gabagool1000=IntData(payload=1000)
 )
 
 
@@ -34,7 +36,7 @@ class TestModelNode(BaseNode):
             ),
         ],
         outputs=[
-            OutputNodeField(label='output',)
+            OutputNodeField(label='output', allowed_types=['TestModel'])
         ]
     )
     def exec(cls, input: TestModel) -> TestModel:

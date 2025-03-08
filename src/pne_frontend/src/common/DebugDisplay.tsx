@@ -5,7 +5,6 @@ import { isModelData } from "../types/dataTypes/modelData";
 import { isImageData } from "../types/dataTypes/imageData";
 import { Resizable } from 're-resizable';
 import { IconArrowsDiagonal } from "@tabler/icons-react";
-import * as React from 'react';
 
 function Render(
   data: AnyData, 
@@ -72,7 +71,7 @@ function Render(
 }
 
 
-const CustomHandle = props => (
+const CustomHandle = (props: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     style={{
       background: '#fff',

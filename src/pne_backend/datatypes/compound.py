@@ -14,6 +14,14 @@ from .basic import IntData, FloatData, StringData, NumpyData
 @register_class
 class ListData(BaseData):
     payload: List[Any] = Field(discriminator='class_name')
+    metadata: Dict[str, Any] = Field(default_factory=lambda: {'expanded': False})
+
+    def __add__(self, other: 'ListData') -> 'ListData':
+        if not isinstance(other, ListData):
+            raise TypeError(f"unsupported operand type(s) for +: '{type(self)}' and '{type(other)}'")
+        # Combine payloads and merge metadata
+        # combined_metadata = {**self.metadata, **other.metadata}
+        return ListData(payload=self.payload + other.payload)
 
     @field_validator('payload', mode='before')
     @classmethod
@@ -40,7 +48,8 @@ class ListData(BaseData):
 class ModelData(BaseModel):
     '''Modeldata is subclassed to allow creation of classes that can be serialized and deserialized'''
     class_parent: str = 'ModelData'
-
+    metadata: Dict[str, Any] = Field(default_factory=lambda: {'expanded': False})
+    
     @computed_field(repr=True)
     @property
     def class_name(self) -> str:

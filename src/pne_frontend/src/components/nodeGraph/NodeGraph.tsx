@@ -4,42 +4,29 @@ import {
   Controls,
   Background,
   BackgroundVariant,
-  addEdge,
-  applyNodeChanges,
-  applyEdgeChanges,
   type Node,
-  type Edge,
   type NodeTypes,
-  type OnConnect,
-  type OnNodesChange,
-  type OnEdgesChange,
   useReactFlow,
 } from '@xyflow/react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { BaseNodeData } from '../../types/nodeTypes';
 import CustomNode from '../customNode/CustomNode';
+import useStore from '../store';
 
 const nodeTypes: NodeTypes = {customNode: CustomNode};
 
 function NodeGraph() {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
+  // Use the store directly since we need all parts of the state
+  const { 
+    nodes, 
+    edges, 
+    onNodesChange, 
+    onEdgesChange, 
+    onConnect, 
+    setNodes 
+  } = useStore();
 
   const { screenToFlowPosition } = useReactFlow();
-
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [setNodes],
-  );
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [setEdges],
-  );
-
-  const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
-    [setEdges],
-  );
 
   // Handle the spawning of droppped nodes
   const onDrop = useCallback(
@@ -61,9 +48,9 @@ function NodeGraph() {
         data: {...droppedNodeData},
         width: node_data.width,
       };
-      setNodes((nds) => [...nds, newNode as Node]);
+      setNodes([...nodes, newNode]);
     },
-    [screenToFlowPosition, setNodes]
+    [screenToFlowPosition, setNodes, nodes]
   );
 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -75,7 +62,7 @@ function NodeGraph() {
     <div style={{width: '100%', height: '100%'}}>
       <ReactFlow
         proOptions={{ hideAttribution: true }}
-        nodes={nodes}
+        nodes={[...nodes]}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -91,7 +78,7 @@ function NodeGraph() {
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
     </div>
-  );
-};
+  )
+}
 
 export default NodeGraph;

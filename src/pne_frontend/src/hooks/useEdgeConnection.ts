@@ -1,14 +1,7 @@
-import { 
-  useStore, 
-  useNodeId, 
-  useReactFlow,
-  type ReactFlowState,
-  type Edge,
-} from '@xyflow/react';
+import { useNodeId } from '@xyflow/react';
+import { useEffect, useState } from 'react';
+import useStore from '../components/store';
 import { type InputField } from '../types/nodeTypes';
-import { useEffect, useRef } from 'react';
-
-const edgesLengthSelector = (state: ReactFlowState) => state.edges.length || 0;
 
 interface UseEdgeConnectionProps {
   field: InputField;
@@ -21,27 +14,31 @@ interface UseEdgeConnectionProps {
 // Used for disabling user input fields when an edge is connected
 export function useEdgeConnection({ field, index, updateField }: UseEdgeConnectionProps) {
   const nodeId = useNodeId();
-  const prevEdgesLength = useRef(0);
-  const edgesLength = useStore(edgesLengthSelector);
-  const reactFlow = useReactFlow();
-
+  const [isConnected, setIsConnected] = useState(field.is_edge_connected || false);
+  
+  // Get edges directly from the store
+  const edges = useStore(state => state.edges);
+  
   useEffect(() => {
-    if (prevEdgesLength.current !== edgesLength) {
-      const edges = reactFlow.getEdges();
-      const isConnected = edges.some((edge: Edge) => 
-        edge.target === nodeId && 
-        edge.targetHandle === `${nodeId}-input-${index}`
-      );
-      if (isConnected !== field.is_edge_connected) {
+    // Check if any edge is connected to this input
+    const connected = edges.some(edge => 
+      edge.target === nodeId && 
+      edge.targetHandle === `${nodeId}-input-${index}`
+    );
+    
+    // Only update if connection state has changed
+    if (connected !== isConnected) {
+      setIsConnected(connected);
+      
+      // Update the field if the connection state has changed
+      if (connected !== field.is_edge_connected) {
         updateField({
           ...field, 
-          is_edge_connected: isConnected
+          is_edge_connected: connected
         }, index);
-        // console.log(`Edge connected: ${isConnected}`);
       }
-      prevEdgesLength.current = edgesLength;
     }
-  }, [edgesLength, nodeId, index, reactFlow, field, updateField]);
+  }, [edges, nodeId, index, field, updateField, isConnected]);
 
-  return field.is_edge_connected;
+  return isConnected;
 } 

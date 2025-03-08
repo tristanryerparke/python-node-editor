@@ -23,6 +23,7 @@ export function createStringData(stringValue: string): StringData {
   return {
     class_name: 'StringData',
     id: uuidv4(),
-    payload: stringValue
+    payload: stringValue,
+    metadata: {}
   };
 }
