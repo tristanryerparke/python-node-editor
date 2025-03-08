@@ -41,9 +41,10 @@ export default function NumberInput({ path, data }: NumberInputProps) {
         onChange={(val) => setValue((val as number) ?? 0)}
         allowDecimal={true}
         decimalScale={3}
+        style={{ width: '100%' }}
       />
     ) : (
-      <Flex className="basic-output" >
+      <Flex className="basic-output" w='100%' style={{ flexGrow: 1 }}>
         <Text pr={10} size="xs">{value}</Text>
       </Flex>
     )

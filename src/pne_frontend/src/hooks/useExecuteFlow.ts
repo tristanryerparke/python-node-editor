@@ -3,6 +3,7 @@ import { Node } from '@xyflow/react';
 import { BaseNodeData } from '../types/nodeTypes';
 import useStore from '../components/store';
 import { produce } from 'immer';
+import mergeWithExpandedPreserved from '../utils/mergeWithExpandedPreserved';
 
 // Define a type that extends Node with our BaseNodeData
 // Using Record<string, unknown> & BaseNodeData to satisfy the constraint
@@ -71,18 +72,25 @@ export default function useExecuteFlow() {
           // Handle full node update
           const { node } = data;
           const updatedNode = JSON.parse(node) as CustomNode;
-          console.log('DEBUG: Single node update received:', updatedNode);
+          // console.log('DEBUG: Single node update received:', updatedNode);
           
           // Use Immer's produce for immutable updates
+          const nodeIndex = nodes.findIndex(n => n.id === updatedNode.id);
+          const existingNode = nodeIndex !== -1 ? nodes[nodeIndex] : null;
+
+          console.log('DEBUG: Existing node data:', existingNode?.data);
+          console.log('DEBUG: Updated node data:', updatedNode.data);
+
+          // Calculate merged data outside setNodes
+          const mergedData = nodeIndex !== -1 
+            ? mergeWithExpandedPreserved(existingNode?.data, updatedNode.data)
+            : updatedNode.data;
+
           setNodes(
             produce(nodes, (draft) => {
-              const nodeIndex = draft.findIndex(n => n.id === updatedNode.id);
               if (nodeIndex !== -1) {
-                // Replace the entire data object with the updated one
-                // This ensures we don't keep any references to old data
-                draft[nodeIndex].data = { ...updatedNode.data };
-                
-                console.log('DEBUG: Updated node data:', draft[nodeIndex].data);
+                draft[nodeIndex].data = mergedData;
+                // console.log('DEBUG: Updated node data with preserved expanded states:', draft[nodeIndex].data);
               }
             })
           );

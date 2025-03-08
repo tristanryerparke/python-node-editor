@@ -34,7 +34,7 @@ const renderData = (
   switch (inputType) {
     case "ImageData":
       return (
-        <div className="list-line-item">
+        <div className="list-item">
           <ImageInput 
             path={path} 
             data={data as ImageData}
@@ -43,7 +43,7 @@ const renderData = (
       );
     case "IntData":
       return (
-        <div className="list-line-item">
+        <div className="list-item">
           <NumberInput 
             data={(data && data.class_name === "IntData") ? data as IntData : { class_name: "IntData", id: "", payload: 0, metadata: {} } as IntData} 
             path={path} 
@@ -52,7 +52,7 @@ const renderData = (
       );
     case "FloatData":
       return (
-        <div className="list-line-item">
+        <div className="list-item">
           <NumberInput 
             data={(data && data.class_name === "FloatData") ? data as FloatData : { class_name: "FloatData", id: "", payload: 0.0, metadata: {} } as FloatData} 
             path={path} 

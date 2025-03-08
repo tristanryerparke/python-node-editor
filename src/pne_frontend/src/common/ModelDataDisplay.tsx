@@ -43,13 +43,15 @@ const ModelDataDisplay = ({
             .map(([key, value]) => {
               if (typeof value === "object") {
                 return (
-                  <div key={key} className="list-item">
+                  <div key={key} className="list-item" style={{ width: '100%' }}>
                     <div className="list-key">{key}:</div>
-                    {/* Add additional validation here too */}
-                    {Array.isArray(path) ? 
-                      renderData(value as AnyData, [...path, key]) : 
-                      <div className="error-state">Invalid path</div>
-                    }
+                    <div style={{ flexGrow: 1, width: '100%' }}>
+                      {/* Add additional validation here too */}
+                      {Array.isArray(path) ? 
+                        renderData(value as AnyData, [...path, 'data', key]) : 
+                        <div className="error-state">Invalid path</div>
+                      }
+                    </div>
                   </div>
                 );
               }

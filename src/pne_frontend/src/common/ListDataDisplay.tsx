@@ -22,6 +22,8 @@ const ListDataDisplay = ({
     // Return a fallback UI when path is invalid
     return <div className="error-state">Invalid path data</div>;
   }
+
+  
   
   // Now safely use path since we've validated it
   const expandedData = getNodeData([...path, 'metadata', 'expanded']);
@@ -45,7 +47,7 @@ const ListDataDisplay = ({
               <div className="list-key">{idx}:</div>
               {/* Add additional validation here too */}
               {Array.isArray(path) ? 
-                renderData(item as AnyData, [...path, idx]) : 
+                renderData(item as AnyData, [...path, 'data', 'payload', idx]) : 
                 <div className="error-state">Invalid path</div>
               }
             </div>

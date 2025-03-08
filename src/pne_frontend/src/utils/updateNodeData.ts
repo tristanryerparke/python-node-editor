@@ -35,7 +35,15 @@ export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
   const setNodes = useStore.getState().setNodes;
   const nodes = useStore.getState().nodes;
 
-  console.log('updateNodeData', path, newData);
+  console.log('updateNodeData func', path, newData);
+
+  // Check if we're creating a new property
+  const existingData = getNodeData(path);
+  const isNewProperty = existingData === undefined;
+  
+  if (isNewProperty) {
+    console.warn(`Creating new property at path: ${path.join('.')}. This may be unintentional.`);
+  }
 
   setNodes(
     produce(nodes, draft => {
@@ -48,6 +56,7 @@ export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
         for (let i = 0; i < pathToProperty.length - 1; i++) {
           const key = pathToProperty[i];
           if (current[key] === undefined) {
+            console.warn(`Creating new nested property: ${key} at path: ${path.slice(0, i + 2).join('.')}`);
             current[key] = {};
           }
           current = current[key] as Record<string | number, unknown>;
@@ -59,4 +68,9 @@ export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
       }
     })
   );
+
+  // Use setTimeout to log the updated state after the state update has been applied
+  setTimeout(() => {
+    console.log('updated node data', useStore.getState().nodes);
+  }, 0);
 }

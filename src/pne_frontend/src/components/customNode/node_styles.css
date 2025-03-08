@@ -22,10 +22,9 @@
 
 .list-key {
   min-width: 20px;
-  max-width: fit-content;
-  width: auto; /* Change this line */
-  max-width: none; /* Change this line */
+  width: auto;
   overflow: visible;
+  flex-shrink: 0;
 }
 
 .list-title {
@@ -41,16 +40,15 @@
 .item-list {
   display: flex;
   flex-direction: column;
-  width: fit-content;
-  /* border: 1px solid black;
-  border-radius: 5px; */
+  width: 100%;
   padding: 5px;
   gap: 5px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .list-item {
   width: 100%;
+  flex-grow: 1;
   display: flex;
   flex-direction: row;
   align-items: center;
