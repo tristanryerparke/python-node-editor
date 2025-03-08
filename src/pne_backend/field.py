@@ -17,7 +17,6 @@ class ModelNotFoundError(Exception):
 class InputNodeField(BaseModel):
     data: Optional[Any] = None
     allowed_types: list[str] = ['AnyData']
-    default_generator_type: Optional[str] = None
     display_type: Optional[str] = None
     label: str
     description: Optional[str] = None
@@ -55,8 +54,10 @@ class InputNodeField(BaseModel):
 class OutputNodeField(BaseModel):
     data: Optional[Any] = None
     label: str
+    allowed_types: list[str] = ['AnyData']
     description: Optional[str] = None
     user_label: Optional[str] = None
+    
     # disabled: bool = False
     is_edge_connected: bool = False
     # node_expanded: bool = False

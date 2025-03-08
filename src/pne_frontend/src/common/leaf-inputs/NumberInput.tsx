@@ -20,7 +20,7 @@ export default function NumberInput({ path, data }: NumberInputProps) {
 
   useEffect(() => {
     // only update the node data if the value has changed and the node is an input
-    if (debouncedValue !== data.payload && path.includes('inputs')) {
+    if (debouncedValue !== data.payload && path[1] === 'inputs') {
       const isFloat = debouncedValue % 1 !== 0;
       const newData = {
         ...data,
@@ -38,10 +38,10 @@ export default function NumberInput({ path, data }: NumberInputProps) {
       <MantineNumberInput
         value={value}
         size="xs"
+        w='100%'
         onChange={(val) => setValue((val as number) ?? 0)}
         allowDecimal={true}
         decimalScale={3}
-        style={{ width: '100%' }}
       />
     ) : (
       <Flex className="basic-output" w='100%' style={{ flexGrow: 1 }}>

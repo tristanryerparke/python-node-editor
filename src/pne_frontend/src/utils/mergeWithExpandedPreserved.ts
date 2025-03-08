@@ -36,17 +36,19 @@ export function mergeWithExpandedPreserved<T extends Record<string, unknown>, U 
         return;
       }
       
-      // Check for metadata with expanded: true
+      // Check for metadata with expanded property
       const sourceObj = source as Record<string, unknown>;
       const targetObj = target as Record<string, unknown>;
       
       if (sourceObj.metadata && 
           typeof sourceObj.metadata === 'object' && 
           sourceObj.metadata !== null &&
-          (sourceObj.metadata as Record<string, unknown>).expanded === true && 
+          (sourceObj.metadata as Record<string, unknown>).expanded !== undefined && 
           targetObj.metadata && 
           typeof targetObj.metadata === 'object') {
-        (targetObj.metadata as Record<string, unknown>).expanded = true;
+        // Always copy the expanded state from source to target
+        (targetObj.metadata as Record<string, unknown>).expanded = 
+          (sourceObj.metadata as Record<string, unknown>).expanded;
       }
       
       // Continue traversing nested objects and arrays

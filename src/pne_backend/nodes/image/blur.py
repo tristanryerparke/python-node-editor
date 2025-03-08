@@ -13,15 +13,15 @@ class BlurImageNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='image', dtype='image', default_generator_type='ImageData'),
-            InputNodeField(label='radius', dtype='number', data=IntData(payload=6), metadata={
-                'min': 0,
-                'max': 100,
-                'displayFormat': 'slider'
-            })
+            InputNodeField(label='image', allowed_types=['ImageData']),
+            InputNodeField(label='radius', allowed_types=['IntData'], data=IntData(payload=10))
         ],
         outputs=[
-            OutputNodeField(field_type='output', label='blurred_image', dtype='image')
+            OutputNodeField(
+                label='blurred_image', 
+                user_label='Blurred Image',
+                allowed_types=['ImageData'],
+            )
         ]
     )
     def exec(cls, image: ImageData, radius: IntData) -> ImageData:

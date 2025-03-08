@@ -1,7 +1,9 @@
-import { AnyData } from "../types/dataTypes/anyData";
-import { ModelData as ModelDataType } from "../types/dataTypes/modelData";
-import { ChevronButton } from "../common/ChevronButton.tsx";
-import { updateNodeData, getNodeData } from "../utils/updateNodeData";
+import { AnyData } from "../../types/dataTypes/anyData.ts";
+import { ModelData as ModelDataType } from "../../types/dataTypes/modelData.ts";
+import { ChevronButton } from "../ChevronButton.tsx";
+import { updateNodeData, getNodeData } from "../../utils/updateNodeData.ts";
+
+import './structured_data_styles.css';
 
 interface ModelDataProps {
   data: AnyData;
@@ -31,27 +33,25 @@ const ModelDataDisplay = ({
   };
 
   return (
-    <div className={`list-wrapper ${!expanded ? 'small' : ''}`}>
-      <div className="list-title">
+    <div className={`pne-div structured-data-wrapper ${!expanded ? 'small' : ''}`}>
+      <div className="structured-data-title">
         {modelData.class_name}({modelData.class_parent})
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
       {expanded && (
-        <div className="item-list">
+        <div className="pne-div structured-data-list">
           {Object.entries(modelData)
             .filter(([key]) => key !== "class_name" && key !== "class_parent" && key !== "id" && key !== "metadata")
             .map(([key, value]) => {
               if (typeof value === "object") {
                 return (
-                  <div key={key} className="list-item" style={{ width: '100%' }}>
-                    <div className="list-key">{key}:</div>
-                    <div style={{ flexGrow: 1, width: '100%' }}>
-                      {/* Add additional validation here too */}
-                      {Array.isArray(path) ? 
-                        renderData(value as AnyData, [...path, 'data', key]) : 
-                        <div className="error-state">Invalid path</div>
-                      }
-                    </div>
+                  <div key={key} className="structured-data-item">
+                    <div className="structured-data-label">{key}:</div>
+                    {/* Add additional validation here too */}
+                    {Array.isArray(path) ? 
+                      renderData(value as AnyData, [...path, 'data', key]) : 
+                      <div className="error-state">Invalid path</div>
+                    }
                   </div>
                 );
               }

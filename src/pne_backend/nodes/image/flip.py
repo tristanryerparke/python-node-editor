@@ -10,13 +10,13 @@ class FlipHorizontallyNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='image', dtype='image')
+            InputNodeField(label='image', allowed_types=['ImageData'])
         ],
         outputs=[
-            OutputNodeField(label='flipped_image', dtype='image')
+            OutputNodeField(label='flipped_image', allowed_types=['ImageData'])
         ]
     )
     def exec(cls, image: ImageData) -> ImageData:
         img = Image.fromarray(image.payload.astype(np.uint8))
         flipped_img = img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-        return ImageData(payload=np.array(flipped_img), dtype='image')
+        return ImageData(payload=np.array(flipped_img))

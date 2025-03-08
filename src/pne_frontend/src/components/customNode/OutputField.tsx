@@ -24,13 +24,9 @@ export default function OutputFieldComponent({ path, field }: OutputFieldCompone
   
   return (
     <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
-      <div className='pne-div node-field-internals'>
-        <div className='pne-div node-field-minified'>
-          <div className='pne-div node-label-display right'>
-            <strong>{`${field.user_label ?? field.label}: `}</strong>
-            <RichDisplay path={path} field={field} />
-          </div>
-        </div>
+      <div className='field-wrapper right'>
+        <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
+        <RichDisplay path={path} field={field} />
       </div>
       
       <div className='handle-padder'/>

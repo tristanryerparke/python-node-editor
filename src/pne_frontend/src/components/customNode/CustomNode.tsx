@@ -11,6 +11,8 @@ type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
     
+ 
+  console.log('rendering node with data', data);
   return (
     <div className='node-wrapper'>
       <NodeHeader data={data} />
@@ -18,7 +20,7 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
       <div className='node-field-inputs'>
         {data.inputs.map((input, index) => (
           <div key={index} className='node-field-input'>
-            {index > 0 && <div className='divider-div'/>}
+            {index > 0 && <div className='divider-div' style={{border: '0.25px d #000'}}/>}
             <InputFieldComponent
               path={[id, 'inputs', index]}
               field={input}

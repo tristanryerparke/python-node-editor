@@ -1,7 +1,9 @@
-import { AnyData } from "../types/dataTypes/anyData";
-import { ListData as ListDataType } from "../types/dataTypes/listData";
-import { ChevronButton } from "../common/ChevronButton.tsx";
-import { updateNodeData, getNodeData } from "../utils/updateNodeData";
+import { AnyData } from "../../types/dataTypes/anyData.ts";
+import { ListData as ListDataType } from "../../types/dataTypes/listData.ts";
+import { ChevronButton } from "../ChevronButton.tsx";
+import { updateNodeData, getNodeData } from "../../utils/updateNodeData.ts";
+
+import './structured_data_styles.css';
 
 interface ListDataProps {
   path: (string | number)[];
@@ -35,21 +37,17 @@ const ListDataDisplay = ({
 
   
   return (
-    <div className={`list-wrapper ${!expanded ? 'small' : ''}`}>
-      <div className="list-title">
+    <div className={`pne-div  structured-data-wrapper ${!expanded ? 'small' : ''}`}>
+      <div className="structured-data-title">
         List [{listData.payload.length}]
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
       {expanded && (
-        <div className="item-list">
+        <div className="pne-div structured-data-list">
           {listData.payload.map((item, idx) => (
-            <div key={idx} className="list-item">
-              <div className="list-key">{idx}:</div>
-              {/* Add additional validation here too */}
-              {Array.isArray(path) ? 
-                renderData(item as AnyData, [...path, 'data', 'payload', idx]) : 
-                <div className="error-state">Invalid path</div>
-              }
+            <div key={idx} className="structured-data-item">
+              <div className="structured-data-label">{idx}:</div>
+              {renderData(item as AnyData, [...path, 'data', 'payload', idx])}
             </div>
           ))}
         </div>

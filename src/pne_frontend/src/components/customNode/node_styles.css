@@ -1,58 +1,12 @@
 .node-wrapper {
+  border: 1px solid black;
+  border-radius: 0.5rem;
+  padding: 0px;
+  margin: 0px;
+  background-color: white;
+  opacity: 1;
   width: fit-content;
   display: inline-block;
-}
-
-.list-wrapper {
-  min-width: 100px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  border: 1px solid black;
-  border-radius: 5px;
-  padding: 5px;
-}
-
-.list-wrapper.small {
-  max-height: var(--input-size);
-  flex-direction: row;
-}
-
-.list-key {
-  min-width: 20px;
-  width: auto;
-  overflow: visible;
-  flex-shrink: 0;
-}
-
-.list-title {
-  width: 100%;
-  display: flex;
-  flex-grow: 1;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 5px;
-}
-
-.item-list {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 5px;
-  gap: 5px;
-  align-items: stretch;
-}
-
-.list-item {
-  width: 100%;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 5px;
 }
 
 .basic-output {
@@ -65,4 +19,40 @@
   gap: 5px;
   border: 1px solid black;
   border-radius: 4px;
+}
+
+/* Add missing classes from CustomNode.tsx */
+.divider-div {
+  width: 100%;
+  height: 1px;
+  background-color: #000;
+  margin: 2px 0;
+}
+
+.data-base-wrapper {
+  min-width: 100px;
+  width: 100%;
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  gap: 5px;
+}
+
+.data-base-wrapper.small {
+  height: var(--small-element-height);
+}
+
+.data-wrapper {
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+.data-wrapper.small {
+  height: var(--small-element-height);
 }

@@ -16,7 +16,6 @@ class SplitNode(BaseNode):
                 label='number', 
                 user_label='Number',
                 allowed_types=['IntData', 'FloatData'],
-                default_generator_type='IntData',
                 data=IntData(payload=1),
                 metadata={
                     'max': 100,
@@ -26,7 +25,6 @@ class SplitNode(BaseNode):
             InputNodeField(
                 label='t', 
                 allowed_types=['FloatData'],
-                default_generator_type='FloatData',
                 data=FloatData(payload=0.5),
                 metadata={
                     'max': 1.0,

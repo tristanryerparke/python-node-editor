@@ -36,7 +36,7 @@ class TestModelNode(BaseNode):
             ),
         ],
         outputs=[
-            OutputNodeField(label='output',)
+            OutputNodeField(label='output', allowed_types=['TestModel'])
         ]
     )
     def exec(cls, input: TestModel) -> TestModel:

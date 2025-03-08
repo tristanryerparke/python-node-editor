@@ -1,7 +1,8 @@
 import { Handle, Position, useNodeConnections } from '@xyflow/react';
 import { type InputField } from '../../types/nodeTypes';
-import { DisplayModeButton } from '../../common/DisplayModeButton';
 import RichDisplay from '../../common/RichDisplay';
+
+import './field_styles.css';
 
 interface InputFieldProps {
   path: (string | number)[];
@@ -19,7 +20,6 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
 
   // Determine if connected based on connections array length and target node id
   const isConnected = connections.length > 0 && connections[0].targetHandle === handleId;
-  const displayMode = (field.metadata?.displayMode ?? 'Pretty') as 'Debug' | 'Pretty';
 
   // Set handle color based on connection state
   const handleColor = isConnected ? '#4CAF50' : 'white';
@@ -38,13 +38,11 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
         position={Position.Left}
         id={handleId}
       />
-      <div className='pne-div node-field-internals left'>
-        <strong style={{height: '20px'}}>{`${field.user_label ?? field.label}:  `}</strong>
-        <RichDisplay path={path} field={field} />
-          <DisplayModeButton
-            displayMode={displayMode}
-            setDisplayMode={() => {}}
-          />
+      <div className='field-wrapper left'>
+        <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
+        <div className='data-base-wrapper'>
+          <RichDisplay path={path} field={field} />
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,6 @@ export interface InputField {
   label: string;
   user_label: string;
   data?: AnyData;
-  default_generator_type: string;
   allowed_types: string[];
   input_display_generate: string;
   display_type: string;

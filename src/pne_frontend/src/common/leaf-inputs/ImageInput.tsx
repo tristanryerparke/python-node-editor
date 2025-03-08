@@ -4,10 +4,13 @@ import { useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ImageData } from "../../types/dataTypes/imageData";
 import { ChevronButton } from "../ChevronButton";
-import { updateNodeData } from "../../utils/updateNodeData";
+import { getNodeData, updateNodeData } from "../../utils/updateNodeData";
+
+
+
 interface ImageInputProps {
   path: (string | number)[];
-  data?: ImageData;
+  data?: ImageData | null;
   
 }
 
@@ -15,51 +18,42 @@ export default function ImageInput({ data, path }: ImageInputProps) {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Create a default empty ImageData if none is provided
-  const imageData = data || {
-    class_name: "ImageData",
-    id: uuidv4(),
-    payload: "",
-    preview: "",
-    metadata: {}
-  } as ImageData;
+  // Determine if this is an output (non-interactive) component
+  const isOutput = path[1] === 'outputs';
 
-  // Get expanded state from metadata with default as false
-  const metadata = imageData.metadata || {};
-  const expanded = metadata.expanded ?? false;
-  
-  // Function to toggle expanded state
+  const expandedData = getNodeData([...path, 'metadata', 'expanded']);
+  const expanded = (expandedData ?? false) as boolean;
   const setExpanded = (expanded: boolean) => {
     updateNodeData({ path: [...path, 'metadata', 'expanded'], newData: expanded });
   };
 
   // Helper function to determine if we have an image to display
   const hasImage = () => {
-    return Boolean(imageData.payload || imageData.preview);
+    return Boolean(data?.payload || data?.preview);
   };
 
   // Helper function to get the image source
   const getImageSrc = () => {
-    if (imageData.preview) {
-      return `data:image/jpeg;base64,${imageData.preview}`;
+    if (data?.preview) {
+      return `data:image/jpeg;base64,${data.preview}`;
     }
-    if (imageData.payload) {
-      return `data:image/jpeg;base64,${imageData.payload}`;
+    if (data?.payload) {
+      return `data:image/jpeg;base64,${data.payload}`;
     }
     return '';
   };
 
   // Get display text for the title
   const getTitleText = () => {
-    if (hasImage() && imageData.width && imageData.height) {
-      return `Image: ${imageData.width}x${imageData.height} ${imageData.image_type || ''}`;
+    if (hasImage() && data?.width && data?.height) {
+      return `Image: ${data.width}x${data.height} ${data.image_type || ''}`;
     }
     return "No image";
   };
 
   // Handle click on the dropzone
   const handleDropzoneClick = () => {
-    if (!isLoading && fileInputRef.current) {
+    if (!isLoading && fileInputRef.current && !isOutput) {
       fileInputRef.current.click();
     }
   };
@@ -84,17 +78,8 @@ export default function ImageInput({ data, path }: ImageInputProps) {
 
   async function handleUpload(file: File | null) {
     if (!file) {
-      const newData = {
-        ...imageData,
-        id: uuidv4(),
-        payload: "",
-        preview: "",
-        metadata: {
-          ...imageData.metadata,
-          expanded: expanded
-        },
-      };
-      updateNodeData({ path: path, newData: newData });
+      // Set data to an empty object when removing the image
+      updateNodeData({ path: [...path, 'data'], newData: {} });
       return;
     }
 
@@ -129,7 +114,8 @@ export default function ImageInput({ data, path }: ImageInputProps) {
             ...result.metadata, 
             expanded: expanded 
           };
-          updateNodeData({ path: path, newData: result });
+          // Consistently use the same path format for setting image data
+          updateNodeData({ path: [...path, 'data'], newData: result });
         } else {
           console.error('Failed to upload image');
         }
@@ -146,33 +132,62 @@ export default function ImageInput({ data, path }: ImageInputProps) {
   // Collapsed view - minimal information
   if (!expanded) {
     return (
-      <div className="list-wrapper small">
-        <div className="list-title">
-          {getTitleText()}
-          <ChevronButton expanded={expanded} setExpanded={setExpanded} />
-        </div>
+      <div style={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '5px',
+        padding: '5px',
+        border: '1px solid black',
+        borderRadius: '5px',
+        height: 'var(--small-element-height)'
+      }}
+      >
+        {getTitleText()}
+        <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
     );
   }
 
   // Expanded view - always show the dropzone if there's no image
   return (
-    <div className="list-wrapper">
-      <div className="list-title">
+    <div style={{
+      width: '100%', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      gap: '5px',
+      padding: '5px',
+      border: '1px solid black',
+      borderRadius: '5px'
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '5px'
+        }}
+      >
         {getTitleText()}
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
 
       {hasImage() ? (
         // Image preview section
-        <div className="item-list">
+        <div className="field-list">
           <div 
             style={{ 
               position: 'relative',
-              cursor: 'pointer',
+              cursor: isOutput ? 'default' : 'pointer',
               borderRadius: '5px'
             }}
-            onClick={handleDropzoneClick}
+            onClick={!isOutput ? handleDropzoneClick : undefined}
           >
             <Image 
               w='100%' 
@@ -196,77 +211,91 @@ export default function ImageInput({ data, path }: ImageInputProps) {
               </div>
             )}
             
-            <div 
-              style={{
-                position: 'absolute',
-                top: '5px',
-                right: '5px',
-                width: '20px',
-                height: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-              onClick={handleRemoveImage}
-            >
-              ✕
-            </div>
+            {/* Only show remove button for inputs */}
+            {!isOutput && (
+              <div 
+                style={{
+                  position: 'absolute',
+                  top: '5px',
+                  right: '5px',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+                onClick={handleRemoveImage}
+              >
+                ✕
+              </div>
+            )}
           </div>
           
-          {metadata.filename && (
+          {data?.metadata?.filename && (
             <Text size='xs' c='dimmed'>
-              {metadata.filename}
+              {data.metadata.filename}
             </Text>
           )}
         </div>
       ) : (
-        // Clickable dropzone for when there's no image
-        <div 
-          className="item-list"
-          style={{ 
-            border: '1px dashed #ced4da', 
-            borderRadius: '5px',
-            padding: '20px',
-            cursor: 'pointer'
-          }}
-          onClick={handleDropzoneClick}
-        >
-          {isLoading ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100px'
-            }}>
-              <Loader color='dark.3' size={30} />
-            </div>
-          ) : (
-            <div style={{ 
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}>
-              <IconPhoto size={20} color="#868e96" style={{ marginBottom: 10 }} />
-              <Text ta="center" size="xs" mb={5}>
-                Click to select an image
-              </Text>
-              <Text ta="center" size="xs" c="dimmed">
-                Attach PNG or JPG file
-              </Text>
-            </div>
-          )}
-        </div>
+        // Clickable dropzone for when there's no image - only for inputs
+        !isOutput ? (
+          <div 
+            className="field-list"
+            style={{ 
+              border: '1px dashed #ced4da', 
+              borderRadius: '5px',
+              padding: '20px',
+              cursor: 'pointer'
+            }}
+            onClick={handleDropzoneClick}
+          >
+            {isLoading ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100px'
+              }}>
+                <Loader color='dark.3' size={30} />
+              </div>
+            ) : (
+              <div style={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}>
+                <IconPhoto size={20} color="#868e96" style={{ marginBottom: 10 }} />
+                <Text ta="center" size="xs" mb={5}>
+                  Click to select an image
+                </Text>
+                <Text ta="center" size="xs" c="dimmed">
+                  Attach PNG or JPG file
+                </Text>
+              </div>
+            )}
+          </div>
+        ) : (
+          // Non-interactive placeholder for outputs
+          <div className="field-list">
+            <Text ta="center" size="xs" c="dimmed">
+              No image output
+            </Text>
+          </div>
+        )
       )}
       
-      {/* Hidden file input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: 'none' }}
-        accept="image/png,image/jpeg,image/jpg"
-        onChange={handleFileChange}
-      />
+      {/* Hidden file input - only needed for inputs */}
+      {!isOutput && (
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          accept="image/png,image/jpeg,image/jpg"
+          onChange={handleFileChange}
+        />
+      )}
     </div>
   );
 }
