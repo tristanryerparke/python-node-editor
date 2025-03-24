@@ -1,6 +1,7 @@
 import { Handle, Position, useNodeConnections } from '@xyflow/react';
 import { type InputField } from '../../types/nodeTypes';
 import RichDisplay from '../../common/RichDisplay';
+import { EdgeConnectedProvider } from '../../contexts/edgeConnectedContext';
 
 import './field_styles.css';
 
@@ -41,7 +42,9 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
       <div className='field-wrapper left'>
         <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
         <div className='data-base-wrapper'>
-          <RichDisplay path={path} field={field} />
+          <EdgeConnectedProvider isConnected={isConnected}>
+            <RichDisplay path={path} field={field} />
+          </EdgeConnectedProvider>
         </div>
       </div>
     </div>

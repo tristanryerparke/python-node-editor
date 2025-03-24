@@ -78,7 +78,7 @@ export default function useExecuteFlow() {
           const nodeIndex = nodes.findIndex(n => n.id === updatedNode.id);
           const existingNode = nodeIndex !== -1 ? nodes[nodeIndex] : null;
 
-          console.log('DEBUG: Existing node data:', existingNode?.data);
+          // console.log('DEBUG: Existing node data:', existingNode?.data);
           console.log('DEBUG: Updated node data:', updatedNode.data);
 
           // Calculate merged data outside setNodes

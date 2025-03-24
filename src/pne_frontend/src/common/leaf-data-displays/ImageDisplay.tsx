@@ -4,27 +4,44 @@ import { useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ImageData } from "../../types/dataTypes/imageData";
 import { ChevronButton } from "../ChevronButton";
-import { getNodeData, updateNodeData } from "../../utils/updateNodeData";
-
-
+import { updateNodeData } from "../../utils/updateNodeData";
+import { useEdgeConnected } from "../../contexts/edgeConnectedContext";
 
 interface ImageInputProps {
   path: (string | number)[];
   data?: ImageData | null;
-  
 }
 
 export default function ImageInput({ data, path }: ImageInputProps) {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Only check edge connected state for inputs
+  const isInput = path[1] === 'inputs';
+  let isConnected = false;
+  try {
+    const context = useEdgeConnected();
+    isConnected = isInput ? context.isConnected : false;
+  } catch {
+    // If we're not within the provider (outputs), ignore the error
+  }
 
   // Determine if this is an output (non-interactive) component
   const isOutput = path[1] === 'outputs';
 
-  const expandedData = getNodeData([...path, 'metadata', 'expanded']);
-  const expanded = (expandedData ?? false) as boolean;
+  // Determine if the component should be disabled (either output or connected)
+  const isDisabled = isOutput || isConnected;
+
+  // Get expanded state from data
+  const expanded = (data?.metadata?.expanded ?? false) as boolean;
   const setExpanded = (expanded: boolean) => {
-    updateNodeData({ path: [...path, 'metadata', 'expanded'], newData: expanded });
+    if (data) {
+      const newData = {
+        ...data,
+        metadata: { ...data.metadata, expanded }
+      };
+      updateNodeData({ path: [...path, 'data'], newData });
+    }
   };
 
   // Helper function to determine if we have an image to display
@@ -53,7 +70,7 @@ export default function ImageInput({ data, path }: ImageInputProps) {
 
   // Handle click on the dropzone
   const handleDropzoneClick = () => {
-    if (!isLoading && fileInputRef.current && !isOutput) {
+    if (!isLoading && fileInputRef.current && !isDisabled) {
       fileInputRef.current.click();
     }
   };
@@ -72,6 +89,7 @@ export default function ImageInput({ data, path }: ImageInputProps) {
 
   // Handle file removal
   const handleRemoveImage = (e: React.MouseEvent) => {
+    if (isDisabled) return;
     e.stopPropagation(); // Prevent triggering the dropzone click
     handleUpload(null);
   };
@@ -161,7 +179,8 @@ export default function ImageInput({ data, path }: ImageInputProps) {
       gap: '5px',
       padding: '5px',
       border: '1px solid black',
-      borderRadius: '5px'
+      borderRadius: '5px',
+      opacity: isDisabled ? 0.7 : 1,
       }}
     >
       <div
@@ -184,15 +203,18 @@ export default function ImageInput({ data, path }: ImageInputProps) {
           <div 
             style={{ 
               position: 'relative',
-              cursor: isOutput ? 'default' : 'pointer',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
               borderRadius: '5px'
             }}
-            onClick={!isOutput ? handleDropzoneClick : undefined}
+            onClick={!isDisabled ? handleDropzoneClick : undefined}
           >
             <Image 
               w='100%' 
               src={getImageSrc()} 
-              style={{borderRadius: '5px'}}
+              style={{
+                borderRadius: '5px',
+                opacity: isDisabled ? 0.7 : 1
+              }}
             />
             
             {isLoading && (
@@ -211,8 +233,8 @@ export default function ImageInput({ data, path }: ImageInputProps) {
               </div>
             )}
             
-            {/* Only show remove button for inputs */}
-            {!isOutput && (
+            {/* Only show remove button for inputs that aren't disabled */}
+            {!isDisabled && (
               <div 
                 style={{
                   position: 'absolute',
@@ -239,15 +261,16 @@ export default function ImageInput({ data, path }: ImageInputProps) {
           )}
         </div>
       ) : (
-        // Clickable dropzone for when there's no image - only for inputs
-        !isOutput ? (
+        // Clickable dropzone for when there's no image - only for enabled inputs
+        !isDisabled ? (
           <div 
             className="field-list"
             style={{ 
               border: '1px dashed #ced4da', 
               borderRadius: '5px',
               padding: '20px',
-              cursor: 'pointer'
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              opacity: isDisabled ? 0.7 : 1
             }}
             onClick={handleDropzoneClick}
           >
@@ -277,17 +300,17 @@ export default function ImageInput({ data, path }: ImageInputProps) {
             )}
           </div>
         ) : (
-          // Non-interactive placeholder for outputs
+          // Non-interactive placeholder for outputs or disabled inputs
           <div className="field-list">
             <Text ta="center" size="xs" c="dimmed">
-              No image output
+              No image {isConnected ? '(input connected)' : 'output'}
             </Text>
           </div>
         )
       )}
       
-      {/* Hidden file input - only needed for inputs */}
-      {!isOutput && (
+      {/* Hidden file input - only needed for enabled inputs */}
+      {!isDisabled && (
         <input
           type="file"
           ref={fileInputRef}

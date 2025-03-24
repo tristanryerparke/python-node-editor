@@ -12,7 +12,7 @@ type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
     
  
-  console.log('rendering node with data', data);
+  // console.log('rendering node with data', data);
   return (
     <div className='node-wrapper'>
       <NodeHeader data={data} />

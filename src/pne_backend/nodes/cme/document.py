@@ -18,7 +18,6 @@ class Document(ModelData):
 
 class ConstructDocumentNode(BaseNode):
     '''Creates a document, a collection of an image, units, width, and height.'''
-    width: int = 275
 
     @classmethod
     @node_definition(

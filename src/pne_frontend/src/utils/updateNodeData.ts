@@ -32,6 +32,7 @@ export function getNodeData(path: (string | number)[]) {
 }
 
 export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
+  // Function to handle user updates to node data
   const setNodes = useStore.getState().setNodes;
   const nodes = useStore.getState().nodes;
 

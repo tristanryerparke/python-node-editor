@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
 import { IntData, FloatData } from "../types/dataTypes/numberData";
 import { AnyData } from "../types/dataTypes/anyData";
-import NumberInput from "./leaf-inputs/NumberInput";
-import ImageInput from "./leaf-inputs/ImageInput";
+import NumberDisplay from "./leaf-data-displays/NumberDisplay";
+import ImageInput from "./leaf-data-displays/ImageDisplay";
 import { InputField, OutputField } from "../types/nodeTypes";
 import ModelDataDisplay from "./structured_data/ModelDataDisplay";
 import ListDataDisplay from "./structured_data/ListDataDisplay";
@@ -47,7 +47,7 @@ const renderData = (
     case "IntData":
       return (
         <div className="data-wrapper">
-          <NumberInput 
+          <NumberDisplay 
             data={(data && data.class_name === "IntData") ? data as IntData : { class_name: "IntData", id: "", payload: 0, metadata: {} } as IntData} 
             path={path} 
           />
@@ -56,7 +56,7 @@ const renderData = (
     case "FloatData":
       return (
         <div className="data-wrapper">
-          <NumberInput 
+          <NumberDisplay 
             data={(data && data.class_name === "FloatData") ? data as FloatData : { class_name: "FloatData", id: "", payload: 0.0, metadata: {} } as FloatData} 
             path={path} 
           />
