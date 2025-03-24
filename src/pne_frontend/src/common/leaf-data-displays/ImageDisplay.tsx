@@ -1,19 +1,54 @@
 import { Image, Text, Loader } from "@mantine/core";
-import { IconPhoto } from "@tabler/icons-react";
-import { useState, useRef } from "react";
+import { IconPhoto, IconArrowsMaximize } from "@tabler/icons-react";
+import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ImageData } from "../../types/dataTypes/imageData";
 import { ChevronButton } from "../ChevronButton";
 import { updateNodeData } from "../../utils/updateNodeData";
 import { useEdgeConnected } from "../../contexts/edgeConnectedContext";
+import { Resizable } from "re-resizable";
+
+const IMAGE_PREVIEW_SIZE = 200;
+const DEFAULT_SIZE = {
+  width: IMAGE_PREVIEW_SIZE,
+  height: IMAGE_PREVIEW_SIZE,
+};
 
 interface ImageInputProps {
   path: (string | number)[];
   data?: ImageData | null;
 }
 
+// Custom resize handle component
+const ResizeHandle = () => (
+  <div 
+    className="nodrag nopan nowheel"
+    style={{
+      position: 'absolute',
+      bottom: '2px',
+      right: '2px',
+      width: '20px',
+      height: '20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'se-resize'
+    }}
+  >
+    <IconArrowsMaximize 
+      size={14} 
+      stroke={1.5}
+      style={{
+        padding: 2,
+        opacity: 0.4
+      }}
+    />
+  </div>
+);
+
 export default function ImageInput({ data, path }: ImageInputProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [size, setSize] = useState(DEFAULT_SIZE);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Only check edge connected state for inputs
@@ -94,10 +129,33 @@ export default function ImageInput({ data, path }: ImageInputProps) {
     handleUpload(null);
   };
 
+  // Calculate aspect ratio from image data
+  const aspectRatio = data?.width && data?.height ? data.width / data.height : 1;
+
+  // Update size when image dimensions change
+  useEffect(() => {
+    if (data?.width && data?.height) {
+      // Keep the width the same, but adjust height based on aspect ratio
+      const currentWidth = size.width;
+      setSize({
+        width: currentWidth,
+        height: currentWidth / aspectRatio
+      });
+    }
+  }, [data?.width, data?.height, aspectRatio]);
+
   async function handleUpload(file: File | null) {
     if (!file) {
-      // Set data to an empty object when removing the image
-      updateNodeData({ path: [...path, 'data'], newData: {} });
+      // Preserve expanded state when removing the image
+      updateNodeData({ 
+        path: [...path, 'data'], 
+        newData: {
+          class_name: "ImageData",
+          metadata: { 
+            expanded: expanded 
+          }
+        } 
+      });
       return;
     }
 
@@ -198,60 +256,96 @@ export default function ImageInput({ data, path }: ImageInputProps) {
       </div>
 
       {hasImage() ? (
-        // Image preview section
         <div className="field-list">
-          <div 
-            style={{ 
-              position: 'relative',
-              cursor: isDisabled ? 'not-allowed' : 'pointer',
-              borderRadius: '5px'
-            }}
-            onClick={!isDisabled ? handleDropzoneClick : undefined}
-          >
-            <Image 
-              w='100%' 
-              src={getImageSrc()} 
-              style={{
-                borderRadius: '5px',
-                opacity: isDisabled ? 0.7 : 1
+          <div style={{ position: 'relative' }}>
+            <Resizable
+              // size={size}
+              defaultSize={size}
+              // onResize={(_e, _direction, _ref, d) => {
+              //   setSize({
+              //     width: Math.max(IMAGE_PREVIEW_SIZE, size.width + d.width),
+              //     height: Math.max(IMAGE_PREVIEW_SIZE, size.height + d.height)
+              //   });
+              // }}
+              enable={{
+                top: false,
+                right: false,
+                bottom: false,
+                left: false,
+                topRight: false,
+                bottomRight: true,
+                bottomLeft: false,
+                topLeft: false,
               }}
-            />
-            
-            {isLoading && (
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
+              minWidth={IMAGE_PREVIEW_SIZE}
+              minHeight={IMAGE_PREVIEW_SIZE}
+              // maxWidth={1300}
+              // maxHeight={1300}
+              grid={[1, 1]}
+              lockAspectRatio={aspectRatio}
+              // handleComponent={{
+              //   bottomRight: <ResizeHandle />
+              // }}
+              style={{
+                position: 'relative',
+                borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.7)'
-              }}>
-                <Loader color='dark.3' size={30} />
-              </div>
-            )}
-            
-            {/* Only show remove button for inputs that aren't disabled */}
-            {!isDisabled && (
-              <div 
+                backgroundColor: 'white'
+              }}
+              className="nopan nodrag"
+            >
+              <Image 
+                w='100%'
+                h='100%'
+                fit="contain"
+                src={getImageSrc()} 
                 style={{
+                  borderRadius: '5px',
+                  opacity: isDisabled ? 0.7 : 1,
+                  objectFit: 'contain'
+                }}
+              />
+              
+              {isLoading && (
+                <div style={{
                   position: 'absolute',
-                  top: '5px',
-                  right: '5px',
-                  width: '20px',
-                  height: '20px',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-                onClick={handleRemoveImage}
-              >
-                ✕
-              </div>
-            )}
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)'
+                }}>
+                  <Loader color='dark.3' size={30} />
+                </div>
+              )}
+              
+              {/* Only show remove button for inputs that aren't disabled */}
+              {!isDisabled && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    borderRadius: '50%'
+                  }}
+                  onClick={handleRemoveImage}
+                >
+                  ✕
+                </div>
+              )}
+            </Resizable>
           </div>
           
           {data?.metadata?.filename && (
@@ -266,9 +360,14 @@ export default function ImageInput({ data, path }: ImageInputProps) {
           <div 
             className="field-list"
             style={{ 
+              display: 'flex',
               border: '1px dashed #ced4da', 
               borderRadius: '5px',
               padding: '20px',
+              height: '200px',
+              width: '200px',
+              alignItems: 'center',
+              justifyContent: 'center',
               cursor: isDisabled ? 'not-allowed' : 'pointer',
               opacity: isDisabled ? 0.7 : 1
             }}
@@ -279,7 +378,7 @@ export default function ImageInput({ data, path }: ImageInputProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '100px'
+                height: '200px'
               }}>
                 <Loader color='dark.3' size={30} />
               </div>
