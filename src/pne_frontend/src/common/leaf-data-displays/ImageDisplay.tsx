@@ -1,5 +1,5 @@
 import { Image, Text, Loader } from "@mantine/core";
-import { IconPhoto, IconArrowsMaximize } from "@tabler/icons-react";
+import { IconPhoto } from "@tabler/icons-react";
 import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ImageData } from "../../types/dataTypes/imageData";
@@ -19,32 +19,6 @@ interface ImageInputProps {
   data?: ImageData | null;
 }
 
-// Custom resize handle component
-const ResizeHandle = () => (
-  <div 
-    className="nodrag nopan nowheel"
-    style={{
-      position: 'absolute',
-      bottom: '2px',
-      right: '2px',
-      width: '20px',
-      height: '20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: 'se-resize'
-    }}
-  >
-    <IconArrowsMaximize 
-      size={14} 
-      stroke={1.5}
-      style={{
-        padding: 2,
-        opacity: 0.4
-      }}
-    />
-  </div>
-);
 
 export default function ImageInput({ data, path }: ImageInputProps) {
   const [isLoading, setIsLoading] = useState(false);
