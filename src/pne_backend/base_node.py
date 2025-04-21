@@ -70,14 +70,16 @@ class BaseNodeData(BaseModel):
     outputs: List[OutputNodeField] = []
     streaming: bool = False
     definition_path: str = ''
+    min_width: Optional[int] = 200
+    max_width: Optional[int] = 800
 
 
 
 class BaseNode(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     data: BaseNodeData = BaseNodeData()
-    # width: int = 250
     group: str = ''
+    
 
 
     def __init__(self, *args, **kwargs):
@@ -87,12 +89,21 @@ class BaseNode(BaseModel):
         if not self.data.display_name:
             self.data.display_name = self.__class__.__name__.replace(
                 'Node', '')
+            
+        # print all attributes of the class
+        
+        if hasattr(self, 'min_width'):
+            self.data.min_width = self.min_width
+        if hasattr(self, 'max_width'):
+            self.data.max_width = self.max_width
+        
         self.analyze_inputs()
         self.analyze_outputs()
         self.detect_namespace()
         self.data.definition_path = self.__class__.definition_path
 
         self.data.description = self.__class__.__doc__ or ''
+        
 
     def detect_namespace(self):
         '''detects the namespace of the node to display in the frontend'''

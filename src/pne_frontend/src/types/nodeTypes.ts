@@ -35,6 +35,8 @@ export interface BaseNodeData {
   streaming: boolean;
   definition_path: string;
   progress: number;
+  min_width?: number;
+  max_width?: number;
 }
 
 export interface BaseNode {

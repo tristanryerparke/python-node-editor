@@ -17,6 +17,7 @@ class SVGData(StringData):
 
 class StrokeOptimNode(BaseNode):
     '''Analyzes an image and returns an svg made up of "paint strokes" that represent the image.'''
+    min_width: int = 250
 
     @classmethod
     @node_definition(

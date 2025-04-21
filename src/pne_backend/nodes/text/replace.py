@@ -5,15 +5,36 @@ from ...datatypes.basic import StringData
 MAXSIZE = 10
 
 class ReplaceNode(BaseNode):
+    group: str = 'Basic'
+
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='text', dtype='string', data=StringData(payload='')),
-            InputNodeField(label='old', dtype='string', data=StringData(payload='')),
-            InputNodeField(label='new', dtype='string', data=StringData(payload=''))
+            InputNodeField(
+                label='text',
+                user_label='Text',
+                allowed_types=['StringData'],
+                data=StringData(payload='')
+            ),
+            InputNodeField(
+                label='old',
+                user_label='Find',
+                allowed_types=['StringData'],
+                data=StringData(payload='')
+            ),
+            InputNodeField(
+                label='new',
+                user_label='Replace With',
+                allowed_types=['StringData'],
+                data=StringData(payload='')
+            )
         ],
         outputs=[
-            OutputNodeField(label='replace_result', dtype='string')
+            OutputNodeField(
+                label='replace_result',
+                user_label='Result',
+                allowed_types=['StringData']
+            )
         ]
     )
     def exec(cls, text: StringData, old: StringData, new: StringData) -> StringData:

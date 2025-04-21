@@ -36,7 +36,9 @@ export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
   const setNodes = useStore.getState().setNodes;
   const nodes = useStore.getState().nodes;
 
-  console.log('updateNodeData func', path, newData);
+  console.log('updating ', path);
+  console.log('from ', getNodeData(path));
+  console.log('to ', newData);
 
   // Check if we're creating a new property
   const existingData = getNodeData(path);

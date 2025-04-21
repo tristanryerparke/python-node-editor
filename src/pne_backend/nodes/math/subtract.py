@@ -33,7 +33,7 @@ class SubtractNode(BaseNode):
             )
         ],
         outputs=[
-            OutputNodeField(label='result', user_label='Result')
+            OutputNodeField(label='result', user_label='Result', allowed_types=['IntData', 'FloatData'])
         ]
     )
     @lru_cache(maxsize=MAXSIZE)

@@ -41,12 +41,12 @@ function NodeGraph() {
       const newNode: Node = {
         id: crypto.randomUUID(),
         position: {
-          x: position.x,
+          x: position.x - node_data.data.min_width / 2,
           y: position.y,
         },
         type: 'customNode',
         data: {...droppedNodeData},
-        width: node_data.width,
+        width: node_data.data.min_width,
       };
       setNodes([...nodes, newNode]);
     },

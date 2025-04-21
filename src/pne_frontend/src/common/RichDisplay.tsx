@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { IntData, FloatData } from "../types/dataTypes/numberData";
 import { AnyData } from "../types/dataTypes/anyData";
 import NumberDisplay from "./leaf-data-displays/NumberDisplay";
-import ImageInput from "./leaf-data-displays/ImageDisplay";
+import ImageDisplay from "./leaf-data-displays/ImageDisplays/ImageDisplay";
 import { InputField, OutputField } from "../types/nodeTypes";
 import ModelDataDisplay from "./structured_data/ModelDataDisplay";
 import ListDataDisplay from "./structured_data/ListDataDisplay";
@@ -10,6 +10,9 @@ import { ImageData } from "../types/dataTypes/imageData";
 
 import '../components/customNode/node_styles.css';
 import '../common/structured_data/structured_data_styles.css';
+import StringDisplay from "./leaf-data-displays/StringDisplay";
+import { StringData } from "../types/dataTypes/stringData";
+import SVGDisplay from "./leaf-data-displays/ImageDisplays/SVGDisplay";
 
 // Recursive render function
 const renderData = (
@@ -38,26 +41,33 @@ const renderData = (
     case "ImageData":
       return (
         <div className="data-wrapper">
-          <ImageInput 
+          <ImageDisplay 
             path={path} 
             data={data as ImageData | null}
           />
         </div>
       );
-    case "IntData":
+    case "SVGData":
       return (
         <div className="data-wrapper">
-          <NumberDisplay 
-            data={(data && data.class_name === "IntData") ? data as IntData : { class_name: "IntData", id: "", payload: 0, metadata: {} } as IntData} 
-            path={path} 
-          />
+          <SVGDisplay data={data as StringData | null} path={path} />
         </div>
       );
+    case "IntData":
     case "FloatData":
       return (
         <div className="data-wrapper">
           <NumberDisplay 
-            data={(data && data.class_name === "FloatData") ? data as FloatData : { class_name: "FloatData", id: "", payload: 0.0, metadata: {} } as FloatData} 
+            data={data as IntData | FloatData | null} 
+            path={path} 
+          />
+        </div>
+      );
+    case "StringData":
+      return (
+        <div className="data-wrapper">
+          <StringDisplay 
+            data={data as StringData | null} 
             path={path} 
           />
         </div>
@@ -81,10 +91,14 @@ const renderData = (
           />
         );
       }
-      
-      
-      // No compatible input
-      return <div className="data-wrapper">No Compatible Display</div>;
+
+      if (data == null) {
+        return <div className="data-wrapper">null</div>;
+      } else {
+        // No compatible input
+        console.log("No compatible display for data:", data, "with inputType:", inputType, "field:", field);
+        return <div className="data-wrapper">No Compatible Display</div>;
+      }
   }
 };
 
@@ -95,18 +109,5 @@ interface RichDisplayProps {
 }
 
 export default function RichDisplay({ path, field }: RichDisplayProps): ReactNode {
-  // return (
-  //   <div className="pne-div" style={{
-  //     width: '100%',
-  //     flexGrow: 1,
-  //     display: 'flex',
-  //     flexDirection: 'row',
-  //     alignItems: 'center',
-  //     gap: '5px'
-  //   }}>
-  //     {renderData(field.data || {} as AnyData, path, field)}
-  //   </div>
-  // );
   return renderData(field.data || {} as AnyData, path, field);
 }
-

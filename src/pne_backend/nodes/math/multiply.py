@@ -32,7 +32,7 @@ class MultiplyNode(BaseNode):
             )
         ],
         outputs=[
-            OutputNodeField(label='result')
+            OutputNodeField(label='result', allowed_types=['IntData', 'FloatData'])
         ]
     )
     @lru_cache(maxsize=MAXSIZE)

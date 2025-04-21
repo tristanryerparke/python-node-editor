@@ -7,18 +7,39 @@ from ...datatypes.basic import StringData
 MAXSIZE = 10
 
 class JoinNode(BaseNode):
+    group: str = 'Basic'
+
     @classmethod
     @node_definition(
         inputs=[
-            InputNodeField(label='separator', dtype='string', data=StringData(payload='a')),
-            InputNodeField(label='a', dtype='string', data=StringData(payload='b')),
-            InputNodeField(label='b', dtype='string', data=StringData(payload='c'))
+            InputNodeField(
+                label='a',
+                user_label='First Text', 
+                allowed_types=['StringData'],
+                data=StringData(payload='')
+            ),
+            InputNodeField(
+                label='b',
+                user_label='Second Text',
+                allowed_types=['StringData'],
+                data=StringData(payload='')
+            ),
+            InputNodeField(
+                label='separator',
+                user_label='Separator',
+                allowed_types=['StringData'], 
+                data=StringData(payload=' ')
+            )
         ],
         outputs=[
-            OutputNodeField(label='join_result', dtype='string')
+            OutputNodeField(
+                label='join_result',
+                user_label='Joined Text',
+                allowed_types=['StringData']
+            )
         ]
     )
     @lru_cache(maxsize=MAXSIZE)
-    def exec(cls, separator: StringData, a: StringData, b: StringData) -> StringData:
+    def exec(cls, a: StringData, b: StringData, separator: StringData) -> StringData:
         join_result = separator.payload.join([a.payload, b.payload])
-        return StringData(payload=join_result) 
+        return StringData(payload=join_result)
