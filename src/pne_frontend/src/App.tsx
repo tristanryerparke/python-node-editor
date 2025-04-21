@@ -1,7 +1,9 @@
 import NodePicker from './components/nodePicker/NodePicker';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { ReactFlowProvider } from '@xyflow/react';
+
 import '@mantine/core/styles.css';
+import './index.css';
 import '@xyflow/react/dist/style.css';
 import NodeGraph from './components/nodeGraph/NodeGraph';
 import ExecuteMenu from './components/ExecuteMenu';
@@ -17,29 +19,20 @@ function App() {
     <>
       <MantineProvider theme={theme}>
         <ReactFlowProvider>
-          <div style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
-            <div style={{
-              width: 400, 
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              // padding: '10px'
-            }}>
-              {/* <h1>PNE Frontend 2</h1> */}
+          <div className="app-container">
+            <div className="w-100 flex flex-col">
               <NodePicker />
-              <div style={{height: '1px', width: '100%', backgroundColor: 'black'}}/>
-              <div className='pne-div shrink' style={{padding: '0.25rem', gap: '0.25rem'}}>
+              {/* buttons horizontal menu */}
+              <div className="h-[1px] w-full bg-black"/>
+              <div className='w-full flex flex-row p-1 gap-1'>
+                
                 <ExecuteMenu />
                 <SaveButton />
               </div>
             </div>
-            <div style={{width: '1px', height: '100%', backgroundColor: 'black'}}/>
-            <div style={{
-              display: 'flex',
-              width: '100%', height: '100%'}}>
-              <NodeGraph />
-            </div>
+            {/* vertical divider */}
+            <div className="w-[1px] h-full bg-black"/>
+            <NodeGraph />
           </div>
         </ReactFlowProvider>
       </MantineProvider>

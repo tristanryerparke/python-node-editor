@@ -12,17 +12,9 @@ export function DraggableNode({ node }: DraggableNodeProps) {
 
   return (
     <div
-      className='pne-div'
+      className="w-full rounded-md border border-black p-1 z-[1000] bg-white"
       onDragStart={onDragStart}
       draggable
-      style={{ 
-        borderRadius: '0.25rem',
-        border: '1px solid black',
-        alignItems: 'flex-start',
-        padding: '0.25rem',
-        zIndex: 1000,
-        opacity: 1
-      }}
     >
       {node.data.display_name}
     </div>

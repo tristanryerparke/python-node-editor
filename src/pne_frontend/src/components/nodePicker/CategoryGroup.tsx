@@ -9,24 +9,17 @@ interface CategoryGroupProps {
   showDivider: boolean;
 }
 
-const sidePadStyle = {
-  padding: '0 0.25rem 0 0.25rem'
-}
-
 export function CategoryGroup({ category, categoryData, showDivider }: CategoryGroupProps) {
   return (
-    <div key={category} className='pne-div' style={{height: 'auto'}}>
-      {showDivider && <div style={{marginTop: '0.25rem', borderTop: '1px solid black'}}/>}
-      <div 
-        className='pne-div shrink'
-        style={{fontSize: '1rem', ...(sidePadStyle || {})}}
-      >
+    <div key={category} className="w-full flex flex-col">
+      {showDivider && <div className="w-full h-[1px] mt-1 bg-black"/>}
+      <div className="flex flex-row flex-shrink px-1">
         <strong>{category}</strong>
       </div>
       {categoryData.groups && Object.entries(categoryData.groups).map(([group, nodes]) => (
-        <div key={`${category}-${group}`} className={`pne-div shrink`}>
-          <div className='pne-div shrink' style={sidePadStyle}><i>{group}</i></div>
-          <div className='pne-div' style={{gap: '0.25rem', ...(sidePadStyle || {})}}>
+        <div key={`${category}-${group}`} className="flex flex-col flex-shrink">
+          <div className="flex flex-col flex-shrink px-1"><i>{group}</i></div>
+          <div className="flex flex-col gap-1 px-1">
             {nodes.map((node, index) => (
               <DraggableNode key={index} node={node} />
             ))}

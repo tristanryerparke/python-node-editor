@@ -4,7 +4,7 @@ import useExecuteFlow from '../hooks/useExecuteFlow';
 export default function ExecuteMenu() {
   const { execute, loading } = useExecuteFlow();
 
-  return <div>
+  return <div className='w-full'>
     <Button 
       variant='outline'
       w='100%'

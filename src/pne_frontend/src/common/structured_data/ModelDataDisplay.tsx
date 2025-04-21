@@ -35,7 +35,9 @@ const ModelDataDisplay = ({
   return (
     <div className={`pne-div structured-data-wrapper ${!expanded ? 'small' : ''}`}>
       <div className="structured-data-title">
-        {modelData.class_name}({modelData.class_parent})
+        <div className="truncate flex-shrink overflow-hidden">
+          {modelData.class_name}({modelData.class_parent})
+        </div>
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
       {expanded && (
@@ -47,7 +49,6 @@ const ModelDataDisplay = ({
                 return (
                   <div key={key} className="structured-data-item">
                     <div className="structured-data-label">{key}:</div>
-                    {/* Add additional validation here too */}
                     {Array.isArray(path) ? 
                       renderData(value as AnyData, [...path, 'data', key]) : 
                       <div className="error-state">Invalid path</div>

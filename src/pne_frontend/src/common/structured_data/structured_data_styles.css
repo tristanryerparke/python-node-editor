@@ -27,13 +27,17 @@
 .structured-data-title {
   width: 100%;
   display: flex;
-  flex-grow: 1;
+  flex-grow: 0;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 5px;
   min-height: var(--small-element-height);
   font-weight: 600;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+
 }
 
 .structured-data-list {

@@ -39,7 +39,7 @@ const ListDataDisplay = ({
   return (
     <div className={`pne-div  structured-data-wrapper ${!expanded ? 'small' : ''}`}>
       <div className="structured-data-title">
-        List [{listData.payload.length}]
+        <div style={{flexGrow: 1}}>List [{listData.payload.length}]</div>
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
       {expanded && (

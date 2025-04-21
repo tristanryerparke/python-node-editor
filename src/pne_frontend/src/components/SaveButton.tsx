@@ -18,7 +18,7 @@ export default function ExecuteMenu() {
     saveAs(blob, 'flow.json')
   }, [reactFlow])
 
-  return <div>
+  return <div className='w-full'>
     <Button 
       variant='outline'
       w='100%'

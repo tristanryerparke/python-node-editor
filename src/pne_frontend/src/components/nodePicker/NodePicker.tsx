@@ -69,23 +69,14 @@ function NodePicker() {
   }, {} as NodeCategories & { [key: string]: { groups?: Record<string, BaseNode[]> } });
 
   return (
-    <div className='pne-div' style={{
-      minWidth: '175px', 
-      overflowX: 'scroll',
-      overflowY: 'hidden'
-    }}>
+    <div className="overflow-x-scroll overflow-y-hidden flex flex-col">
       <SearchBar 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onRefresh={fetchNodes}
       />
-      <hr style={{margin: '0'}}/>
-      <div className='pne-div' style={{
-        overflowY: 'scroll',
-        justifyContent: 'flex-start', 
-        alignItems: 'flex-start',
-        paddingBottom: '0.25rem'
-      }}>
+      <hr className="m-0"/>
+      <div className="overflow-y-scroll flex flex-col justify-start items-start pb-1">
         {Object.entries(filteredCategories).map(([category, categoryData], index) => (
           <CategoryGroup 
             key={category}
