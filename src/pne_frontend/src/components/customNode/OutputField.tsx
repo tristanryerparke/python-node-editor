@@ -23,26 +23,27 @@ export default function OutputFieldComponent({ path, field }: OutputFieldCompone
   const isConnected = connections.length > 0 && connections[0].sourceHandle === handleId;
   
   return (
-    <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
-      <div className='field-wrapper right'>
-        <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
-        <RichDisplay path={path} field={field} />
+    <div className="relative">
+      <div className="flex w-full pl-1 pr-2 py-1 gap-1 overflow-hidden justify-between">
+        <div className="flex items-center flex-shrink-0 font-bold">
+          {field.user_label ?? field.label}{':'}
+        </div>
+        <div className="flex w-full gap-1.5">
+          <RichDisplay path={path} field={field} />
+        </div>
       </div>
-      
-      <div className='handle-padder'/>
       <Handle 
         style={{
           width: '12px',
           height: '12px',
           backgroundColor: isConnected ? '#4CAF50' : 'white',
           border: '1px solid black',
-          borderRadius: '50%'
+          borderRadius: '50%',
         }} 
         type="source" 
         position={Position.Right}
         id={handleId}
       />
     </div>
-    
   );
 } 

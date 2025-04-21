@@ -3,7 +3,6 @@ import { type InputField } from '../../types/nodeTypes';
 import RichDisplay from '../../common/RichDisplay';
 import { EdgeConnectedProvider } from '../../contexts/edgeConnectedContext';
 
-import './field_styles.css';
 
 interface InputFieldProps {
   path: (string | number)[];

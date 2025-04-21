@@ -1,12 +1,38 @@
+@layer theme, base, components, mantine, utilities;
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
 
 @theme {
   --spacing: 5px;
   --text-base: 14px;
   --radius-md: 5px;
+  --radius-lg: 7px;
+  --border-width: 0.5px;
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .border-thin {
+    border-width: var(--border-width);
+    border-color: black;
+    border-radius: var(--radius-md);
+  }
+}
+
+@layer mantine {
+  @import '@mantine/core/styles.layer.css';
+}
+
+:root {
+  --small-element-height: 26px;
 }
 
 
@@ -33,16 +59,19 @@
   overflow: hidden;
 }
 
-.mantine-Input-root {
-  width: 100%;
+/* .mantine-Input-root {
+  @apply h-5;
 }
 
 .mantine-Input-input {
+  @apply h-5;
   width: 100%;
-  
   border-color: black;
+  border-width: 1px;
+  border-radius: 5px;
 }
 
 .mantine-NumberInput-control {
   border-color: black;
-}
+  
+} */

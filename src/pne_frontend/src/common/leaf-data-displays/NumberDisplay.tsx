@@ -32,7 +32,7 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
 
   if (!numberData || numberData.payload === undefined) {
     return (
-      <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
+      <Flex className="w-full h-5 px-1 justify-start items-center border-thin" w='100%' miw='20px' style={{ flexGrow: 1 }}>
         <Text pr={10} size="xs" c="dimmed">no data</Text>
       </Flex>
     );
@@ -40,7 +40,7 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
 
   if (!isInput) {
     return (
-      <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
+      <Flex className="w-full h-5 px-1 justify-start items-center border-thin" w='100%' miw='20px' style={{ flexGrow: 1 }}>
         <Text pr={10} size="xs">{value}</Text>
       </Flex>
     );

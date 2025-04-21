@@ -7,9 +7,6 @@ import { InputField, OutputField } from "../types/nodeTypes";
 import ModelDataDisplay from "./structured_data/ModelDataDisplay";
 import ListDataDisplay from "./structured_data/ListDataDisplay";
 import { ImageData } from "../types/dataTypes/imageData";
-
-import '../components/customNode/node_styles.css';
-import '../common/structured_data/structured_data_styles.css';
 import StringDisplay from "./leaf-data-displays/StringDisplay";
 import { StringData } from "../types/dataTypes/stringData";
 import SVGDisplay from "./leaf-data-displays/ImageDisplays/SVGDisplay";
@@ -40,37 +37,29 @@ const renderData = (
   switch (inputType) {
     case "ImageData":
       return (
-        <div className="data-wrapper">
           <ImageDisplay 
             path={path} 
             data={data as ImageData | null}
           />
-        </div>
       );
     case "SVGData":
       return (
-        <div className="data-wrapper">
-          <SVGDisplay data={data as StringData | null} path={path} />
-        </div>
+        <SVGDisplay data={data as StringData | null} path={path} />
       );
     case "IntData":
     case "FloatData":
       return (
-        <div className="data-wrapper">
-          <NumberDisplay 
-            data={data as IntData | FloatData | null} 
-            path={path} 
-          />
-        </div>
+        <NumberDisplay 
+          data={data as IntData | FloatData | null} 
+          path={path} 
+        />
       );
     case "StringData":
       return (
-        <div className="data-wrapper">
-          <StringDisplay 
-            data={data as StringData | null} 
-            path={path} 
-          />
-        </div>
+        <StringDisplay 
+          data={data as StringData | null} 
+          path={path} 
+        />
       );
     case "ListData":
       return (
@@ -93,11 +82,11 @@ const renderData = (
       }
 
       if (data == null) {
-        return <div className="data-wrapper">null</div>;
+        return <div>null</div>;
       } else {
         // No compatible input
         console.log("No compatible display for data:", data, "with inputType:", inputType, "field:", field);
-        return <div className="data-wrapper">No Compatible Display</div>;
+        return <div>No Compatible Display</div>;
       }
   }
 };

@@ -5,13 +5,12 @@ import NodeHeader from './NodeHeader';
 import InputFieldComponent from './InputField';
 import OutputFieldComponent from './OutputField';
 
-import './node_styles.css';
 
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   return (
-    <div className='node-wrapper'>
+    <div className='border border-black rounded-lg bg-white'>
       <NodeHeader data={data} nodeId={id} />
       <div className='divider-div' style={{borderTop: '1px solid #000'}}/>
       <div className='pne-div'>
@@ -25,7 +24,6 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
           </div>
         ))}
       </div>
-      {/* <div className='divider-div'/> */}
       {data.outputs.length > 0 && (
         <>
           <div className='divider-div' style={{borderTop: '1px solid #000'}}/>
