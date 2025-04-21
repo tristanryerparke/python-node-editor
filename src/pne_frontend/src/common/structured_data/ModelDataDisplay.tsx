@@ -1,7 +1,7 @@
 import { AnyData } from "../../types/dataTypes/anyData.ts";
 import { ModelData as ModelDataType } from "../../types/dataTypes/modelData.ts";
 import { ChevronButton } from "../ChevronButton.tsx";
-import { updateNodeData, getNodeData } from "../../utils/updateNodeData.ts";
+import { updateNodeData, getNodeData } from "../../utils/nodeDataUtils.ts";
 
 import './structured_data_styles.css';
 

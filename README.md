@@ -17,7 +17,7 @@ Requirements:
 
 Steps:
 - clone the repo
-- `python -m pip install .`
+- `python -m pip install -e .`
 - `cd frontend && bun install (or npm install)`
 
 # Running:

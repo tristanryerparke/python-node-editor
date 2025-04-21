@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Node } from '@xyflow/react';
 import { BaseNodeData } from '../types/nodeTypes';
 import useStore from '../components/store';
@@ -14,7 +14,7 @@ export default function useExecuteFlow() {
   const nodes = useStore(state => state.nodes);
   const edges = useStore(state => state.edges);
   const setNodes = useStore(state => state.setNodes);
-
+  const [loading, setLoading] = useState(false);
 
   const sendExecuteMessage = useCallback(() => {
     const flow = {
@@ -44,6 +44,7 @@ export default function useExecuteFlow() {
       websocketRef.current = new WebSocket('ws://localhost:8000/execute');
       websocketRef.current.onopen = () => {
         console.log('WebSocket connection established');
+        setLoading(true);
         sendExecuteMessage();
       };
 
@@ -97,6 +98,7 @@ export default function useExecuteFlow() {
         } else if (data.event === 'execution_finished') {
           // Handle execution finished event
           console.log('Execution finished');
+          setLoading(false);
         }
       };
 
@@ -113,5 +115,5 @@ export default function useExecuteFlow() {
     }
   }, [sendExecuteMessage, setNodes, nodes]);
 
-  return { execute };
+  return { execute, loading };
 }

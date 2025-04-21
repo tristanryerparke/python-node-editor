@@ -33,8 +33,8 @@ class SplitNode(BaseNode):
             )
         ],
         outputs=[
-            OutputNodeField(label='split_t'),
-            OutputNodeField(label='split_1_minus_t')
+            OutputNodeField(label='split_t', allowed_types=['FloatData']),
+            OutputNodeField(label='split_1_minus_t', allowed_types=['FloatData'])
         ]
     )
     @lru_cache(maxsize=MAXSIZE)

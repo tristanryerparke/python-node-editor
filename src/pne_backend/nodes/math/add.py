@@ -7,6 +7,8 @@ MAXSIZE = 10
 
 class AddNode(BaseNode):
     group: str = 'Basic'
+    min_width: int = 140
+    max_width: int = 400
 
     @classmethod
     @node_definition(
@@ -16,23 +18,15 @@ class AddNode(BaseNode):
                 user_label='A',
                 allowed_types=['IntData', 'FloatData'],
                 data=IntData(payload=1),
-                metadata={
-                    'max': 100,
-                    'min': -100
-                }
             ),
             InputNodeField(
                 label='b', 
                 allowed_types=['IntData', 'FloatData'],
                 data=IntData(payload=2),
-                metadata={
-                    'max': 100,
-                    'min': -100
-                }
             )
         ],
         outputs=[
-            OutputNodeField(label='result')
+            OutputNodeField(label='result', allowed_types=['IntData', 'FloatData'])
         ]
     )
     @lru_cache(maxsize=MAXSIZE)

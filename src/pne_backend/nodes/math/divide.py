@@ -31,7 +31,7 @@ class DivideNode(BaseNode):
             )
         ],
         outputs=[
-            OutputNodeField(label='result')
+            OutputNodeField(label='result', allowed_types=['FloatData'])
         ]
     )
     @lru_cache(maxsize=MAXSIZE)

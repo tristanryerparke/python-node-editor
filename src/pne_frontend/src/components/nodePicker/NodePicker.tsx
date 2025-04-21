@@ -15,7 +15,6 @@ function NodePicker() {
       .then((response) => response.json())
       .then((data: NodeCategories) => {
         setNodeCategories(data);
-        console.log('Fetched node data:', data);
 
         // Create a set of valid node types
         const validNodeTypes = new Set(

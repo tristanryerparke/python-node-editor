@@ -41,7 +41,7 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
       />
       <div className='field-wrapper left'>
         <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
-        <div className='data-base-wrapper'>
+        <div className='data-base-wrapper' style={{ flexGrow: 1 }}>
           <EdgeConnectedProvider isConnected={isConnected}>
             <RichDisplay path={path} field={field} />
           </EdgeConnectedProvider>
