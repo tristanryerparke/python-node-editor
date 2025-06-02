@@ -2,8 +2,8 @@ import { AnyData } from "../../types/dataTypes/anyData.ts";
 import { ModelData as ModelDataType } from "../../types/dataTypes/modelData.ts";
 import { ChevronButton } from "../ChevronButton.tsx";
 import { updateNodeData, getNodeData } from "../../utils/nodeDataUtils.ts";
+import { JSX } from "react";
 
-import './structured_data_styles.css';
 
 interface ModelDataProps {
   data: AnyData;
@@ -33,33 +33,48 @@ const ModelDataDisplay = ({
   };
 
   return (
-    <div className={`structured-data-wrapper ${!expanded ? 'small' : ''}`}>
-      <div className="structured-data-title">
-        <div className="truncate flex-shrink overflow-hidden">
-          {modelData.class_name}({modelData.class_parent})
+    <div
+      className={
+        expanded ? 
+        "w-full rounded-md transition-colors duration-500 overflow-hidden" : 
+        "w-full rounded-md transition-colors duration-500 dark:bg-input/30 overflow-hidden"
+      }
+    >
+      <div className="w-full flex flex-col justify-center border-input border-1 p-2 gap-2 overflow-hidden">
+        <div className="w-full flex flex-row gap-1 items-center justify-between">
+          <div className="truncate flex-shrink overflow-hidden text-sm">
+            {modelData.class_name}({modelData.class_parent})
+          </div>
+          <ChevronButton expanded={expanded} setExpanded={setExpanded} />
         </div>
-        <ChevronButton expanded={expanded} setExpanded={setExpanded} />
+        {expanded && (
+          <div className="flex flex-col gap-2">
+            {Object.entries(modelData)
+              .filter(
+                ([key]) =>
+                  key !== "class_name" &&
+                  key !== "class_parent" &&
+                  key !== "id" &&
+                  key !== "metadata"
+              )
+              .map(([key, value]) => {
+                if (typeof value === "object") {
+                  return (
+                    <div key={key} className="flex flex-row gap-1 items-center">
+                      <div className="text-sm flex-shrink text-ellipsis">{key}:</div>
+                      {Array.isArray(path) ? (
+                        renderData(value as AnyData, [...path, "data", key])
+                      ) : (
+                        <div className="error-state">Invalid path</div>
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })}
+          </div>
+        )}
       </div>
-      {expanded && (
-        <div>
-          {Object.entries(modelData)
-            .filter(([key]) => key !== "class_name" && key !== "class_parent" && key !== "id" && key !== "metadata")
-            .map(([key, value]) => {
-              if (typeof value === "object") {
-                return (
-                  <div key={key} className="structured-data-item">
-                    <div className="structured-data-label">{key}:</div>
-                    {Array.isArray(path) ? 
-                      renderData(value as AnyData, [...path, 'data', key]) : 
-                      <div className="error-state">Invalid path</div>
-                    }
-                  </div>
-                );
-              }
-              return null;
-            })}
-        </div>
-      )}
     </div>
   );
 };

@@ -1,16 +1,21 @@
-import { Text } from "@mantine/core";
-import { ReactNode } from "react";
+import * as React from "react";
 
 interface SingleLineTextDisplayProps {
-  content: ReactNode;
+  content: React.ReactNode;
   dimmed?: boolean;
 }
 
 export default function SingleLineTextDisplay({ content, dimmed = false }: SingleLineTextDisplayProps) {
   return (
-    <div className="flex w-full h-5 px-1.5 justify-start 
-    items-center border-input overflow-hidden">
-      <Text truncate="end" size="xs" c={dimmed ? "dimmed" : undefined}>{content}</Text>
+    <div
+      className={
+        [
+          "flex h-9 w-full min-w-0 rounded-md border dark:bg-input/30 px-3 py-1 text-base shadow-xs border-input overflow-hidden items-center",
+          dimmed ? "text-gray-400" : ""
+        ].join(" ")
+      }
+    >
+      <span className="truncate w-full text-sm">{content}</span>
     </div>
   );
 }

@@ -22,17 +22,17 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
   const isConnected = connections.length > 0 && connections[0].targetHandle === handleId;
 
   // Set handle color based on connection state
-  const handleColor = isConnected ? '#4CAF50' : 'white';
+  // const handleColor = isConnected ? '#4CAF50' : 'white';
 
   return (
     <div className="relative w-full" >
       <Handle 
-        className="h-3 w-3 border-input rounded-full bg-primary"
+        className="h-4 w-4 rounded-full bg-primary"
         type="target" 
         position={Position.Left}
         id={handleId}
       />
-      <div className="flex w-full pl-2 pr-1 py-1 gap-1 overflow-hidden">
+      <div className="flex w-full pl-3 pr-2 py-2 gap-1 overflow-hidden">
         <div className="flex items-center flex-shrink-0 font-bold">
           {field.user_label ?? field.label}{':'}
         </div>

@@ -1,4 +1,4 @@
-@layer theme, base, components, mantine, utilities;
+@layer theme, base, components, utilities;
 @import "tailwindcss" important;
 @import "tw-animate-css";
 
@@ -15,10 +15,6 @@
     border-color: black;
     border-radius: var(--radius-md);
   }
-}
-
-@layer mantine {
-  @import '@mantine/core/styles.layer.css';
 }
 
 :root {

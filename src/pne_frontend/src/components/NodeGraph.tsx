@@ -9,10 +9,10 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { useCallback } from 'react';
-import { BaseNodeData } from '../../types/nodeTypes';
-import CustomNode from '../customNode/CustomNode';
-import useStore from '../store';
-import { useTheme } from '../theme-provider';
+import { BaseNodeData } from '../types/nodeTypes';
+import CustomNode from './customNode/CustomNode';
+import useStore from './store';
+import { useTheme } from './theme-provider';
 
 const nodeTypes: NodeTypes = {customNode: CustomNode};
 
@@ -86,7 +86,12 @@ function NodeGraph() {
       >
         <Controls />
         <MiniMap position='bottom-right'/>
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Background 
+          variant={BackgroundVariant.Dots} 
+          gap={12} 
+          size={1} 
+          bgColor={colorMode === 'dark' ? '#111111' : '#f8f8f8'}
+        />
       </ReactFlow>
     </div>
   )

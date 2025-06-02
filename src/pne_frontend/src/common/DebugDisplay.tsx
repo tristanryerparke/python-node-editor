@@ -4,7 +4,7 @@ import { isListData } from "../types/dataTypes/listData";
 import { isModelData } from "../types/dataTypes/modelData";
 import { isImageData } from "../types/dataTypes/imageData";
 import { Resizable } from 're-resizable';
-import { IconArrowsDiagonal } from "@tabler/icons-react";
+import { Move } from "lucide-react";
 
 function Render(
   data: AnyData, 
@@ -86,7 +86,7 @@ const CustomHandle = (props: React.HTMLAttributes<HTMLDivElement>) => (
 
 const BottomRightHandle = () => (
   <CustomHandle className='nodrag nopan nowheel'>
-    <IconArrowsDiagonal size={16} style={{
+    <Move size={16} style={{
       transform: 'rotate(90deg)',
       opacity: 0.5,
     }}/>

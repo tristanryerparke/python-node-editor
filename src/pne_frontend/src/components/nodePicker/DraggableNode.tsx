@@ -12,7 +12,7 @@ export function DraggableNode({ node }: DraggableNodeProps) {
 
   return (
     <div
-      className="bg-background text-secondary-foreground border border-input p-2 rounded-md"
+      className="bg-background text-secondary-foreground border border-input p-2 rounded-md text-ellipsis overflow-hidden"
       onDragStart={onDragStart}
       draggable
     >

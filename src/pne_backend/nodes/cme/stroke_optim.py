@@ -10,6 +10,7 @@ from ...datatypes.compound import ModelData
 from ...field import InputNodeField, OutputNodeField
 from ...base_node import BaseNode, node_definition
 from .optim_util import StrokeOptim
+from .document import Document
 
 
 
@@ -100,48 +101,48 @@ class ConstructStrokeOptimParamsNode(BaseNode):
         )
 
 
-# class StrokeOptimNode(BaseNode):
-#     '''Analyzes an image and returns an svg made up of "paint strokes" that represent the image.'''
-#     min_width: int = 250
+class StrokeOptimNode(BaseNode):
+    '''Analyzes an image and returns an svg made up of "paint strokes" that represent the image.'''
+    min_width: int = 250
 
-#     @classmethod
-#     @node_definition(
-#         inputs=[
-#             InputNodeField(label='image', allowed_types=['Document']),
-#             InputNodeField(label='params', allowed_types=['StrokeOptimParams']),
-#         ],
-#         outputs=[
-#             OutputNodeField(label='svg', allowed_types=['SVGData'])
-#         ]
-#     )
-#     def exec(cls, document: Document, params: StrokeOptimParams) -> SVGData:
+    @classmethod
+    @node_definition(
+        inputs=[
+            InputNodeField(label='document', allowed_types=['Document']),
+            InputNodeField(label='params', allowed_types=['StrokeOptimParams']),
+        ],
+        outputs=[
+            OutputNodeField(label='svg', allowed_types=['SVGData'])
+        ]
+    )
+    def exec(cls, document: Document, params: StrokeOptimParams) -> SVGData:
         
-#         # Convert numpy array to PIL Image
-#         pil_image = Image.fromarray(document.image.payload.astype(np.uint8))
+        # Convert numpy array to PIL Image
+        pil_image = Image.fromarray(document.image.payload.astype(np.uint8))
         
-#         # Initialize StrokeOptim
-#         api_key = os.getenv("VITE_RP_API_KEY")
-#         if not api_key:
-#             raise ValueError("VITE_RP_API_KEY environment variable not set")
+        # Initialize StrokeOptim
+        api_key = os.getenv("VITE_RP_API_KEY")
+        if not api_key:
+            raise ValueError("VITE_RP_API_KEY environment variable not set")
             
-#         optim = StrokeOptim(
-#             "https://api.runpod.ai/v2/5kp5wea90xdfa3",
-#             api_key
-#         )
+        optim = StrokeOptim(
+            "https://api.runpod.ai/v2/5kp5wea90xdfa3",
+            api_key
+        )
         
-#         # Run optimization
-#         optim.run(
-#             image=pil_image,
-#             physical_size_in=(document.width.payload, document.height.payload),
-#             num_strokes=params.num_strokes.payload,
-#             num_steps=params.num_steps.payload,
-#             width_scale=params.width_scale.payload,
-#             length_scale=params.length_scale.payload,
-#             style_weight=params.style_weight.payload,
-#             tv_weight=params.tv_weight.payload,
-#             curvature_weight=params.curvature_weight.payload
-#         )
+        # Run optimization
+        optim.run(
+            image=pil_image,
+            physical_size_in=(document.width.payload, document.height.payload),
+            num_strokes=params.num_strokes.payload,
+            num_steps=params.num_steps.payload,
+            width_scale=params.width_scale.payload,
+            length_scale=params.length_scale.payload,
+            style_weight=params.style_weight.payload,
+            tv_weight=params.tv_weight.payload,
+            curvature_weight=params.curvature_weight.payload
+        )
         
-#         # Get result
-#         svg = optim.result()
-#         return SVGData(payload=svg) 
+        # Get result
+        svg = optim.result()
+        return SVGData(payload=svg) 

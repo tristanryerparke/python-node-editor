@@ -59,14 +59,14 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
         setValue(newVal);
         if (isInput && newVal !== numberData.payload) {
           const newData = createNumberData(numberData, newVal);
-          updateNodeData({ path: [...path, 'data'], newData: newData });
+          updateNodeData({ path: path, newData: newData });
         }
       }}
       onBlur={() => {
         if (value === "") {
           setValue(0);
           const newData = createNumberData(numberData, 0);
-          updateNodeData({ path: [...path, 'data'], newData: newData });
+          updateNodeData({ path: path, newData: newData });
         }
       }}
       disabled={isConnected}

@@ -11,7 +11,7 @@ type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   return (
-    <div className='border border-input rounded-lg bg-background text-secondary-foreground'>
+    <div className='shadow-md border border-input rounded-lg bg-background text-secondary-foreground'>
       <NodeHeader data={data} nodeId={id} />
       <Separator/>
       <div>

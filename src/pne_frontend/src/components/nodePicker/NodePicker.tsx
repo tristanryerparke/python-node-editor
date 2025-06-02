@@ -3,7 +3,7 @@ import { useReactFlow } from '@xyflow/react';
 import { NodeCategories, BaseNode } from '../../types/nodeTypes';
 import { SearchBar } from './SearchBar';
 import { CategoryGroup } from './CategoryGroup';
-import { Separator } from '../ui/separator';
+
 
 
 function NodePicker() {

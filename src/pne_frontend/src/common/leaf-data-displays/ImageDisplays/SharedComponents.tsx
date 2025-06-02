@@ -1,6 +1,14 @@
-import { Text, Loader, Flex } from "@mantine/core";
 import { ReactNode } from "react";
 import { ChevronButton } from "../../ChevronButton";
+
+function LoadingSpinner({ size = 30 }: { size?: number }) {
+  return (
+    <div 
+      className="animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"
+      style={{ width: size, height: size }}
+    />
+  );
+}
 
 // Common container for all data displays
 export function DisplayContainer({ 
@@ -14,7 +22,7 @@ export function DisplayContainer({
 }) {
   return expanded ? (
     <div
-      className="w-full h-full flex flex-col items-center gap-1 p-1 border border-black rounded"
+      className="w-full h-full flex flex-col items-center gap-1 p-2 border border-input rounded-md"
       style={{ opacity: isDisabled ? 0.7 : 1 }}
     >
       {children}
@@ -54,7 +62,7 @@ export function ContentContainer({
   children: ReactNode 
 }) {
   return (
-    <div className="field-list w-full">
+    <div className="w-full">
       <div className="w-full">
         <div
           className="w-full h-full rounded bg-white relative"
@@ -118,21 +126,21 @@ export function DropzoneArea({
 }) {
   return (
     <div 
-      className="flex h-full w-full items-center justify-center border border-dashed border-gray-300 rounded"
+      className="flex h-full w-full items-center justify-center border-input border-dashe rounded-md"
       style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
       onClick={onClick}
     >
       {isLoading ? (
-        <Loader color='dark.3' size={30} />
+        <LoadingSpinner />
       ) : (
         <div className="flex flex-col items-center">
           {icon}
-          <Text ta="center" size="xs" mb={5}>
+          <span className="text-center text-xs mb-2">
             {primaryText}
-          </Text>
-          <Text ta="center" size="xs" c="dimmed">
+          </span>
+          <span className="text-center text-xs text-muted-foreground">
             {secondaryText}
-          </Text>
+          </span>
         </div>
       )}
     </div>
@@ -151,9 +159,9 @@ export function EmptyState({
 }) {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <Text ta="center" size="xs" c="dimmed">
+      <span className="text-center text-xs text-gray-500">
         No {type} {isConnected ? '(input connected)' : isOutput ? 'output' : ''}
-      </Text>
+      </span>
     </div>
   );
 }
@@ -162,7 +170,7 @@ export function EmptyState({
 export function LoadingOverlay() {
   return (
     <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)' }}>
-      <Loader color='dark.3' size={30} />
+      <LoadingSpinner />
     </div>
   );
 }
