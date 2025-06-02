@@ -1,4 +1,4 @@
-import { NumberInput as MantineNumberInput } from "@mantine/core";
+import { NumberInput } from "../../components/ui/number-input";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { IntData, FloatData } from "../../types/dataTypes/numberData";
@@ -51,18 +51,14 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
   }
 
   return (
-    <MantineNumberInput
-      value={value ?? undefined}
-      size="xs"
-      w='100%'
-      onChange={(val) => {
-        const newValue = (val as number) ?? 0;
-        setValue(newValue);
-        
-        // Only update node data if this is an input and the value actually changed
-        if (isInput && newValue !== numberData.payload) {
-          const newData = createNumberData(numberData, newValue);
-          // update just the data property at the current path
+    <NumberInput
+      value={typeof value === 'number' ? value : undefined}
+      decimalScale={3}
+      onValueChange={(newValue) => {
+        const newVal = newValue ?? 0;
+        setValue(newVal);
+        if (isInput && newVal !== numberData.payload) {
+          const newData = createNumberData(numberData, newVal);
           updateNodeData({ path: [...path, 'data'], newData: newData });
         }
       }}
@@ -73,9 +69,9 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
           updateNodeData({ path: [...path, 'data'], newData: newData });
         }
       }}
-      allowDecimal={true}
-      decimalScale={3}
       disabled={isConnected}
+      className="nodrag nopan noscroll h-9 w-full"
+      placeholder="Enter number"
     />
   );
 }

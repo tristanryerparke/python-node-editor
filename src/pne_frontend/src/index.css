@@ -1,23 +1,12 @@
 @layer theme, base, components, mantine, utilities;
-@import "tailwindcss";
+@import "tailwindcss" important;
 @import "tw-animate-css";
+
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --spacing: 5px;
   --text-base: 14px;
-  --radius-md: 5px;
-  --border-width: 1px;
-}
-
-@layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    scroll-behavior: smooth;
-  }
 }
 
 @layer components {
@@ -77,14 +66,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-}
-
-.app-container {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: row;
-  overflow: hidden;
 }
 
 @theme inline {
@@ -167,3 +148,4 @@
     @apply bg-background text-foreground;
   }
 }
+@import '@xyflow/react/dist/style.css';

@@ -3,6 +3,7 @@ import { useReactFlow } from '@xyflow/react';
 import { NodeCategories, BaseNode } from '../../types/nodeTypes';
 import { SearchBar } from './SearchBar';
 import { CategoryGroup } from './CategoryGroup';
+import { Separator } from '../ui/separator';
 
 
 function NodePicker() {
@@ -69,13 +70,12 @@ function NodePicker() {
   }, {} as NodeCategories & { [key: string]: { groups?: Record<string, BaseNode[]> } });
 
   return (
-    <div className="overflow-x-scroll overflow-y-hidden flex flex-col">
+    <div className="overflow-x-scroll overflow-y-hidden flex flex-col p-2 gap-2">
       <SearchBar 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onRefresh={fetchNodes}
       />
-      <hr className="m-0"/>
       <div className="overflow-y-scroll flex flex-col justify-start items-start pb-1">
         {Object.entries(filteredCategories).map(([category, categoryData], index) => (
           <CategoryGroup 

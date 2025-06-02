@@ -1,5 +1,6 @@
-import { ActionIcon, TextInput } from '@mantine/core';
-import { IconReload, IconSearch } from '@tabler/icons-react';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface SearchBarProps {
   searchTerm: string;
@@ -9,27 +10,20 @@ interface SearchBarProps {
 
 export function SearchBar({ searchTerm, onSearchChange, onRefresh }: SearchBarProps) {
   return (
-    <div className='flex flex-row items-center px-1 py-1 gap-1'>
-      <TextInput
-        w='100%'
-        classNames={{
-          wrapper: 'h-7',
-          input: 'h-7 min-h-7 text-lg',
-        }}
-        color='dark'
-        leftSection={<IconSearch size={16} color='black'/>}
-        value={searchTerm}
-        onChange={(event) => onSearchChange(event.currentTarget.value)}
-      />
-      <ActionIcon 
-        onClick={onRefresh} 
-        variant='outline'
-        classNames={{
-          root: 'h-7 w-8',
-        }}
+    <div className='flex flex-row gap-2'>
+      <div className="relative w-full">
+        <Input
+          value={searchTerm}
+          onChange={(event) => onSearchChange(event.currentTarget.value)}
+          placeholder="Search..."
+        />
+      </div>
+      <Button
+        size="icon"
+        onClick={onRefresh}
       >
-        <IconReload size={16} color='black' />
-      </ActionIcon>
+        <RefreshCw/>
+      </Button>
     </div>
   );
 } 

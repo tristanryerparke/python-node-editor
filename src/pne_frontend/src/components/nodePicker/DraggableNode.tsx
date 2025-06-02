@@ -12,7 +12,7 @@ export function DraggableNode({ node }: DraggableNodeProps) {
 
   return (
     <div
-      className="w-full rounded-md border border-black p-1 z-[1000] bg-white"
+      className="bg-background text-secondary-foreground border border-input p-2 rounded-md"
       onDragStart={onDragStart}
       draggable
     >

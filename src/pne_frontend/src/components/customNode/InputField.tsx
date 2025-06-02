@@ -27,13 +27,7 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
   return (
     <div className="relative w-full" >
       <Handle 
-        style={{
-          width: '12px',
-          height: '12px',
-          backgroundColor: handleColor,
-          border: '1px solid black',
-          borderRadius: '50%'
-        }} 
+        className="h-3 w-3 border-input rounded-full bg-primary"
         type="target" 
         position={Position.Left}
         id={handleId}
