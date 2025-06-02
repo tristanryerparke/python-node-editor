@@ -1,8 +1,7 @@
 import NodePicker from './components/nodePicker/NodePicker';
-import { MantineProvider, createTheme } from '@mantine/core';
+import { MantineProvider, createTheme, NumberInput, TextInput, ActionIcon } from '@mantine/core';
 import { ReactFlowProvider } from '@xyflow/react';
 
-// import '@mantine/core/styles.css';
 import '@xyflow/react/dist/style.css';
 import NodeGraph from './components/nodeGraph/NodeGraph';
 import ExecuteMenu from './components/ExecuteMenu';
@@ -12,12 +11,24 @@ const theme = createTheme({
   primaryColor: 'dark',
 
   components: {
-    NumberInput: {
-      styles: {
-        input: { border: '0.5px solid black', borderRadius: '5px' },
-        control: { borderLeft: '0.5px solid black'},
+    NumberInput: NumberInput.extend({
+      classNames: {
+        root: 'h-5 nodrag nopan nowheel',
+        input: 'h-5 pl-1.5 border border-black rounded-md overflow-hidden',
+        control: 'border-left border-black',
       },
-    },
+    }),
+    TextInput: TextInput.extend({
+      classNames: {
+        wrapper: 'h-5',
+        input: 'h-5 min-h-5 border border-black rounded-md',
+      },
+    }),
+    ActionIcon: ActionIcon.extend({
+      classNames: {
+        root: 'border border-black rounded-md',
+      },
+    }),
   },
 });
 

@@ -12,19 +12,23 @@ export function SearchBar({ searchTerm, onSearchChange, onRefresh }: SearchBarPr
     <div className='flex flex-row items-center px-1 py-1 gap-1'>
       <TextInput
         w='100%'
+        classNames={{
+          wrapper: 'h-7',
+          input: 'h-7 min-h-7 text-lg',
+        }}
         color='dark'
         leftSection={<IconSearch size={16} color='black'/>}
-        size='xs'
         value={searchTerm}
         onChange={(event) => onSearchChange(event.currentTarget.value)}
       />
       <ActionIcon 
-        h={29.5} 
-        w={29.5} 
         onClick={onRefresh} 
-        variant='outline' 
+        variant='outline'
+        classNames={{
+          root: 'h-7 w-8',
+        }}
       >
-        <IconReload size={16} />
+        <IconReload size={16} color='black' />
       </ActionIcon>
     </div>
   );

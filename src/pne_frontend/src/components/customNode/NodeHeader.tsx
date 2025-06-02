@@ -20,7 +20,7 @@ export default function NodeHeader({ data, nodeId }: NodeHeaderProps) {
       height: '22px'
     }}>
       <Text fw={700} size='md' style={{flexGrow: 1}}>{data.display_name}</Text>
-      <div className='pne-div' style={{ 
+      <div style={{ 
         display: 'flex', 
         flexDirection: 'row', 
         width: 'fit-content',

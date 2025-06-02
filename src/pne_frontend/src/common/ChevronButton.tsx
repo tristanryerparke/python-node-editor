@@ -19,6 +19,9 @@ export function ChevronButton({
       size="sm"
       variant="subtle"
       onClick={handleClick}
+      classNames={{
+        root: 'border-none',
+      }}
     >
       {expanded ? <IconChevronUp /> : <IconChevronDown />}
     </ActionIcon>

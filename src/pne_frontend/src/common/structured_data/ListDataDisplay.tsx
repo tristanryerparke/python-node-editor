@@ -2,6 +2,7 @@ import { AnyData } from "../../types/dataTypes/anyData.ts";
 import { ListData as ListDataType } from "../../types/dataTypes/listData.ts";
 import { ChevronButton } from "../ChevronButton.tsx";
 import { updateNodeData, getNodeData } from "../../utils/nodeDataUtils.ts";
+import { JSX } from "react";
 
 import './structured_data_styles.css';
 
@@ -37,13 +38,15 @@ const ListDataDisplay = ({
 
   
   return (
-    <div className={`pne-div  structured-data-wrapper ${!expanded ? 'small' : ''}`}>
-      <div className="structured-data-title">
+    <div className={
+      expanded ? "w-full flex flex-col justify-center border-input px-1 py-1 gap-1" : 
+      "w-full flex flex-col justify-center border-input px-1 py-1 gap-1"}>
+      <div className="w-full flex items-center gap-1">
         <div style={{flexGrow: 1}}>List [{listData.payload.length}]</div>
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
       {expanded && (
-        <div className="pne-div structured-data-list">
+        <div className="w-full flex flex-col gap-1">
           {listData.payload.map((item, idx) => (
             <div key={idx} className="structured-data-item">
               <div className="structured-data-label">{idx}:</div>

@@ -170,7 +170,7 @@ export default function ImageDisplay({ path, data }: ImageInputProps) {
       />
       
       {expanded && (
-        <>
+        <div className="w-full flex flex-col gap-1 overflow-hidden text-ellipsis">
           <ContentContainer>
             {hasImage() ? (
               <>
@@ -213,7 +213,7 @@ export default function ImageDisplay({ path, data }: ImageInputProps) {
               onChange={handleFileChange}
             />
           )}
-        </>
+        </div>
       )}
     </DisplayContainer>
   );

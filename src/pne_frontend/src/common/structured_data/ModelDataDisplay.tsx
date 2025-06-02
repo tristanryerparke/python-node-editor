@@ -33,7 +33,7 @@ const ModelDataDisplay = ({
   };
 
   return (
-    <div className={`pne-div structured-data-wrapper ${!expanded ? 'small' : ''}`}>
+    <div className={`structured-data-wrapper ${!expanded ? 'small' : ''}`}>
       <div className="structured-data-title">
         <div className="truncate flex-shrink overflow-hidden">
           {modelData.class_name}({modelData.class_parent})
@@ -41,7 +41,7 @@ const ModelDataDisplay = ({
         <ChevronButton expanded={expanded} setExpanded={setExpanded} />
       </div>
       {expanded && (
-        <div className="pne-div structured-data-list">
+        <div>
           {Object.entries(modelData)
             .filter(([key]) => key !== "class_name" && key !== "class_parent" && key !== "id" && key !== "metadata")
             .map(([key, value]) => {

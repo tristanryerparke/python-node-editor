@@ -25,7 +25,7 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
   const handleColor = isConnected ? '#4CAF50' : 'white';
 
   return (
-    <div className="relative" >
+    <div className="relative w-full" >
       <Handle 
         style={{
           width: '12px',
@@ -42,11 +42,9 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
         <div className="flex items-center flex-shrink-0 font-bold">
           {field.user_label ?? field.label}{':'}
         </div>
-        <div className="flex w-full gap-1.5">
-          <EdgeConnectedProvider isConnected={isConnected}>
-            <RichDisplay path={path} field={field} />
-          </EdgeConnectedProvider>
-        </div>
+        <EdgeConnectedProvider isConnected={isConnected}>
+          <RichDisplay path={path} field={field} />
+        </EdgeConnectedProvider>
       </div>
     </div>
   );

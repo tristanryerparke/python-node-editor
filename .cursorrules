@@ -1,0 +1,17 @@
+I'm building a node editing tool in with python backend and react typescript frontend.
+
+
+
+
+There is heavy emphasis on the use of pydantic V2 in the backend.
+
+
+for the frontend I use bun, vite and tailwindcss, as well as mantine for much of the ui.
+
+
+
+
+
+
+
+

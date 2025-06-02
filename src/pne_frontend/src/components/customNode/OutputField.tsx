@@ -24,13 +24,11 @@ export default function OutputFieldComponent({ path, field }: OutputFieldCompone
   
   return (
     <div className="relative">
-      <div className="flex w-full pl-1 pr-2 py-1 gap-1 overflow-hidden justify-between">
+      <div className="flex w-full pl-1 pr-2 py-1 gap-1 overflow-hidden">
         <div className="flex items-center flex-shrink-0 font-bold">
           {field.user_label ?? field.label}{':'}
         </div>
-        <div className="flex w-full gap-1.5">
-          <RichDisplay path={path} field={field} />
-        </div>
+        <RichDisplay path={path} field={field} />
       </div>
       <Handle 
         style={{

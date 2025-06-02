@@ -1,14 +1,9 @@
-from pydantic import BaseModel, Field, model_validator, ValidationInfo
-from typing import Literal, Any, ClassVar, Union, Optional, List
-import uuid
-import importlib
-import inspect
-import pkgutil
-import importlib.util
-from pathlib import Path
+from typing import Any, Optional
 
-from .base_data import BaseData
+from pydantic import BaseModel, ValidationInfo, model_validator
+
 from .datatypes.compound import CLASS_REGISTRY
+
 
 class ModelNotFoundError(Exception):
     pass
@@ -35,7 +30,7 @@ class InputNodeField(BaseModel):
             allowed_classes = list(CLASS_REGISTRY.keys())
         else:
             allowed_classes = allowed
-        
+
         data = values.get('data')
         if isinstance(data, dict):
             discriminator = data.get('class_name')
@@ -57,7 +52,7 @@ class OutputNodeField(BaseModel):
     allowed_types: list[str] = ['AnyData']
     description: Optional[str] = None
     user_label: Optional[str] = None
-    
+
     # disabled: bool = False
     is_edge_connected: bool = False
     # node_expanded: bool = False
