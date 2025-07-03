@@ -4,20 +4,20 @@ import { BaseNodeData } from '../../types/nodeTypes';
 import NodeHeader from './NodeHeader';
 import InputFieldComponent from './InputField';
 import OutputFieldComponent from './OutputField';
+import { Separator } from '../ui/separator';
 
-import './node_styles.css';
 
 type CustomNodeData = Node<BaseNodeData & Record<string, unknown>>;
 
 export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   return (
-    <div className='node-wrapper'>
+    <div className='shadow-md border border-input rounded-lg bg-background text-secondary-foreground'>
       <NodeHeader data={data} nodeId={id} />
-      <div className='divider-div' style={{borderTop: '1px solid #000'}}/>
-      <div className='pne-div'>
+      <Separator/>
+      <div>
         {data.inputs.map((input, index) => (
           <div key={index} className='node-field-input'>
-            {index > 0 && <div className='divider-div' style={{borderTop: '0.25px dashed #000'}}/>}
+            {index > 0 && <Separator/>}
             <InputFieldComponent
               path={[id, 'inputs', index]}
               field={input}
@@ -25,11 +25,10 @@ export default memo(function CustomNode({ data, id }: NodeProps<CustomNodeData>)
           </div>
         ))}
       </div>
-      {/* <div className='divider-div'/> */}
       {data.outputs.length > 0 && (
         <>
-          <div className='divider-div' style={{borderTop: '1px solid #000'}}/>
-          <div className='pne-div'>
+          <Separator/>
+          <div>
             {data.outputs.map((output, index) => (
               <div key={index} className='node-field-output'>
                 {index > 0 && <div className='divider-div'/>}

@@ -3,7 +3,6 @@ import { addEdge, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { Node, Edge, OnNodesChange, OnEdgesChange, OnConnect } from '@xyflow/react';
 import { produce } from 'immer';
 
-// Define types for the data structures we're working with
 interface DataWithMetadata {
   metadata?: {
     expanded?: boolean;

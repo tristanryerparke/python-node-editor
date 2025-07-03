@@ -36,6 +36,11 @@ export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
   const setNodes = useStore.getState().setNodes;
   const nodes = useStore.getState().nodes;
 
+  // If the last but one element is 'inputs', add 'data' to the path
+  if (path[path.length - 2] === 'inputs') {
+    path = [...path, 'data'];
+  }
+
   console.log('updating ', path);
   console.log('from ', getNodeData(path));
   console.log('to ', newData);
@@ -45,7 +50,26 @@ export function updateNodeData({ path, newData }: UpdateNodeDataProps) {
   const isNewProperty = existingData === undefined;
   
   if (isNewProperty) {
-    console.warn(`Creating new property at path: ${path.join('.')}. This may be unintentional.`);
+    // Find how far we get in the path before failing
+    const currentNode = nodes.find(node => node.id === path[0]);
+    let validUntil = 0;
+    let failedKey: string | number | undefined = undefined;
+    if (currentNode) {
+      let currentData = currentNode.data as Record<string | number, unknown>;
+      for (let i = 1; i < path.length; i++) {
+        const key = path[i];
+        if (currentData && currentData[key] !== undefined) {
+          currentData = currentData[key] as Record<string | number, unknown>;
+          validUntil = i;
+        } else {
+          failedKey = key;
+          break;
+        }
+      }
+    }
+    const validPath = path.slice(0, validUntil + 1);
+    console.warn(`Creating new property at path: ${path.join('.')}. This may be unintentional. Path was valid up to: ${validPath.join('.')} and failed at key: ${failedKey}`);
+    console.log('nodes', nodes);
   }
 
   setNodes(

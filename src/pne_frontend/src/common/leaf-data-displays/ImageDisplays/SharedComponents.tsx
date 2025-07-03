@@ -1,6 +1,14 @@
-import { Text, Loader, Flex } from "@mantine/core";
 import { ReactNode } from "react";
 import { ChevronButton } from "../../ChevronButton";
+
+function LoadingSpinner({ size = 30 }: { size?: number }) {
+  return (
+    <div 
+      className="animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"
+      style={{ width: size, height: size }}
+    />
+  );
+}
 
 // Common container for all data displays
 export function DisplayContainer({ 
@@ -13,34 +21,17 @@ export function DisplayContainer({
   isDisabled: boolean 
 }) {
   return expanded ? (
-    <div style={{
-      width: '100%', 
-      height: '100%',
-      // aspectRatio: '1/1',
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      gap: '5px',
-      padding: '5px',
-      border: '1px solid black',
-      borderRadius: '5px',
-      opacity: isDisabled ? 0.7 : 1,
-    }}>
+    <div
+      className="w-full h-full flex flex-col items-center gap-1 p-2 border border-input rounded-md"
+      style={{ opacity: isDisabled ? 0.7 : 1 }}
+    >
       {children}
     </div>
   ) : (
-    <div style={{
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '5px',
-      padding: '5px',
-      border: '1px solid black',
-      borderRadius: '5px',
-      height: 'var(--small-element-height)'
-    }}>
+    <div
+      className="w-full flex flex-row items-center justify-between gap-1 p-1 border border-black rounded"
+      style={{ height: 'var(--small-element-height)', opacity: isDisabled ? 0.7 : 1 }}
+    >
       {children}
     </div>
   );
@@ -56,25 +47,11 @@ export function DisplayHeader({
   expanded: boolean, 
   setExpanded: (expanded: boolean) => void 
 }) {
-  return expanded ? (
-    <div
-      style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '5px'
-      }}
-    >
-      {title}
+  return (
+    <div className="w-full flex flex-row items-center justify-between gap-1">
+      <div className="text-nowrap overflow-hidden text-ellipsis">{title}</div>
       <ChevronButton expanded={expanded} setExpanded={setExpanded} />
     </div>
-  ) : (
-    <>
-      {title}
-      <ChevronButton expanded={expanded} setExpanded={setExpanded} />
-    </>
   );
 }
 
@@ -85,18 +62,11 @@ export function ContentContainer({
   children: ReactNode 
 }) {
   return (
-    <div className="field-list" style={{ width: '100%' }}>
-      <div style={{ width: '100%' }}>
-        <div 
-          style={{
-            width: '100%',
-            height: '100%',
-            aspectRatio: '1/1',
-            borderRadius: '5px',
-            backgroundColor: 'white',
-            position: 'relative'
-          }}
-          // className="nopan nodrag"
+    <div className="w-full">
+      <div className="w-full">
+        <div
+          className="w-full h-full rounded bg-white relative"
+          style={{ aspectRatio: '1/1' }}
         >
           {children}
         </div>
@@ -117,22 +87,12 @@ export function MediaDisplay({
 }) {
   return (
     <div
-      className="pne-div"
-      style={{
-        
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}
-
+      className="w-full h-full flex items-center justify-center relative"
     >
       <img 
         src={src} 
+        className="flex-grow rounded"
         style={{
-          flexGrow: 1,
-          borderRadius: '5px',
           opacity: isDisabled ? 0.7 : 1,
           maxWidth: '100%',
           maxHeight: '100%',
@@ -140,7 +100,6 @@ export function MediaDisplay({
         }}
         alt="Media display"
       />
-      
       {/* X button positioned relative to the image */}
       {!isDisabled && (
         <RemoveButton onClick={onRemove} />
@@ -167,33 +126,21 @@ export function DropzoneArea({
 }) {
   return (
     <div 
-      style={{ 
-        display: 'flex',
-        height: '100%',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        border: '1px dashed #ced4da',
-        borderRadius: '5px',
-      }}
+      className="flex h-full w-full items-center justify-center border-input border-dashe rounded-md"
+      style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
       onClick={onClick}
     >
       {isLoading ? (
-        <Loader color='dark.3' size={30} />
+        <LoadingSpinner />
       ) : (
-        <div style={{ 
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
+        <div className="flex flex-col items-center">
           {icon}
-          <Text ta="center" size="xs" mb={5}>
+          <span className="text-center text-xs mb-2">
             {primaryText}
-          </Text>
-          <Text ta="center" size="xs" c="dimmed">
+          </span>
+          <span className="text-center text-xs text-muted-foreground">
             {secondaryText}
-          </Text>
+          </span>
         </div>
       )}
     </div>
@@ -211,16 +158,10 @@ export function EmptyState({
   type: string 
 }) {
   return (
-    <div style={{
-      display: 'flex',
-      height: '100%',
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <Text ta="center" size="xs" c="dimmed">
+    <div className="flex h-full w-full items-center justify-center">
+      <span className="text-center text-xs text-gray-500">
         No {type} {isConnected ? '(input connected)' : isOutput ? 'output' : ''}
-      </Text>
+      </span>
     </div>
   );
 }
@@ -228,18 +169,8 @@ export function EmptyState({
 // Loading overlay
 export function LoadingOverlay() {
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.7)'
-    }}>
-      <Loader color='dark.3' size={30} />
+    <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)' }}>
+      <LoadingSpinner />
     </div>
   );
 }
@@ -251,11 +182,34 @@ export function FilenameDisplay({
   filename?: string 
 }) {
   if (!filename) return null;
-  
+
+  // Split filename into base and extension
+  const lastDot = filename.lastIndexOf(".");
+  let base = filename;
+  let ext = "";
+  if (lastDot > 0 && lastDot < filename.length - 1) {
+    base = filename.slice(0, lastDot);
+    ext = filename.slice(lastDot);
+  }
+
   return (
-    <Text size='xs' c='dimmed'>
-      {filename}
-    </Text>
+    <div
+      className="flex justify-center w-full"
+      style={{ padding: "0 12px" }}
+    >
+      <span
+        className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-gray-500"
+        style={{
+          minWidth: 0,
+          maxWidth: "100%",
+          textAlign: "center",
+        }}
+        title={filename}
+      >
+        <span style={{ verticalAlign: "bottom" }}>{base}</span>
+        <span style={{ verticalAlign: "bottom", color: "#888" }}>{ext}</span>
+      </span>
+    </div>
   );
 }
 
@@ -267,19 +221,12 @@ export function RemoveButton({
 }) {
   return (
     <div 
+      className="absolute flex items-center justify-center cursor-pointer bg-white bg-opacity-70 rounded-full z-10"
       style={{
-        position: 'absolute',
         top: '5px',
         right: '5px',
         width: '20px',
-        height: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-        borderRadius: '50%',
-        zIndex: 10
+        height: '20px'
       }}
       onClick={onClick}
     >

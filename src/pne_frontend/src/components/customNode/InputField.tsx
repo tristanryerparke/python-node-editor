@@ -3,7 +3,6 @@ import { type InputField } from '../../types/nodeTypes';
 import RichDisplay from '../../common/RichDisplay';
 import { EdgeConnectedProvider } from '../../contexts/edgeConnectedContext';
 
-import './field_styles.css';
 
 interface InputFieldProps {
   path: (string | number)[];
@@ -23,29 +22,23 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
   const isConnected = connections.length > 0 && connections[0].targetHandle === handleId;
 
   // Set handle color based on connection state
-  const handleColor = isConnected ? '#4CAF50' : 'white';
+  // const handleColor = isConnected ? '#4CAF50' : 'white';
 
   return (
-    <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >
+    <div className="relative w-full" >
       <Handle 
-        style={{
-          width: '12px',
-          height: '12px',
-          backgroundColor: handleColor,
-          border: '1px solid black',
-          borderRadius: '50%'
-        }} 
+        className="h-4 w-4 rounded-full bg-primary"
         type="target" 
         position={Position.Left}
         id={handleId}
       />
-      <div className='field-wrapper left'>
-        <div className='field-label-text'>{field.user_label ?? field.label}{':'}</div>
-        <div className='data-base-wrapper' style={{ flexGrow: 1 }}>
-          <EdgeConnectedProvider isConnected={isConnected}>
-            <RichDisplay path={path} field={field} />
-          </EdgeConnectedProvider>
+      <div className="flex w-full pl-3 pr-2 py-2 gap-1 overflow-hidden">
+        <div className="flex items-center flex-shrink-0 font-bold">
+          {field.user_label ?? field.label}{':'}
         </div>
+        <EdgeConnectedProvider isConnected={isConnected}>
+          <RichDisplay path={path} field={field} />
+        </EdgeConnectedProvider>
       </div>
     </div>
   );

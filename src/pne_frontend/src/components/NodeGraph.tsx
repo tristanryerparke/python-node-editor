@@ -9,13 +9,15 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import { useCallback } from 'react';
-import { BaseNodeData } from '../../types/nodeTypes';
-import CustomNode from '../customNode/CustomNode';
-import useStore from '../store';
+import { BaseNodeData } from '../types/nodeTypes';
+import CustomNode from './customNode/CustomNode';
+import useStore from './store';
+import { useTheme } from './theme-provider';
 
 const nodeTypes: NodeTypes = {customNode: CustomNode};
 
 function NodeGraph() {
+  const { theme } = useTheme();
   // Use the store directly since we need all parts of the state
   const { 
     nodes, 
@@ -27,6 +29,14 @@ function NodeGraph() {
   } = useStore();
 
   const { screenToFlowPosition } = useReactFlow();
+
+  // Determine colorMode for ReactFlow
+  let colorMode: 'dark' | 'light';
+  if (theme === 'system') {
+    colorMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  } else {
+    colorMode = theme;
+  }
 
   // Handle the spawning of droppped nodes
   const onDrop = useCallback(
@@ -70,12 +80,18 @@ function NodeGraph() {
         onDrop={onDrop}
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
+        colorMode={colorMode}
         // fitView
         panOnScroll
       >
         <Controls />
         <MiniMap position='bottom-right'/>
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Background 
+          variant={BackgroundVariant.Dots} 
+          gap={12} 
+          size={1} 
+          bgColor={colorMode === 'dark' ? '#111111' : '#f8f8f8'}
+        />
       </ReactFlow>
     </div>
   )

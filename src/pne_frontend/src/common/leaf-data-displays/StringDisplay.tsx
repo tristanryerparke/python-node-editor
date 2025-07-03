@@ -1,10 +1,11 @@
-import { TextInput as MantineTextInput, Text, Flex } from "@mantine/core";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { StringData } from "../../types/dataTypes/stringData";
 import { updateNodeData } from "../../utils/nodeDataUtils";
 import { useEdgeConnected } from "../../contexts/edgeConnectedContext";
 import { AnyData } from "../../types/dataTypes/anyData";
+import { Input } from "../../components/ui/input";
+import SingleLineTextDisplay from "./SingleLineTextDisplay";
 
 interface StringDisplayProps {
   path: (string | number)[];
@@ -32,27 +33,16 @@ export default function StringDisplay({ path, data }: StringDisplayProps) {
   }
 
   if (!stringData || stringData.payload === undefined) {
-    return (
-      <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
-        <Text pr={10} size="xs" c="dimmed">no data</Text>
-      </Flex>
-    );
+    return <SingleLineTextDisplay content="no data" dimmed={true} />;
   }
 
   if (!isInput) {
-    return (
-      <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
-        <Text pr={10} size="xs">{value === "" ? "(empty string)" : value}</Text>
-      </Flex>
-    );
+    return <SingleLineTextDisplay content={value === "" ? "(empty string)" : value} />;
   }
 
   return (
-    <MantineTextInput
+    <Input
       value={value ?? ''}
-      size="xs"
-      w='100%'
-      style={{ flexGrow: 1 }}
       onChange={(event) => {
         const newValue = event.currentTarget.value;
         setValue(newValue);
@@ -68,6 +58,8 @@ export default function StringDisplay({ path, data }: StringDisplayProps) {
         }
       }}
       disabled={isConnected}
+      className="nodrag nopan noscroll h-9 w-full"
+      placeholder="Enter text"
     />
   );
 }

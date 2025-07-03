@@ -1,48 +1,34 @@
 import NodePicker from './components/nodePicker/NodePicker';
-import { MantineProvider, createTheme } from '@mantine/core';
 import { ReactFlowProvider } from '@xyflow/react';
-import '@mantine/core/styles.css';
-import '@xyflow/react/dist/style.css';
-import NodeGraph from './components/nodeGraph/NodeGraph';
-import ExecuteMenu from './components/ExecuteMenu';
-import SaveButton from './components/SaveButton';
+import { ThemeProvider } from './components/theme-provider';
+import { ModeToggle } from './components/mode-toggle';
+import { Separator } from './components/ui/separator';
 
-const theme = createTheme({
-  primaryColor: 'dark',
-});
+import NodeGraph from './components/NodeGraph';
+import ExecuteMenu from './components/execute-button';
+import SaveButton from './components/save-button';
 
 function App() {
 
   return (
     <>
-      <MantineProvider theme={theme}>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <ReactFlowProvider>
-          <div style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
-            <div style={{
-              width: 400, 
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              // padding: '10px'
-            }}>
-              {/* <h1>PNE Frontend 2</h1> */}
+          <div className="min-h-full flex h-screen w-screen flex-row overflow-hidden bg-background text-foreground">
+            <div className="min-w-60 flex flex-col h-full">
               <NodePicker />
-              <div style={{height: '1px', width: '100%', backgroundColor: 'black'}}/>
-              <div className='pne-div shrink' style={{padding: '0.25rem', gap: '0.25rem'}}>
+              <Separator className='mt-auto' />
+              <div className='w-full flex flex-row p-2 gap-2'>
                 <ExecuteMenu />
                 <SaveButton />
+                <ModeToggle />
               </div>
             </div>
-            <div style={{width: '1px', height: '100%', backgroundColor: 'black'}}/>
-            <div style={{
-              display: 'flex',
-              width: '100%', height: '100%'}}>
-              <NodeGraph />
-            </div>
+            <Separator orientation="vertical" />
+            <NodeGraph />
           </div>
         </ReactFlowProvider>
-      </MantineProvider>
+      </ThemeProvider>
     </>
   )
 }

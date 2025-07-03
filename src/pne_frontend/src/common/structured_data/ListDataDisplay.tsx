@@ -2,8 +2,8 @@ import { AnyData } from "../../types/dataTypes/anyData.ts";
 import { ListData as ListDataType } from "../../types/dataTypes/listData.ts";
 import { ChevronButton } from "../ChevronButton.tsx";
 import { updateNodeData, getNodeData } from "../../utils/nodeDataUtils.ts";
+import { JSX } from "react";
 
-import './structured_data_styles.css';
 
 interface ListDataProps {
   path: (string | number)[];
@@ -37,21 +37,29 @@ const ListDataDisplay = ({
 
   
   return (
-    <div className={`pne-div  structured-data-wrapper ${!expanded ? 'small' : ''}`}>
-      <div className="structured-data-title">
-        List [{listData.payload.length}]
-        <ChevronButton expanded={expanded} setExpanded={setExpanded} />
-      </div>
-      {expanded && (
-        <div className="pne-div structured-data-list">
-          {listData.payload.map((item, idx) => (
-            <div key={idx} className="structured-data-item">
-              <div className="structured-data-label">{idx}:</div>
-              {renderData(item as AnyData, [...path, 'data', 'payload', idx])}
-            </div>
-          ))}
+    <div
+      className={
+        expanded ? 
+        "w-full rounded-md transition-colors duration-500 overflow-hidden" : 
+        "w-full rounded-md transition-colors duration-500 dark:bg-input/30 overflow-hidden"
+      }
+    >
+      <div className="w-full flex flex-col justify-center border-input border-1 p-2 gap-2 overflow-hidden">
+        <div className="w-full flex flex-row gap-1 items-center justify-between">
+          <div className="text-sm flex-grow overflow-hidden text-ellipsis">List [{listData.payload.length}]</div>
+          <ChevronButton expanded={expanded} setExpanded={setExpanded} />
         </div>
-      )}
+        {expanded && (
+          <div className="w-full flex flex-col gap-2">
+            {listData.payload.map((item, idx) => (
+              <div key={idx} className="flex flex-row gap-1 items-center">
+                <div className="text-sm flex-shrink text-ellipsis">{idx}:</div>
+                {renderData(item as AnyData, [...path, 'payload', idx])}
+              </div>
+            ))}
+          </div>
+        )}
+        </div>
     </div>
   );
 };

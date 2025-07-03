@@ -1,19 +1,31 @@
-import { Flex, NumberInput as MantineNumberInput, Text } from "@mantine/core";
+import { NumberInput } from "../../components/ui/number-input";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { IntData, FloatData } from "../../types/dataTypes/numberData";
 import { updateNodeData } from "../../utils/nodeDataUtils";
 import { useEdgeConnected } from "../../contexts/edgeConnectedContext";
+import SingleLineTextDisplay from "./SingleLineTextDisplay";
 
 interface NumberDisplayProps {
   path: (string | number)[];
   data: IntData | FloatData | null;
 }
 
+// Helper function to create number data objects
+const createNumberData = (baseData: IntData | FloatData, newValue: number): IntData | FloatData => {
+  const isFloat = newValue % 1 !== 0;
+  return {
+    ...baseData,
+    id: uuidv4(),
+    payload: newValue,
+    class_name: isFloat ? "FloatData" : "IntData",
+  } as IntData | FloatData;
+};
+
 export default function NumberDisplay({ path, data }: NumberDisplayProps) {
   // Data is directly the number data itself
   const numberData = data as IntData | FloatData;
-  const [value, setValue] = useState<number | null>(numberData?.payload ?? null);
+  const [value, setValue] = useState<number | string | null>(numberData?.payload ?? null);
   
   // Only check edge connected state for inputs
   const isInput = path[1] === 'inputs';
@@ -31,46 +43,35 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
   }
 
   if (!numberData || numberData.payload === undefined) {
-    return (
-      <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
-        <Text pr={10} size="xs" c="dimmed">no data</Text>
-      </Flex>
-    );
+    return <SingleLineTextDisplay content="no data" dimmed={true} />;
   }
 
   if (!isInput) {
-    return (
-      <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
-        <Text pr={10} size="xs">{value}</Text>
-      </Flex>
-    );
+    return <SingleLineTextDisplay content={value} />;
   }
 
   return (
-    <MantineNumberInput
-      value={value ?? undefined}
-      size="xs"
-      w='100%'
-      onChange={(val) => {
-        const newValue = (val as number) ?? 0;
-        setValue(newValue);
-        
-        // Only update node data if this is an input and the value actually changed
-        if (isInput && newValue !== numberData.payload) {
-          const isFloat = newValue % 1 !== 0;
-          const newData = {
-            ...numberData,
-            id: uuidv4(),
-            payload: newValue,
-            class_name: isFloat ? "FloatData" : "IntData",
-          } as IntData | FloatData;
-          // update just the data property at the current path
-          updateNodeData({ path: [...path, 'data'], newData: newData });
+    <NumberInput
+      value={typeof value === 'number' ? value : undefined}
+      decimalScale={3}
+      onValueChange={(newValue) => {
+        const newVal = newValue ?? 0;
+        setValue(newVal);
+        if (isInput && newVal !== numberData.payload) {
+          const newData = createNumberData(numberData, newVal);
+          updateNodeData({ path: path, newData: newData });
         }
       }}
-      allowDecimal={true}
-      decimalScale={3}
+      onBlur={() => {
+        if (value === "") {
+          setValue(0);
+          const newData = createNumberData(numberData, 0);
+          updateNodeData({ path: path, newData: newData });
+        }
+      }}
       disabled={isConnected}
+      className="nodrag nopan noscroll h-9 w-full"
+      placeholder="Enter number"
     />
   );
 }
