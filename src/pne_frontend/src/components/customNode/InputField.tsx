@@ -23,7 +23,12 @@ export default function InputFieldComponent({ path, field }: InputFieldProps) {
   const isConnected = connections.length > 0 && connections[0].targetHandle === handleId;
 
   // Set handle color based on connection state
+<<<<<<< Updated upstream
   const handleColor = isConnected ? '#4CAF50' : 'white';
+=======
+  // const handleColor = isConnected ? '#4CAF50' : 'white';
+  
+>>>>>>> Stashed changes
 
   return (
     <div style={{position: 'relative', display: 'flex', flexDirection: 'row'}} >

@@ -30,6 +30,7 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
     setValue(numberData.payload);
   }
 
+<<<<<<< Updated upstream
   if (!numberData || numberData.payload === undefined) {
     return (
       <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
@@ -38,6 +39,8 @@ export default function NumberDisplay({ path, data }: NumberDisplayProps) {
     );
   }
 
+=======
+>>>>>>> Stashed changes
   if (!isInput) {
     return (
       <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>

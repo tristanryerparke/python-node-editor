@@ -31,6 +31,7 @@ export default function StringDisplay({ path, data }: StringDisplayProps) {
     setValue(stringData.payload);
   }
 
+<<<<<<< Updated upstream
   if (!stringData || stringData.payload === undefined) {
     return (
       <Flex className="basic-output" w='100%' miw='20px' style={{ flexGrow: 1 }}>
@@ -38,6 +39,11 @@ export default function StringDisplay({ path, data }: StringDisplayProps) {
       </Flex>
     );
   }
+=======
+  // if (!stringData || stringData.payload === undefined) {
+  //   return <SingleLineTextDisplay content="no data" dimmed={true} />;
+  // }
+>>>>>>> Stashed changes
 
   if (!isInput) {
     return (

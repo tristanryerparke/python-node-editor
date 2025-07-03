@@ -7,12 +7,21 @@ import uuid
 
 LARGE_DATA_CACHE = {}
 
-CLASS_REGISTRY: Dict[str, Type[BaseModel]] = {}
+DATA_CLASS_REGISTRY: Dict[str, Type[BaseModel]] = {}
 
-def register_class(cls: Type[BaseModel]):
-    # decorator to register the class in the CLASS_REGISTRY
-    CLASS_REGISTRY[cls.__name__] = cls
-    return cls
+def register_class(cls: Type[BaseModel] = None, *, namespace: str = None, group: str = None):
+    def decorator(actual_cls):
+        DATA_CLASS_REGISTRY[actual_cls.__name__] = actual_cls
+        if namespace is not None:
+            actual_cls.auto_node_namespace = namespace
+        if group is not None:
+            actual_cls.auto_node_group = group
+        return actual_cls
+
+    if cls is None:
+        return decorator
+    else:
+        return decorator(cls)
 
 def cache_key_exists(id: str) -> bool:
     return id in LARGE_DATA_CACHE

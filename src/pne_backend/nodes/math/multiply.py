@@ -1,12 +1,12 @@
 from typing import Union
-from ...base_node import BaseNode, node_definition
+from ...base_node import BaseNode, node_definition, register_node
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import IntData, FloatData
 from functools import lru_cache
 MAXSIZE = 10
 
+@register_node(namespace='Math', group='Basic')
 class MultiplyNode(BaseNode):
-    group: str = 'Basic'
     
     @classmethod
     @node_definition(

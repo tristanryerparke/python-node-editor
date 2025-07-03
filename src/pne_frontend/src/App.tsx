@@ -1,5 +1,9 @@
+<<<<<<< Updated upstream
 import NodePicker from './components/nodePicker/NodePicker';
 import { MantineProvider, createTheme } from '@mantine/core';
+=======
+import NodePicker from './components/node-picker/node-picker';
+>>>>>>> Stashed changes
 import { ReactFlowProvider } from '@xyflow/react';
 import '@mantine/core/styles.css';
 import '@xyflow/react/dist/style.css';

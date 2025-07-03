@@ -5,7 +5,7 @@ import numpy as np
 from pne_backend.datatypes.basic import IntData, FloatData, StringData
 from pne_backend.datatypes.image import ImageData
 from pne_backend.datatypes.compound import ListData, ModelData
-from pne_backend.base_data import register_class, CLASS_REGISTRY
+from pne_backend.base_data import register_class, DATA_CLASS_REGISTRY
 
 
 

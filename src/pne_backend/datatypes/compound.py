@@ -1,13 +1,6 @@
-from typing import List, ClassVar, Union, Dict, ForwardRef, Literal, Type, Any
-from pydantic import BaseModel, Field, model_validator, field_validator, computed_field, model_serializer
-import uuid
-from ..base_data import BaseData, register_class, CLASS_REGISTRY
-from devtools import debug as d
-
-# Import all relevant data types from basic.py
-from .basic import IntData, FloatData, StringData, NumpyData
-# If there are other subclasses of ModelData, import them here
-# from .other_datatypes import ...
+from typing import List, ClassVar, Dict, Any
+from pydantic import BaseModel, Field, field_validator, computed_field, model_serializer
+from ..base_data import BaseData, register_class, DATA_CLASS_REGISTRY
 
 # Define AnyData as a union of all data types
 
@@ -34,8 +27,8 @@ class ListData(BaseData):
                     class_name = item.get('class_name')
                     # Prioritize class_parent if available
                     discriminator = class_parent or class_name
-                    if discriminator and discriminator in CLASS_REGISTRY:
-                        item_class = CLASS_REGISTRY[discriminator]
+                    if discriminator and discriminator in DATA_CLASS_REGISTRY:
+                        item_class = DATA_CLASS_REGISTRY[discriminator]
                         new_item = item_class.model_validate(item)
                         new_list.append(new_item)
                     else:
@@ -62,3 +55,6 @@ class ModelData(BaseModel):
         return self_as_dict
     
 
+class AutoNodesModelData(ModelData):
+    '''AutoNodesModelData '''
+    auto_node: ClassVar[bool] = True

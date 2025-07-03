@@ -1,13 +1,13 @@
 from functools import lru_cache
 
-from ...base_node import BaseNode, node_definition
+from ...base_node import BaseNode, node_definition, register_node
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import StringData
 
 MAXSIZE = 10
 
+@register_node('Text', group='Basic')
 class JoinNode(BaseNode):
-    group: str = 'Basic'
 
     @classmethod
     @node_definition(

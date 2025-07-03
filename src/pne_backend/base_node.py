@@ -1,10 +1,43 @@
 from pydantic import BaseModel, Field
-from typing import List, Literal, ClassVar, Optional
+from typing import List, Literal, ClassVar, Optional, Dict, Type, NamedTuple
 import uuid
 import sys
 from io import StringIO
 
 from .field import InputNodeField, OutputNodeField
+
+# Structure to store node metadata in registry
+class NodeInfo(NamedTuple):
+    cls: Type["BaseNode"]
+    group: str
+
+# Node registry to store all registered node classes with their metadata
+NODE_REGISTRY: Dict[str, List[NodeInfo]] = {}
+
+def register_node(namespace: str, group: str = "Basic"):
+    """Decorator to register a node class in the NODE_REGISTRY with namespace and group"""
+    def decorator(cls):
+        if namespace not in NODE_REGISTRY:
+            NODE_REGISTRY[namespace] = []
+        
+        # Create NodeInfo with class and group
+        node_info = NodeInfo(cls=cls, group=group)
+        NODE_REGISTRY[namespace].append(node_info)
+        
+        # Set definition_path for the class
+        try:
+            import inspect
+            source_file = inspect.getsourcefile(cls)
+            start_line = inspect.getsourcelines(cls)[1]
+            cls.definition_path = f"{source_file}:{start_line}"
+        except (OSError, TypeError) as e:
+            cls.definition_path = f"{cls.__module__}:{cls.__name__}"
+        
+        # Store group information on the class for easy access
+        cls._node_group = group
+            
+        return cls
+    return decorator
 
 def node_definition(inputs: list[InputNodeField], outputs: list[OutputNodeField]):
     '''decorator to define the inputs and outputs of a node'''
@@ -55,6 +88,7 @@ class BaseNodeData(BaseModel):
     display_name: str = ''
     class_name: str = ''
     namespace: str = ''
+    group: str = ''
     status: Literal[
         'not evaluated', 
         'pending', 
@@ -78,8 +112,6 @@ class BaseNodeData(BaseModel):
 class BaseNode(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     data: BaseNodeData = BaseNodeData()
-    group: str = ''
-    
 
 
     def __init__(self, *args, **kwargs):
@@ -90,7 +122,9 @@ class BaseNode(BaseModel):
             self.data.display_name = self.__class__.__name__.replace(
                 'Node', '')
             
-        # print all attributes of the class
+        # Set group from registration if available
+        if hasattr(self.__class__, '_node_group'):
+            self.data.group = self.__class__._node_group
         
         if hasattr(self, 'min_width'):
             self.data.min_width = self.min_width
@@ -107,6 +141,14 @@ class BaseNode(BaseModel):
 
     def detect_namespace(self):
         '''detects the namespace of the node to display in the frontend'''
+        # First try to find the registered namespace
+        for namespace, node_infos in NODE_REGISTRY.items():
+            for node_info in node_infos:
+                if node_info.cls == self.__class__:
+                    self.data.namespace = namespace
+                    return
+        
+        # Fallback to module-based detection if not found in registry
         module = sys.modules[self.__class__.__module__]
         # Get the parent module (the one containing __init__.py)
         parent_module_name = '.'.join(self.__class__.__module__.split('.')[:-1])

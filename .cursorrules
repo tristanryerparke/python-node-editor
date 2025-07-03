@@ -1,0 +1,5 @@
+1. I'm building a node editing tool in with python backend and react typescript frontend.
+2. There is heavy emphasis on the use of pydantic V2 in the backend.
+3. for the frontend I use bun, vite and tailwindcss, as well as mantine for much of the ui.
+4. Since Tailwind scans your source files as plain text, it has no way of understanding string concatenation or interpolation in the programming language you're using
+5. Do not launch the frontend or the backend from tools, as I usually already have them running.

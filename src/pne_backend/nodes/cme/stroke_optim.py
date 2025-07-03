@@ -22,6 +22,7 @@ class StrokeOptimNode(BaseNode):
     @classmethod
     @node_definition(
         inputs=[
+<<<<<<< Updated upstream
             InputNodeField(label='image', allowed_types=['ImageData']),
             InputNodeField(label='num_strokes', allowed_types=['IntData'], data=IntData(payload=1500),
                          metadata={'min': 100, 'max': 5000}),
@@ -41,6 +42,22 @@ class StrokeOptimNode(BaseNode):
                          metadata={'min': 0.1, 'max': 100.0}),
             InputNodeField(label='height_in', allowed_types=['FloatData'], data=FloatData(payload=8.0),
                          metadata={'min': 0.1, 'max': 100.0})
+=======
+            InputNodeField(label='document', allowed_types=['Document']),
+            InputNodeField(
+                label='params', 
+                allowed_types=['StrokeOptimParams'],
+                data=StrokeOptimParams(
+                    num_strokes=IntData(payload=1500),
+                    num_steps=IntData(payload=20),
+                    width_scale=FloatData(payload=3.0),
+                    length_scale=FloatData(payload=0.75),
+                    style_weight=FloatData(payload=0.0),
+                    tv_weight=FloatData(payload=0.01),
+                    curvature_weight=FloatData(payload=0.0)
+                )
+            ),
+>>>>>>> Stashed changes
         ],
         outputs=[
             OutputNodeField(label='svg', allowed_types=['SVGData'])
@@ -60,7 +77,7 @@ class StrokeOptimNode(BaseNode):
             raise ValueError("VITE_RP_API_KEY environment variable not set")
             
         optim = StrokeOptim(
-            "https://api.runpod.ai/v2/5kp5wea90xdfa3",
+            "https://api.runpod.ai/v2/1gxc7881ih5mn0",
             api_key
         )
         

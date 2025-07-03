@@ -6,7 +6,35 @@ import json
 from pydantic import BaseModel, model_validator
 from collections import deque
 
-from .base_node import BaseNode, StreamingBaseNode
+from .base_node import BaseNode, StreamingBaseNode, NODE_REGISTRY, NodeInfo, register_node, node_definition
+from .field import InputNodeField, OutputNodeField
+from .base_data import DATA_CLASS_REGISTRY
+
+
+def get_registered_nodes():
+    '''Returns all registered node classes from the NODE_REGISTRY with their group information'''
+    result = {}
+    for namespace, node_infos in NODE_REGISTRY.items():
+        result[namespace] = []
+        for node_info in node_infos:
+            result[namespace].append({
+                'class': node_info.cls,
+                'group': node_info.group
+            })
+    return result
+
+
+def get_registered_nodes_by_namespace_and_group():
+    '''Returns nodes organized by namespace and then by group'''
+    result = {}
+    for namespace, node_infos in NODE_REGISTRY.items():
+        result[namespace] = {}
+        for node_info in node_infos:
+            group = node_info.group
+            if group not in result[namespace]:
+                result[namespace][group] = []
+            result[namespace][group].append(node_info.cls)
+    return result
 
 
 def find_and_load_classes(module_path: str):
@@ -107,3 +135,93 @@ def autosave(graph_def: dict):
     filename = graph_def['metadata']['filename']
     with open(f'autosave/{filename}_autosave.json', 'w') as f:
         json.dump(graph_def, f)
+
+
+def create_auto_nodes(data_class):
+    """Create Construct and Deconstruct nodes for a data class with auto_node=True"""
+    
+    # Get namespace and group from the class, with defaults
+    namespace = getattr(data_class, 'auto_node_namespace', 'AutoNodes')
+    group = getattr(data_class, 'auto_node_group', 'Basic')
+    
+    # Get fields from the model class
+    fields = list(data_class.__annotations__.items())
+    
+    # Create Construct Node
+    construct_inputs = [
+        InputNodeField(label=field, allowed_types=[typ.__name__])
+        for field, typ in fields
+    ]
+    construct_outputs = [OutputNodeField(label=data_class.__name__.lower())]
+    
+    @register_node(namespace=namespace, group=group)
+    class ConstructNode(BaseNode):
+        @classmethod
+        @node_definition(inputs=construct_inputs, outputs=construct_outputs)
+        def exec(cls, **kwargs):
+            return data_class(**kwargs)
+    
+    ConstructNode.__name__ = f"Construct{data_class.__name__}Node"
+    ConstructNode.__qualname__ = f"Construct{data_class.__name__}Node"
+    ConstructNode.__module__ = data_class.__module__
+    ConstructNode.__doc__ = f"Creates a {data_class.__name__} from its component fields"
+
+    # Create Deconstruct Node  
+    deconstruct_inputs = [InputNodeField(label=data_class.__name__.lower(), allowed_types=[data_class.__name__])]
+    deconstruct_outputs = [OutputNodeField(label=field, allowed_types=[typ.__name__]) for field, typ in fields]
+    
+    @register_node(namespace=namespace, group=group)
+    class DeconstructNode(BaseNode):
+        @classmethod
+        @node_definition(inputs=deconstruct_inputs, outputs=deconstruct_outputs)
+        def exec(cls, **kwargs):
+            obj = kwargs[data_class.__name__.lower()]
+            return cls(**obj)
+        
+    
+    DeconstructNode.__name__ = f"Deconstruct{data_class.__name__}Node"
+    DeconstructNode.__qualname__ = f"Deconstruct{data_class.__name__}Node"
+    DeconstructNode.__module__ = data_class.__module__
+    DeconstructNode.__doc__ = f"Deconstructs a {data_class.__name__} into its component fields"
+
+    return ConstructNode, DeconstructNode
+
+
+def import_all_nodes(node_modules: list[str]):
+    """Import all nodes including both regular and auto-generated ones"""
+    # Import extensions to register nodes
+    for module_path in node_modules:
+        importlib.import_module(module_path)
+
+    AUTO_NODE_REGISTRY = {}
+
+    # Setup auto nodes for data classes
+    for data_class in DATA_CLASS_REGISTRY.values():
+        if hasattr(data_class, 'auto_node') and data_class.auto_node:
+            construct_node, deconstruct_node = create_auto_nodes(data_class)
+            
+            # Ensure the namespace key exists
+            if data_class.auto_node_namespace not in AUTO_NODE_REGISTRY:
+                AUTO_NODE_REGISTRY[data_class.auto_node_namespace] = []
+            
+            # Remove existing nodes with the same name if they exist
+            AUTO_NODE_REGISTRY[data_class.auto_node_namespace] = [
+                node for node in AUTO_NODE_REGISTRY[data_class.auto_node_namespace] 
+                if node['class'].__name__ not in [construct_node.__name__, deconstruct_node.__name__]
+            ]
+            
+            # Add new nodes in the same format as get_registered_nodes()
+            AUTO_NODE_REGISTRY[data_class.auto_node_namespace].append({
+                'class': construct_node,
+                'group': data_class.auto_node_group
+            })
+            AUTO_NODE_REGISTRY[data_class.auto_node_namespace].append({
+                'class': deconstruct_node,
+                'group': data_class.auto_node_group
+            })
+        
+    # Update node classes with auto-generated nodes
+    node_classes = get_registered_nodes()
+    node_classes.update(AUTO_NODE_REGISTRY)
+
+    return node_classes

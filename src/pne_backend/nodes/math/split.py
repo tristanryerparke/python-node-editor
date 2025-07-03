@@ -1,14 +1,14 @@
 from functools import lru_cache
 from typing import Tuple, Union
-from ...base_node import BaseNode, node_definition
+from ...base_node import BaseNode, node_definition, register_node
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import IntData, FloatData
 
 MAXSIZE = 10
 
 
+@register_node('Math', group='Special')
 class SplitNode(BaseNode):
-    group: str = 'Special'
     @classmethod
     @node_definition(
         inputs=[

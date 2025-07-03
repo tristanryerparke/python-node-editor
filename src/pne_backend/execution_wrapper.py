@@ -89,7 +89,7 @@ class ExecutionWrapper:
 
             node_type = node['data']['class_name']
             namespace = node['data']['namespace']
-            NodeClass = next((cls for cls in self.node_classes.get(namespace, []) if cls.__name__ == node_type), None)
+            NodeClass = next((node_info['class'] for node_info in self.node_classes.get(namespace, []) if node_info['class'].__name__ == node_type), None)
             if NodeClass:
                 instance = NodeClass.model_validate(node, context={'state': 'deserializing'})
                 self.node_instances[id] = instance

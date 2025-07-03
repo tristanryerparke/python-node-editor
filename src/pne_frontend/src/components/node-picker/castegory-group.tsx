@@ -1,5 +1,10 @@
 import { BaseNode } from '../../types/nodeTypes';
+<<<<<<< Updated upstream:src/pne_frontend/src/components/nodePicker/CategoryGroup.tsx
 import { DraggableNode } from './DraggableNode';
+=======
+import { Separator } from '../ui/separator';
+import { DraggableNode } from './draggable-node';
+>>>>>>> Stashed changes:src/pne_frontend/src/components/node-picker/castegory-group.tsx
 
 interface CategoryGroupProps {
   category: string;

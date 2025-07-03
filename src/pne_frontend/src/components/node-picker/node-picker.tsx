@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import { NodeCategories, BaseNode } from '../../types/nodeTypes';
-import { SearchBar } from './SearchBar';
-import { CategoryGroup } from './CategoryGroup';
+import { SearchBar } from './search-bar';
+import { CategoryGroup } from './castegory-group';
+import { LoaderIcon } from 'lucide-react';
 
 
 function NodePicker() {
@@ -40,7 +41,7 @@ function NodePicker() {
   const filteredCategories = Object.entries(nodeCategories).reduce((acc, [category, nodes]) => {
     // Group nodes by their group attribute
     const groupedNodes = nodes.reduce((groups: Record<string, BaseNode[]>, node) => {
-      const group = node.group || 'Ungrouped';  // Default to 'Ungrouped' if no group specified
+      const group = node.data.group || 'Ungrouped';  // Default to 'Ungrouped' if no group specified
       if (!groups[group]) {
         groups[group] = [];
       }
@@ -67,6 +68,7 @@ function NodePicker() {
     }
     return acc;
   }, {} as NodeCategories & { [key: string]: { groups?: Record<string, BaseNode[]> } });
+<<<<<<< Updated upstream:src/pne_frontend/src/components/nodePicker/NodePicker.tsx
 
   return (
     <div className='pne-div' style={{
@@ -74,11 +76,16 @@ function NodePicker() {
       overflowX: 'scroll',
       overflowY: 'hidden'
     }}>
+=======
+  return (  
+    <div className="overflow-x-scroll overflow-y-hidden flex flex-col p-2 gap-2">
+>>>>>>> Stashed changes:src/pne_frontend/src/components/node-picker/node-picker.tsx
       <SearchBar 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onRefresh={fetchNodes}
       />
+<<<<<<< Updated upstream:src/pne_frontend/src/components/nodePicker/NodePicker.tsx
       <hr style={{margin: '0'}}/>
       <div className='pne-div' style={{
         overflowY: 'scroll',
@@ -95,6 +102,25 @@ function NodePicker() {
           />
         ))}
       </div>
+=======
+      {Object.keys(nodeCategories).length === 0 ? (
+        <div className="flex flex-col justify-center items-center p-2 gap-2">
+          <LoaderIcon className="animate-spin" />
+          loading nodes..
+        </div>
+      ) : (
+        <div className="overflow-y-scroll flex flex-col justify-start items-start pb-1">
+          {Object.entries(filteredCategories).map(([category, categoryData], index) => (
+            <CategoryGroup 
+              key={category}
+              category={category}
+              categoryData={categoryData}
+              showDivider={index > 0}
+            />
+          ))}
+        </div>
+      )}
+>>>>>>> Stashed changes:src/pne_frontend/src/components/node-picker/node-picker.tsx
     </div>
   );
 }

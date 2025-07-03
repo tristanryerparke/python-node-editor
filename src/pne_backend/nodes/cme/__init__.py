@@ -1,1 +1,1 @@
-DISPLAY_NAME = "Creative Media Extenders" 
+from .document import Document

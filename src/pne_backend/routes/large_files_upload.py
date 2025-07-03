@@ -13,7 +13,7 @@ async def handle_large_file(
     original_filename: str = Form(...),
 ):
     '''receives a large file from a frontend and returns a field data instance with small preview that is cached'''
-    from ..base_data import CLASS_REGISTRY
+    from ..base_data import DATA_CLASS_REGISTRY
     from ..datatypes.image import ImageData
     
     file_content = await file.read()
@@ -39,8 +39,8 @@ async def handle_large_file(
     
     # Use the same validation logic as in compound.py for non-image data
     discriminator = content_dict.get('class_parent') or content_dict.get('class_name')
-    if discriminator and discriminator in CLASS_REGISTRY:
-        data_instance = CLASS_REGISTRY[discriminator].model_validate(content_dict)
+    if discriminator and discriminator in DATA_CLASS_REGISTRY:
+        data_instance = DATA_CLASS_REGISTRY[discriminator].model_validate(content_dict)
     else:
         data_instance = content_dict
 

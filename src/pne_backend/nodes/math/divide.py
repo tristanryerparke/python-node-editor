@@ -1,10 +1,11 @@
 from typing import Union
-from ...base_node import BaseNode, node_definition
+from ...base_node import BaseNode, node_definition, register_node
 from ...field import InputNodeField, OutputNodeField
 from ...datatypes.basic import IntData, FloatData
 from functools import lru_cache
 MAXSIZE = 10
 
+@register_node(namespace='Math', group='Basic')
 class DivideNode(BaseNode):
     group: str = 'Basic'
     @classmethod
@@ -14,20 +15,12 @@ class DivideNode(BaseNode):
                 label='a', 
                 user_label='A',
                 allowed_types=['IntData', 'FloatData'],
-                data=IntData(payload=1),
-                metadata={
-                    'max': 100,
-                    'min': -100
-                }
+                data=None
             ),
             InputNodeField(
                 label='b', 
                 allowed_types=['IntData', 'FloatData'],
-                data=IntData(payload=1),  # Ensure default is not zero to avoid division by zero
-                metadata={
-                    'max': 100,
-                    'min': -100
-                }
+                data=None
             )
         ],
         outputs=[

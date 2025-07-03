@@ -7,8 +7,12 @@ import pkgutil
 import importlib.util
 from pathlib import Path
 
+<<<<<<< Updated upstream
 from .base_data import BaseData
 from .datatypes.compound import CLASS_REGISTRY
+=======
+from .datatypes.compound import DATA_CLASS_REGISTRY
+>>>>>>> Stashed changes
 
 class ModelNotFoundError(Exception):
     pass
@@ -32,7 +36,7 @@ class InputNodeField(BaseModel):
     def validate_data(cls, values, info: ValidationInfo):
         allowed = values.get('allowed_types', ['AnyData'])
         if allowed == ['AnyData']:
-            allowed_classes = list(CLASS_REGISTRY.keys())
+            allowed_classes = list(DATA_CLASS_REGISTRY.keys())
         else:
             allowed_classes = allowed
         
@@ -40,11 +44,11 @@ class InputNodeField(BaseModel):
         if isinstance(data, dict):
             discriminator = data.get('class_name')
             if discriminator in allowed_classes:
-                data_class = CLASS_REGISTRY.get(discriminator)
+                data_class = DATA_CLASS_REGISTRY.get(discriminator)
                 if data_class:
                     values['data'] = data_class.model_validate(data, context={'state': 'deserializing'})
                 else:
-                    raise ValueError(f"Discriminator '{discriminator}' not found in CLASS_REGISTRY.")
+                    raise ValueError(f"Discriminator '{discriminator}' not found in DATA_CLASS_REGISTRY.")
             else:
                 raise ValueError(f"Type '{discriminator}' is not allowed. Allowed types: {allowed_classes}.")
         return values

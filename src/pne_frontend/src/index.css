@@ -1,5 +1,28 @@
+<<<<<<< Updated upstream
 html, body, #root {
   height: 100%;
+=======
+@layer theme, base, components, utilities;
+@import "tailwindcss" important;
+@import "tw-animate-css";
+
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --text-base: 14px;
+}
+
+@layer components {
+  .border-input {
+    border-width: var(--border-width);
+    border-color: black;
+    border-radius: var(--radius-md);
+  }
+>>>>>>> Stashed changes
 }
 
 :root {
