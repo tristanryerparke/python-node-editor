@@ -91,7 +91,8 @@ def execute_node(node: NodeDataFromFrontend) -> tuple[bool, Any, str]:
         if terminal_output:
             print(terminal_output, end="")
 
-        return (True, result, terminal_output if terminal_output else None)
+        return (True, result, terminal_output if terminal_output else "")
+
     except Exception as e:
         sys.stdout = old_stdout
         sys.stderr = old_stderr

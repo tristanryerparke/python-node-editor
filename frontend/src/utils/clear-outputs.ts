@@ -23,16 +23,11 @@ const clearAllOutputs = (nodes: FunctionNode[]): Map<string, FunctionNode> => {
       return;
     }
 
-    const hasTerminalOutput =
-      "terminalOutput" in node.data || "terminal_output" in node.data;
+    const hasTerminalOutput = "terminalOutput" in node.data;
     const dataWithoutTerminalOutput = hasTerminalOutput
-      ? (({
-          terminalOutput: _terminalOutput,
-          terminal_output: _terminal_output,
-          ...rest
-        }) => rest)(
+      ? (({ terminalOutput: _terminalOutput, ...rest }) => rest)(
           node.data as FunctionNode["data"] & {
-            terminal_output?: string;
+            terminalOutput?: string;
           },
         )
       : node.data;

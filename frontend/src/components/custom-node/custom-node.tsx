@@ -65,8 +65,7 @@ export default memo(function CustomNode({
             <NodeDrawer
               isExpanded={data._terminal_drawer?._expanded ?? false}
               terminalOutput={
-                ((data as { terminalOutput?: string }).terminalOutput ??
-                  data.terminal_output) as string
+                (data as { terminalOutput?: string }).terminalOutput ?? ""
               }
               path={path}
             />

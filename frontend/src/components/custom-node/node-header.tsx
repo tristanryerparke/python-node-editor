@@ -12,8 +12,7 @@ type NodeHeaderProps = {
 export default memo(function NodeHeader({ data, nodeId }: NodeHeaderProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const terminalOutput =
-    (data as { terminalOutput?: string }).terminalOutput ??
-    data.terminal_output;
+    (data as { terminalOutput?: string }).terminalOutput ?? "";
 
   const handleToggleDrawer = useCallback(() => {
     const path = [nodeId, "_terminal_drawer", "_expanded"];
