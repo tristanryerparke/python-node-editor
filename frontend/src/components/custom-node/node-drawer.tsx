@@ -41,7 +41,7 @@ export default memo(function NodeDrawer({
     updateNodeData([...path, "_terminal_drawer", "_expandedHeight"], newHeight);
   };
 
-  if (!isExpanded || !terminalOutput) {
+  if (!isExpanded) {
     return null;
   }
 
@@ -53,19 +53,27 @@ export default memo(function NodeDrawer({
       maxHeight={MAX_HEIGHT}
       useTailwindScale={true}
     >
-      <div className="nodrag nopan nowheel bg-card border-x border-b border-input rounded-b-md overflow-hidden h-full relative w-full z-10">
-        <div
-          className="px-2 pt-2 pb-0 h-full overflow-auto select-text cursor-text w-full"
-          onMouseDown={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <div className="font-mono text-xs whitespace-pre-wrap break-all select-text w-full">
-            {terminalOutput}
+      <div className="absolute w-full h-4 top-0 left-0 -translate-y-4 border-x border-input z-0"></div>
+
+      <div className="nodrag nopan nowheel bg-card/50 border-x border-b border-input rounded-b-lg overflow-hidden h-full relative w-full z-1">
+        {terminalOutput ? (
+          <div
+            className="px-2 pt-2 pb-0 h-full overflow-auto select-text cursor-text w-full"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div className="font-mono text-xs whitespace-pre-wrap break-all select-text w-full">
+              {terminalOutput}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-muted-foreground text-sm">No Terminal Output</p>
+          </div>
+        )}
         <ResizableHeightHandle>
           <SyncedWidthHandle>
-            <div className="nodrag shrink-0 cursor-nwse-resize absolute bottom-0 right-0 p-0.5 opacity-50 hover:opacity-100 transition-opacity">
+            <div className="nodrag shrink-0 cursor-nwse-resize absolute bottom-0.5 right-0.5 p-0.5 opacity-50 hover:opacity-100 transition-opacity">
               <Grip className="h-3 w-3 text-muted-foreground" />
             </div>
           </SyncedWidthHandle>

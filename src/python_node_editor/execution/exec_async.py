@@ -6,6 +6,7 @@ from devtools import debug as d
 from fastapi import APIRouter, HTTPException
 from typing_extensions import Literal
 
+from python_node_editor.execution.context import progress_context
 from python_node_editor.execution.exec_utils import (
     VERBOSE,
     create_node_update,
@@ -105,10 +106,57 @@ def push_node_update(
 
 
 async def execute_and_create_update(
-    node: NodeFromFrontend, graph: Graph, execution_list: list[NodeFromFrontend]
+    node: NodeFromFrontend,
+    graph: Graph,
+    execution_list: list[NodeFromFrontend],
+    execution_id: str,
+    state: ExecutionState,
 ) -> NodeUpdate:
-    """Execute a node and create its update in a single operation."""
-    success, result, terminal_output = await asyncio.to_thread(execute_node, node.data)
+    """Execute a node and create its update in a single operation.
+
+    Supports incremental updates via flush_output_to_frontend() by setting up
+    a progress context that contains both callback and buffer references.
+    """
+
+    # Create a single dict to hold both callback and buffer
+    # buffer will be filled in by execute_node()
+    context_dict = {"callback": None, "buffer": None}
+
+    def on_progress():
+        # Read buffer from the same dict
+        buffer = context_dict.get("buffer")
+        if buffer is None:
+            return
+
+        # Read accumulated terminal output
+        accumulated = buffer.getvalue()
+
+        # Create partial update with accumulated terminal output
+        partial_update = NodeUpdate(
+            node_id=node.id,
+            terminal_output=accumulated,
+        )
+
+        # Push the update
+        push_node_update(state.node_updates, partial_update)
+
+        # Increment update_index so frontend sees the update
+        state.update_index += 1
+
+    # Store callback in dict
+    context_dict["callback"] = on_progress
+
+    # Set the entire dict as a single context variable
+    token = progress_context.set(context_dict)
+
+    try:
+        # Execute node (will run in thread, with context_dict passed to store buffer)
+        success, result, terminal_output = await asyncio.to_thread(
+            execute_node, node.data, context_dict
+        )
+    finally:
+        # Always clean up the context variable
+        progress_context.reset(token)
 
     return create_node_update(
         node, success, result, terminal_output, graph, execution_list
@@ -152,8 +200,10 @@ async def execute_graph_async(execution_id: str, graph: Graph):
         # Increment update_index so the frontend can see the "executing" status update is available
         state.update_index += 1
 
-        # Execute the node and create its update
-        node_update = await execute_and_create_update(node, graph, execution_list)
+        # Execute the node with incremental update support
+        node_update = await execute_and_create_update(
+            node, graph, execution_list, execution_id, state
+        )
 
         # Push the final update
         push_node_update(state.node_updates, node_update)

@@ -34,8 +34,14 @@ def infer_concrete_type(value, type_descriptor, TYPES):
     raise ValueError(f"Unknown type descriptor: {type_descriptor}")
 
 
-def execute_node(node: NodeDataFromFrontend) -> tuple[bool, Any, str]:
+def execute_node(
+    node: NodeDataFromFrontend, context_dict: dict[str, Any] | None = None
+) -> tuple[bool, Any, str]:
     """Finds a node's callable and executes it with the arguments from the frontend
+
+    Args:
+        node: The node to execute
+        context_dict: Optional dict containing 'callback' and 'buffer' keys for incremental updates
 
     Returns a tuple of (success, result, error_message)
     """
@@ -48,6 +54,10 @@ def execute_node(node: NodeDataFromFrontend) -> tuple[bool, Any, str]:
     captured_output = io.StringIO()
     sys.stdout = captured_output
     sys.stderr = captured_output
+
+    # Store buffer reference in context dict so progress callbacks can read it
+    if context_dict is not None:
+        context_dict["buffer"] = captured_output
 
     try:
         if getattr(callable, "list_inputs", False):
@@ -94,6 +104,7 @@ def execute_node(node: NodeDataFromFrontend) -> tuple[bool, Any, str]:
         return (True, result, terminal_output if terminal_output else "")
 
     except Exception as e:
+        # Keep the buffer token in scope for the finally block
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         terminal_output = captured_output.getvalue()

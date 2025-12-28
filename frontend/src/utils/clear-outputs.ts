@@ -40,7 +40,10 @@ const clearAllOutputs = (nodes: FunctionNode[]): Map<string, FunctionNode> => {
 
       updatedNodes.set(node.id, {
         ...node,
-        data: dataWithoutTerminalOutput,
+        data: {
+          ...dataWithoutTerminalOutput,
+          status: "not-executed",
+        },
       });
       return;
     }
@@ -57,6 +60,7 @@ const clearAllOutputs = (nodes: FunctionNode[]): Map<string, FunctionNode> => {
       data: {
         ...dataWithoutTerminalOutput,
         outputs,
+        status: "not-executed",
       },
     });
   });
@@ -87,6 +91,7 @@ const clearConnectedInputs = (
       data: {
         ...node.data,
         arguments: argumentsClone,
+        status: "not-executed",
       },
     });
   });

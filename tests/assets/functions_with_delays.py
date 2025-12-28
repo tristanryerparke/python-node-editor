@@ -6,6 +6,8 @@ and allow testing different stages of node updates.
 
 import time
 
+from python_node_editor.display import flush_output_to_frontend
+
 
 def quick_add(a: int, b: int) -> int:
     """Add two numbers with a short delay."""
@@ -42,4 +44,18 @@ def quick_power(base: int, exponent: int) -> int:
     time.sleep(0.25)
     result = base**exponent
     print(f"{base}^{exponent} = {result}")
+    return result
+
+
+def slow_add_with_update(a: int, b: int) -> int:
+    """Add two numbers with incremental progress updates.
+
+    This function demonstrates flush_output_to_frontend by sending progress updates
+    while waiting, allowing the frontend to see the accumulated terminal output.
+    """
+    for remaining in range(3, 0, -1):
+        flush_output_to_frontend(f"Adding {a} and {b} in {remaining} seconds")
+        time.sleep(0.2)
+    result = a + b
+    flush_output_to_frontend(f"{a} + {b} = {result}")
     return result
