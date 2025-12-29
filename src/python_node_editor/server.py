@@ -11,7 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from python_node_editor.analysis.utils import analyze_file_structure
 from python_node_editor.execution.exec_async import router as execute_async_router
 from python_node_editor.execution.exec_sync import router as execute_sync_router
-from python_node_editor.large_data.router import router as large_data_router
+from python_node_editor.large_data.large_files_endpoint import (
+    router as large_data_router,
+)
 
 FUNCTION_SCHEMAS = []
 CALLABLES = {}

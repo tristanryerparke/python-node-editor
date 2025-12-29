@@ -108,7 +108,7 @@ def test_error_output_capture():
 
 
 def test_empty_terminal_output_on_success():
-    """Test that terminal output is an empty string when function executes without errors or output"""
+    """Test that terminal output is an empty string (always included to clear previous output) when function executes without errors or output"""
     node1 = node_from_schema("add-node-1", add_schema)
     node1.data.arguments["a"].value = 3
     node1.data.arguments["b"].value = 5
@@ -127,6 +127,6 @@ def test_empty_terminal_output_on_success():
     assert node_update["status"] == "executed"
     assert node_update["outputs"]["return"]["value"] == 8
 
-    # Check that terminalOutput is excluded when empty (using exclude_none=True)
-    # An empty terminal output is not included in the response to reduce payload size
-    assert "terminalOutput" not in node_update
+    # Check that terminalOutput is always present (even when empty) to clear previous output
+    assert "terminalOutput" in node_update
+    assert node_update["terminalOutput"] == ""

@@ -42,8 +42,7 @@ export default memo(function NodeStatus({
     return null;
   }
 
-  const isClickable =
-    (status === "error" || status === "executed") && hasTerminalOutput;
+  const isClickable = true;
 
   const handleClick = () => {
     if (isClickable && onToggleDrawer) {

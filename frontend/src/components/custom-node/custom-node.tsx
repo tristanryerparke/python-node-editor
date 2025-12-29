@@ -44,13 +44,13 @@ export default memo(function CustomNode({
         maxWidth={250}
         setWidth={setNodeWidth}
       >
-        <div className="min-w-min">
-          <div
-            className={cn(
-              "border border-input rounded-lg bg-background text-secondary-foreground transition-[color,box-shadow]",
-              selected ? "ring-ring/50 ring-2" : "",
-            )}
-          >
+        <div
+          className={cn(
+            "min-w-min rounded-lg bg-card text-secondary-foreground transition-[color,box-shadow] !z-20",
+            selected ? "ring-ring/50 ring-2" : "",
+          )}
+        >
+          <div className="border border-input rounded-lg bg-background relative z-10">
             <InspectableFieldWrapper path={path}>
               <div>
                 <NodeHeader data={data} nodeId={id} />
@@ -61,16 +61,15 @@ export default memo(function CustomNode({
             <Separator />
             <Outputs outputs={data.outputs} path={path} />
           </div>
-          <div className="px-2">
-            <NodeDrawer
-              isExpanded={data._terminal_drawer?._expanded ?? false}
-              terminalOutput={
-                ((data as { terminalOutput?: string }).terminalOutput ??
-                  data.terminal_output) as string
-              }
-              path={path}
-            />
-          </div>
+          {/*<div className="px-2">*/}
+          <NodeDrawer
+            isExpanded={data._terminal_drawer?._expanded ?? false}
+            terminalOutput={
+              (data as { terminalOutput?: string }).terminalOutput ?? ""
+            }
+            path={path}
+          />
+          {/*</div>*/}
         </div>
       </SyncedWidthHandleProvider>
     </div>

@@ -3,6 +3,9 @@ from typing import Any, Callable, TypeVar, cast
 
 F = TypeVar("F", bound=Callable[..., Any])
 
+# Import the progress context variable for flush_output_to_frontend
+from python_node_editor.execution.context import progress_context
+
 
 def add_node_options(
     node_name: str | None = None,
@@ -31,3 +34,26 @@ def add_node_options(
         return cast(F, wrapper)
 
     return decorator
+
+
+def flush_output_to_frontend(*args, **kwargs):
+    """Print to stdout and trigger an execution update if in a node execution context.
+
+    This function works like a normal print() call, but if called during node execution,
+    it also triggers an incremental update to the frontend with the accumulated terminal output.
+
+    Args:
+        *args: Arguments to print (same as built-in print)
+        **kwargs: Keyword arguments to print (same as built-in print)
+    """
+    # First, print normally (this goes to StringIO buffer if stdout is redirected)
+    print(*args, **kwargs)
+
+    # Then try to trigger a progress update
+    context_dict = progress_context.get()
+    if context_dict is not None:
+        # Get callback from the context dict
+        callback = context_dict.get("callback")
+        if callback is not None:
+            # Call the callback (reads buffer from the same dict)
+            callback()

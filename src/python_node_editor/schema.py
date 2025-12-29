@@ -136,7 +136,7 @@ class NodeUpdate(CamelBaseModel):
     status: Literal["executing", "executed", "error"] | None = None
     outputs: dict[str, DataWrapper | CachedDataWrapper] | None = None
     arguments: dict[str, DataWrapper | CachedDataWrapper] | None = None
-    terminal_output: str | None = None
+    terminal_output: str = ""
 
     @field_serializer("outputs", "arguments", when_used="unless-none")
     def serialize_wrappers(self, value, _info):
