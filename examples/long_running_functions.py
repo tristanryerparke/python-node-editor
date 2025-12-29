@@ -20,6 +20,3 @@ def slow_add_with_update(a: int, b: int) -> int:
     result = a + b
     flush_output_to_frontend(f"{a} + {b} = {result}")
     return result
-
-
-# s
