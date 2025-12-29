@@ -15,6 +15,7 @@ import { useTheme } from "./theme-provider";
 import { initializeUIData } from "../utils/add-ui-data";
 import type { FrontendNodeData, FunctionNode } from "../types/types";
 import GraphToolbar from "./graph-toolbar/graph-toolbar";
+import { useCopyPaste } from "../hooks/useCopyPaste";
 
 const nodeTypes: NodeTypes = {
   customNode: CustomNode,
@@ -37,6 +38,8 @@ function NodeGraph() {
   const { screenToFlowPosition, setViewport: setReactFlowViewport } =
     useReactFlow();
 
+  const { copy, cut, paste } = useCopyPaste();
+
   // Restore viewport on mount
   useEffect(() => {
     if (viewport) {
@@ -44,6 +47,28 @@ function NodeGraph() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Setup keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
+      if (cmdOrCtrl && event.key === "c") {
+        event.preventDefault();
+        copy();
+      } else if (cmdOrCtrl && event.key === "x") {
+        event.preventDefault();
+        cut();
+      } else if (cmdOrCtrl && event.key === "v") {
+        event.preventDefault();
+        paste();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [copy, cut, paste]);
 
   // Save viewport changes
   const onMoveEnd = useCallback<OnMove>(

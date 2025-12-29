@@ -1,9 +1,16 @@
 import type { Edge } from "@xyflow/react";
 import useFlowStore from "../stores/flowStore";
-import type { FunctionNode, FrontendFieldDataWrapper } from "../types/types";
+import type {
+  FunctionNode,
+  FrontendFieldDataWrapper,
+  FrontendNodeData,
+} from "../types/types";
 
 const INPUT_HANDLE_REGEX = /^([^:]+):arguments:(.+):handle$/;
 
+/**
+ * Clones a field while clearing its value, keeping only UI properties and type
+ */
 const cloneFieldWithClearedValue = (
   field: FrontendFieldDataWrapper,
 ): FrontendFieldDataWrapper => {
@@ -12,6 +19,55 @@ const cloneFieldWithClearedValue = (
       ([key]) => key.startsWith("_") || key === "type",
     ),
   ) as FrontendFieldDataWrapper;
+};
+
+/**
+ * Clears output data and terminal output from a single node's data
+ * Preserves UI state (properties starting with "_") and types
+ * Resets status to "not-executed"
+ *
+ * This function is reusable for both:
+ * - Clearing outputs before execution
+ * - Clearing outputs when copy/pasting nodes
+ *
+ * @param nodeData - The node data to clear outputs from
+ * @returns The node data with outputs and terminal output cleared
+ */
+export const clearNodeOutputs = (
+  nodeData: FrontendNodeData,
+): FrontendNodeData => {
+  const hasTerminalOutput = "terminalOutput" in nodeData;
+  const dataWithoutTerminalOutput = hasTerminalOutput
+    ? (({ terminalOutput: _terminalOutput, ...rest }) => rest)(
+        nodeData as FrontendNodeData & {
+          terminalOutput?: string;
+        },
+      )
+    : nodeData;
+
+  if (!nodeData.outputs) {
+    if (!hasTerminalOutput) {
+      return nodeData;
+    }
+
+    return {
+      ...dataWithoutTerminalOutput,
+      status: "not-executed",
+    };
+  }
+
+  const outputs = Object.fromEntries(
+    Object.entries(nodeData.outputs).map(([key, value]) => [
+      key,
+      cloneFieldWithClearedValue(value),
+    ]),
+  );
+
+  return {
+    ...dataWithoutTerminalOutput,
+    outputs,
+    status: "not-executed",
+  };
 };
 
 const clearAllOutputs = (nodes: FunctionNode[]): Map<string, FunctionNode> => {
@@ -23,45 +79,9 @@ const clearAllOutputs = (nodes: FunctionNode[]): Map<string, FunctionNode> => {
       return;
     }
 
-    const hasTerminalOutput = "terminalOutput" in node.data;
-    const dataWithoutTerminalOutput = hasTerminalOutput
-      ? (({ terminalOutput: _terminalOutput, ...rest }) => rest)(
-          node.data as FunctionNode["data"] & {
-            terminalOutput?: string;
-          },
-        )
-      : node.data;
-
-    if (!node.data.outputs) {
-      if (!hasTerminalOutput) {
-        updatedNodes.set(node.id, node);
-        return;
-      }
-
-      updatedNodes.set(node.id, {
-        ...node,
-        data: {
-          ...dataWithoutTerminalOutput,
-          status: "not-executed",
-        },
-      });
-      return;
-    }
-
-    const outputs = Object.fromEntries(
-      Object.entries(node.data.outputs).map(([key, value]) => [
-        key,
-        cloneFieldWithClearedValue(value),
-      ]),
-    );
-
     updatedNodes.set(node.id, {
       ...node,
-      data: {
-        ...dataWithoutTerminalOutput,
-        outputs,
-        status: "not-executed",
-      },
+      data: clearNodeOutputs(node.data),
     });
   });
 
