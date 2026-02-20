@@ -50,7 +50,7 @@ export function useExecuteFlowAsync() {
             ? result.nodeUpdates
             : Object.values(result.nodeUpdates);
 
-          updates.forEach((update: NodeUpdate) => {
+          for (const update of updates) {
             const nodeId = update.nodeId;
 
             // Get existing node data and merge while preserving ui only-data
@@ -60,16 +60,16 @@ export function useExecuteFlowAsync() {
             const mergedNodeData = preserveUIData(existingNodeData, updateData);
 
             // Update the entire node data at once
-            updateNodeData([nodeId], mergedNodeData);
+            await updateNodeData([nodeId], mergedNodeData);
 
             // Log errors for debugging
-            if (update.status === "error") {
-              console.error(
-                `Node ${nodeId} failed with output:`,
-                update.terminalOutput,
-              );
-            }
-          });
+              if (update.status === "error") {
+                console.error(
+                  `Node ${nodeId} failed with output:`,
+                  update.terminalOutput,
+                );
+              }
+          }
         }
 
         // Check if execution is complete

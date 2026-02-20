@@ -44,7 +44,7 @@ export default function EditableKey({ fieldName, path }: EditableKeyProps) {
     delete newArguments[fieldName];
 
     const argumentsPath = [nodeId, "arguments"];
-    updateNodeData(argumentsPath, newArguments);
+    void updateNodeData(argumentsPath, newArguments);
   };
 
   return (

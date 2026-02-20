@@ -9,22 +9,42 @@ router = APIRouter()
 class LargeDataUpload(CamelBaseModel):
     """Generic upload payload for any large data type"""
 
-    type: str  # Discriminator: "CachedImage", "CachedDataFrame", etc.
-    filename: str
+    callable_id: str | None = None
+    type: str  # Discriminator: "Image", "CachedDataFrame", etc.
+    filename: str | None = None
     data: dict  # Type-specific data (e.g., {"img_base64": "..."})
 
 
-@router.post("/upload_large_data")
-async def upload_large_data(upload: LargeDataUpload):
+@router.post("/cache")
+async def cache_large_data(upload: LargeDataUpload):
     """
     Universal endpoint for uploading large data of any registered cached type.
 
-    Uses server.TYPES to look up the cached type class.
-    Each class's deserialize_to_cache() method parses its specific format into a python object and caches it.
+    Uses server.TYPES to verify the cached type.
+    CachedDataWrapper.deserialize_to_cache() parses the payload and caches the data.
     """
-    from python_node_editor.server import TYPES
+    from python_node_editor.large_data.base import get_large_data_handler
+    from python_node_editor.server import CALLABLES, TYPES
 
     try:
+        if not upload.callable_id:
+            raise HTTPException(status_code=400, detail="Missing callable_id")
+
+        func_obj = CALLABLES.get(upload.callable_id)
+        if func_obj is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown callable_id: {upload.callable_id}",
+            )
+
+        handler_spec = get_large_data_handler(func_obj, upload.type)
+        upload_handler = handler_spec.upload if handler_spec else None
+        if upload_handler is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No upload handler registered for type {upload.type} on callable {upload.callable_id}",
+            )
+
         # Look up the cached type in TYPES dictionary
         if upload.type not in TYPES:
             raise HTTPException(status_code=400, detail=f"Unknown type: {upload.type}")
@@ -39,34 +59,13 @@ async def upload_large_data(upload: LargeDataUpload):
                 f"Kind: {type_def.kind}",
             )
 
-        # Get the _referenced_datamodel (the CachedDataWrapper subclass)
-        if (
-            not hasattr(type_def, "_referenced_datamodel")
-            or type_def._referenced_datamodel is None
-        ):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Type {upload.type} does not have a referenced_datamodel",
-            )
-
-        cached_data_class = type_def._referenced_datamodel
-
-        # Verify it's a CachedDataWrapper subclass
-        if not issubclass(cached_data_class, CachedDataWrapper):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Type {upload.type} class is not a CachedDataWrapper subclass",
-            )
-
         # Prepare full data dict for deserialization
-        full_data = {
-            "type": upload.type,
-            "filename": upload.filename,
-            **upload.data,
-        }
+        full_data = upload.model_dump(exclude={"callable_id"})
 
-        # Deserialize using the class-specific method
-        instance = cached_data_class.deserialize_to_cache(full_data)
+        # Deserialize using the provided handler
+        instance = CachedDataWrapper.deserialize_to_cache(
+            full_data, upload_handler=upload_handler
+        )
 
         # Return serialized dict with all computed fields included
         return instance.model_dump()

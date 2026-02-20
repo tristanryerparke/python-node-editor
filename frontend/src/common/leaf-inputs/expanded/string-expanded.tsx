@@ -45,7 +45,9 @@ export default memo(function StringExpanded({
   const [value, setValue] = useControlledDebounce(
     externalValue,
     (debouncedValue) => {
-      updateNodeData([...path, "value"], debouncedValue);
+      void updateNodeData([...path, "value"], debouncedValue, {
+        fromUser: true,
+      });
     },
     200,
   );
@@ -57,7 +59,7 @@ export default memo(function StringExpanded({
   const height = storedHeight || DEFAULT_AND_MIN_HEIGHT;
 
   const setHeight = (newHeight: number) => {
-    updateNodeData([...path, "_expandedHeight"], newHeight);
+    void updateNodeData([...path, "_expandedHeight"], newHeight);
   };
 
   // Early return after all hooks

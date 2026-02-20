@@ -47,7 +47,7 @@ export default function AddListInput({ path }: AddListInputProps) {
       value: null,
     };
 
-    updateNodeData([nodeId, "arguments", newArgName], newArg);
+    void updateNodeData([nodeId, "arguments", newArgName], newArg);
   };
 
   return (

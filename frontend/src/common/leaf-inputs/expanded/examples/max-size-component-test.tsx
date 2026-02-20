@@ -23,7 +23,7 @@ export function GrowingComponent({ path }: GrowingComponentProps) {
   const height = storedHeight || DEFAULT_AND_MIN_HEIGHT;
 
   const setHeight = (newHeight: number) => {
-    updateNodeData([...path, "_expandedHeight"], newHeight);
+    void updateNodeData([...path, "_expandedHeight"], newHeight);
   };
 
   return (

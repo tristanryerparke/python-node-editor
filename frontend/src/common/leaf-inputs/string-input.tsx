@@ -24,7 +24,9 @@ export default memo(function StringInput({
   const [value, setValue] = useControlledDebounce(
     externalValue,
     (debouncedValue) => {
-      updateNodeData([...path, "value"], debouncedValue);
+      void updateNodeData([...path, "value"], debouncedValue, {
+        fromUser: true,
+      });
     },
     200,
   );

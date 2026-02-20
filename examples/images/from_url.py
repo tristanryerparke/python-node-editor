@@ -4,7 +4,7 @@ import requests
 from PIL import Image as ImageLibrary
 from PIL.Image import Image
 
-from examples._custom_datatypes.cached_image import image_cached_datatype
+from extensions.cached_image import image_cached_datatype
 
 
 @image_cached_datatype

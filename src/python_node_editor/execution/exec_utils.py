@@ -160,8 +160,9 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
 
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
+    from python_node_editor.large_data.base import CachedDataWrapper, get_large_data_handler
     from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
-    from python_node_editor.server import TYPES
+    from python_node_editor.server import CALLABLES, TYPES
 
     outputs = {}
 
@@ -190,22 +191,26 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
 
         concrete_type = infer_concrete_type(new_value, data.type, TYPES)
 
-        # If the type has a custom referenced data model, find and create an instance of it
-        # Otheriwse use the generic DataWrapper
+        metadata = {}
         if (
             isinstance(concrete_type, str)
             and concrete_type in TYPES
-            and hasattr(TYPES[concrete_type], "_referenced_datamodel")
-            and TYPES[concrete_type]._referenced_datamodel is not None
+            and TYPES[concrete_type].kind == "cached"
         ):
-            output_class = TYPES[concrete_type]._referenced_datamodel
+            func_obj = CALLABLES.get(node.data.callable_id)
+            handler_spec = (
+                get_large_data_handler(func_obj, concrete_type)
+                if func_obj is not None
+                else None
+            )
+            metadata_handler = handler_spec.metadata if handler_spec else None
+            if metadata_handler is not None:
+                metadata = metadata_handler(new_value) or {}
+            output_class = CachedDataWrapper
         else:
             output_class = DataWrapper
 
-        output_data_model = output_class(
-            type=concrete_type,
-            value=new_value,
-        )
+        output_data_model = output_class(type=concrete_type, value=new_value, **metadata)
 
         outputs[output_name] = output_data_model
 

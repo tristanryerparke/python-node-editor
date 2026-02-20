@@ -6,6 +6,7 @@ import {
   BackgroundVariant,
   type NodeTypes,
   useReactFlow,
+  useStoreApi,
   type OnMove,
 } from "@xyflow/react";
 import { useCallback, useEffect } from "react";
@@ -37,8 +38,19 @@ function NodeGraph() {
 
   const { screenToFlowPosition, setViewport: setReactFlowViewport } =
     useReactFlow();
+  const storeApi = useStoreApi();
 
   const { copy, cut, paste } = useCopyPaste();
+
+  const isTextEditable = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    if (target.isContentEditable) return true;
+    return Boolean(
+      target.closest(
+        'input, textarea, select, [contenteditable="true"], [role="textbox"]',
+      ),
+    );
+  };
 
   // Restore viewport on mount
   useEffect(() => {
@@ -53,14 +65,28 @@ function NodeGraph() {
     const handleKeyDown = (event: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+      const key = event.key.toLowerCase();
+      const isEditingText =
+        isTextEditable(event.target) || isTextEditable(document.activeElement);
 
-      if (cmdOrCtrl && event.key === "c") {
+      if (cmdOrCtrl && key === "a") {
+        if (isEditingText) return;
+        event.preventDefault();
+        setNodes((currentNodes) => {
+          if (currentNodes.length === 0) return currentNodes;
+          storeApi.setState({
+            nodesSelectionActive: true,
+            userSelectionActive: false,
+          });
+          return currentNodes.map((node) => ({ ...node, selected: true }));
+        });
+      } else if (cmdOrCtrl && key === "c") {
         event.preventDefault();
         copy();
-      } else if (cmdOrCtrl && event.key === "x") {
+      } else if (cmdOrCtrl && key === "x") {
         event.preventDefault();
         cut();
-      } else if (cmdOrCtrl && event.key === "v") {
+      } else if (cmdOrCtrl && key === "v") {
         event.preventDefault();
         paste();
       }
@@ -68,7 +94,7 @@ function NodeGraph() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [copy, cut, paste]);
+  }, [copy, cut, paste, setNodes, storeApi]);
 
   // Save viewport changes
   const onMoveEnd = useCallback<OnMove>(

@@ -16,7 +16,7 @@ export default memo(function NodeHeader({ data, nodeId }: NodeHeaderProps) {
 
   const handleToggleDrawer = useCallback(() => {
     const path = [nodeId, "_terminal_drawer", "_expanded"];
-    updateNodeData(path, !data._terminal_drawer?._expanded);
+    void updateNodeData(path, !data._terminal_drawer?._expanded);
   }, [nodeId, data._terminal_drawer?._expanded, updateNodeData]);
 
   if (!data) {

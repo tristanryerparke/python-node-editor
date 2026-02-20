@@ -1,7 +1,7 @@
 from PIL.Image import Image, Transpose
 
+from extensions.cached_image import image_cached_datatype
 from python_node_editor.display import add_node_options
-from examples._custom_datatypes.cached_image import image_cached_datatype
 
 
 @add_node_options(return_value_name="flipped")

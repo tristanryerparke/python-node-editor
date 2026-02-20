@@ -13,6 +13,7 @@ def add_node_options(
     list_inputs: bool = False,
     dict_inputs: bool = False,
     cached_types: list | None = None,
+    cached_handlers: list | dict | None = None,
 ):
     def decorator(func: F) -> F:
         @wraps(func)
@@ -30,6 +31,12 @@ def add_node_options(
             wrapper.dict_inputs = dict_inputs  # type: ignore
         if cached_types is not None:
             wrapper._type_datamodel_mappings = cached_types  # type: ignore
+        if cached_handlers is not None:
+            from python_node_editor.large_data.base import normalize_large_data_handlers
+
+            existing = getattr(wrapper, "_large_data_handlers", None)
+            merged = {**normalize_large_data_handlers(existing), **normalize_large_data_handlers(cached_handlers)}
+            wrapper._large_data_handlers = merged  # type: ignore
 
         return cast(F, wrapper)
 

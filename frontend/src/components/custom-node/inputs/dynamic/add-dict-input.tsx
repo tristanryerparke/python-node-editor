@@ -42,7 +42,7 @@ export default function AddDictInput({ path }: AddDictInputProps) {
       value: null,
     };
 
-    updateNodeData([nodeId, "arguments", newArgName], newArg);
+    void updateNodeData([nodeId, "arguments", newArgName], newArg);
   };
 
   return (

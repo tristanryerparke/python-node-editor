@@ -11,7 +11,14 @@ import type {
   Viewport,
 } from "@xyflow/react";
 import { produce } from "immer";
-import type { FunctionNode } from "../types/types";
+import type { FrontendFieldDataWrapper, FunctionNode } from "../types/types";
+import {
+  getConcreteType,
+  isArgumentValuePath,
+  isCacheKeyString,
+  uploadLargeData,
+} from "../utils/large-data-utils";
+import { preserveUIData } from "../utils/preserve-ui-data";
 
 type FlowStoreState = {
   nodes: FunctionNode[];
@@ -33,8 +40,8 @@ type FlowStoreActions = {
   updateNodeData: (
     path: (string | number)[],
     newData: unknown,
-    options?: { suppress?: boolean; prefix?: string },
-  ) => void;
+    options?: { suppress?: boolean; prefix?: string; fromUser?: boolean },
+  ) => Promise<void>;
   getNodeData: (path: (string | number)[]) => unknown;
   deleteNodeData: (path: (string | number)[]) => void;
 };
@@ -86,21 +93,66 @@ const useFlowStore = createWithEqualityFn<
 
       setRfInstance: (instance) => set({ rfInstance: instance }),
 
-      updateNodeData: (path, newData, options = {}) => {
-        const { suppress = false, prefix = "" } = options;
+      updateNodeData: async (path, newData, options = {}) => {
+        const { suppress = false, prefix = "", fromUser = false } = options;
         const oldValue = get().getNodeData(path);
+
+        let targetPath = path;
+        let dataToSet = newData;
+
+        if (
+          fromUser &&
+          isArgumentValuePath(path) &&
+          newData != null &&
+          !isCacheKeyString(newData)
+        ) {
+          const wrapperPath = path.slice(0, -1);
+          const wrapper = get().getNodeData(
+            wrapperPath,
+          ) as FrontendFieldDataWrapper | undefined;
+          const concreteType = getConcreteType(wrapper);
+
+          if (concreteType) {
+            const nodeId = String(wrapperPath[0]);
+            const nodeData = get().getNodeData([
+              nodeId,
+            ]) as FunctionNode["data"] | undefined;
+            const cachedTypes =
+              nodeData && Array.isArray(nodeData.cachedTypes)
+                ? nodeData.cachedTypes
+                : [];
+
+            if (cachedTypes.includes(concreteType)) {
+              const callableId = nodeData?.callableId;
+              if (callableId) {
+                const cachedData = await uploadLargeData(
+                  concreteType,
+                  newData,
+                  callableId,
+                );
+                dataToSet = preserveUIData(wrapper, cachedData);
+                targetPath = wrapperPath;
+              } else {
+                console.error(
+                  `Missing callableId for cached upload (node: ${nodeId})`,
+                );
+              }
+            }
+          }
+        }
 
         set(
           produce((state: FlowState) => {
             const nodeIndex = state.nodes.findIndex(
-              (node) => node.id === path[0],
+              (node) => node.id === targetPath[0],
             );
             if (nodeIndex !== -1) {
-              const pathToProperty = path.slice(1);
+              const pathToProperty = targetPath.slice(1);
 
               // Special case: if path is just [nodeId], replace entire node data
               if (pathToProperty.length === 0) {
-                state.nodes[nodeIndex].data = newData as FunctionNode["data"];
+                state.nodes[nodeIndex].data =
+                  dataToSet as FunctionNode["data"];
               } else {
                 let current = state.nodes[nodeIndex].data;
 
@@ -108,7 +160,7 @@ const useFlowStore = createWithEqualityFn<
                   const key = pathToProperty[i];
                   if (current[key] === undefined) {
                     console.warn(
-                      `Creating new nested property: ${key} at path: ${path.slice(0, i + 2).join(".")}`,
+                      `Creating new nested property: ${key} at path: ${targetPath.slice(0, i + 2).join(".")}`,
                     );
                     current[key] = {};
                   }
@@ -117,7 +169,7 @@ const useFlowStore = createWithEqualityFn<
                 }
 
                 const finalKey = pathToProperty[pathToProperty.length - 1];
-                current[finalKey] = newData;
+                current[finalKey] = dataToSet;
               }
             }
           }),
@@ -127,11 +179,11 @@ const useFlowStore = createWithEqualityFn<
           const message = prefix ? `${prefix} ` : "";
           console.log(
             `${message}updating `,
-            path,
+            targetPath,
             "\n from",
             oldValue,
             "to",
-            newData,
+            dataToSet,
           );
         }
       },

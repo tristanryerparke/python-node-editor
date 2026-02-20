@@ -161,7 +161,7 @@ def analyze_function(
     # Apply type-to-datamodel mappings from decorator
     if hasattr(func_obj, "_type_datamodel_mappings"):
         mappings = func_obj._type_datamodel_mappings
-        # mappings is a list of dicts like [{"argument_type": Image, "associated_datamodel": CachedImageDataModel}]
+        # mappings is a list of dicts like [{"argument_type": Image, "associated_datamodel": SomeDataModel}]
         for mapping in mappings:
             argument_type = mapping.get("argument_type")
             associated_datamodel = mapping.get("associated_datamodel")
@@ -177,6 +177,31 @@ def analyze_function(
                 # Set _referenced_datamodel on the CachedTypeDefModel instance
                 if hasattr(type_def, "_referenced_datamodel"):
                     type_def._referenced_datamodel = associated_datamodel
+
+    # Validate any cached handlers defined on the function
+    from python_node_editor.large_data.base import get_large_data_handlers
+
+    handlers = get_large_data_handlers(func_obj)
+    cached_types = list(handlers.keys())
+    if handlers:
+        for type_name, handler_spec in handlers.items():
+            match_type = handler_spec.match_type
+            if match_type is not None:
+                resolved_name = get_type_repr(match_type, module_ns, short_repr=True)
+                if resolved_name != type_name:
+                    raise ValueError(
+                        f"Cached handler type_name {type_name} does not match "
+                        f"match_type {resolved_name}"
+                    )
+            if type_name not in found_types:
+                raise ValueError(
+                    f"Cached handler type_name {type_name} not found in function annotations"
+                )
+            type_def = found_types[type_name]
+            if hasattr(type_def, "kind") and type_def.kind != "cached":
+                raise ValueError(
+                    f"Cached handler type_name {type_name} is not registered as a cached type"
+                )
 
     # Generate callable_id by hashing the function's source code
     source_code = inspect.getsource(original_func)
@@ -201,6 +226,7 @@ def analyze_function(
             output_style=output_style,
             outputs=outputs,
             dynamic_input_type=dynamic_input_type,
+            cached_types=cached_types,
         ),
         func_obj,
         found_types,
