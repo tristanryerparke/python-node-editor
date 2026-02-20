@@ -1,6 +1,6 @@
 from PIL.Image import Image, Transpose
 
-from python_node_editor.datatypes.cached_image import image_cached_datatype
+from extensions.cached_image import image_cached_datatype
 from python_node_editor.display import add_node_options
 
 

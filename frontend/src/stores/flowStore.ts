@@ -114,9 +114,24 @@ const useFlowStore = createWithEqualityFn<
           const concreteType = getConcreteType(wrapper);
 
           if (shouldCacheLargeData(concreteType, newData)) {
-            const cachedData = await uploadLargeData(concreteType, newData);
-            dataToSet = preserveUIData(wrapper, cachedData);
-            targetPath = wrapperPath;
+            const nodeId = String(wrapperPath[0]);
+            const nodeData = get().getNodeData([
+              nodeId,
+            ]) as FunctionNode["data"] | undefined;
+            const callableId = nodeData?.callableId;
+            if (callableId) {
+              const cachedData = await uploadLargeData(
+                concreteType,
+                newData,
+                callableId,
+              );
+              dataToSet = preserveUIData(wrapper, cachedData);
+              targetPath = wrapperPath;
+            } else {
+              console.error(
+                `Missing callableId for cached upload (node: ${nodeId})`,
+              );
+            }
           }
         }
 

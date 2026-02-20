@@ -80,6 +80,7 @@ def test_image_upload():
 
     # Upload the image
     payload = {
+        "callableId": schema.callable_id,
         "type": "Image",
         "filename": "test_image.png",
         "data": {"img_base64": img_base64},
@@ -108,6 +109,7 @@ def test_cache_exists():
     img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     payload = {
+        "callableId": schema.callable_id,
         "type": "Image",
         "filename": "test_image.png",
         "data": {"img_base64": img_base64},
@@ -141,6 +143,7 @@ def test_single_image_node_execute():
     img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     upload_payload = {
+        "callableId": schema.callable_id,
         "type": "Image",
         "filename": "test_blur.png",
         "data": {"img_base64": img_base64},
@@ -192,6 +195,7 @@ def test_two_connected_image_nodes():
     img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     upload_payload = {
+        "callableId": schema.callable_id,
         "type": "Image",
         "filename": "test_double_blur.png",
         "data": {"img_base64": img_base64},

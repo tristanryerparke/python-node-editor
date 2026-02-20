@@ -178,6 +178,30 @@ def analyze_function(
                 if hasattr(type_def, "_referenced_datamodel"):
                     type_def._referenced_datamodel = associated_datamodel
 
+    # Validate any cached handlers defined on the function
+    if hasattr(func_obj, "_large_data_handlers"):
+        from python_node_editor.large_data.base import get_large_data_handlers
+
+        handlers = get_large_data_handlers(func_obj)
+        for type_name, handler_spec in handlers.items():
+            match_type = handler_spec.match_type
+            if match_type is not None:
+                resolved_name = get_type_repr(match_type, module_ns, short_repr=True)
+                if resolved_name != type_name:
+                    raise ValueError(
+                        f"Cached handler type_name {type_name} does not match "
+                        f"match_type {resolved_name}"
+                    )
+            if type_name not in found_types:
+                raise ValueError(
+                    f"Cached handler type_name {type_name} not found in function annotations"
+                )
+            type_def = found_types[type_name]
+            if hasattr(type_def, "kind") and type_def.kind != "cached":
+                raise ValueError(
+                    f"Cached handler type_name {type_name} is not registered as a cached type"
+                )
+
     # Generate callable_id by hashing the function's source code
     source_code = inspect.getsource(original_func)
     hash_digest = hashlib.sha256(source_code.encode()).hexdigest()

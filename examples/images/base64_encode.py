@@ -3,7 +3,7 @@ from io import BytesIO
 
 from PIL.Image import Image
 
-from python_node_editor.datatypes.cached_image import image_cached_datatype
+from extensions.cached_image import image_cached_datatype
 
 
 @image_cached_datatype

@@ -63,6 +63,7 @@ export const shouldCacheLargeData = (
 export const uploadLargeData = async (
   typeName: string,
   value: unknown,
+  callableId: string,
 ): Promise<FrontendFieldDataWrapper> => {
   let payload: Record<string, unknown> = {};
   let filename: string | null = null;
@@ -84,6 +85,7 @@ export const uploadLargeData = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      callableId,
       type: typeName,
       filename,
       data: payload,
@@ -91,7 +93,18 @@ export const uploadLargeData = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to upload large data (type: ${typeName})`);
+    let message = `Failed to upload large data (type: ${typeName})`;
+    try {
+      const errorBody = await response.json();
+      if (typeof errorBody?.detail === "string") {
+        message = errorBody.detail;
+      }
+    } catch {
+      // Ignore JSON parse errors and use default message.
+    }
+
+    console.error("Large data upload failed:", message);
+    throw new Error(message);
   }
 
   return (await response.json()) as FrontendFieldDataWrapper;

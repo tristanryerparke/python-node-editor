@@ -6,10 +6,7 @@ from PIL import ImageOps
 from PIL.Image import Image
 
 from python_node_editor.display import add_node_options
-from python_node_editor.large_data.base import (
-    register_large_data_metadata_handler,
-    register_large_data_upload_handler,
-)
+from python_node_editor.large_data.base import LargeDataHandlerSpec
 
 THUMBNAIL_MAX_SIZE = 500
 
@@ -66,9 +63,14 @@ def _image_metadata_handler(value: Image) -> dict:
         "display_name": f"Image({value.width}x{value.height}, {value.mode})",
     }
 
-
-register_large_data_upload_handler("Image", _image_upload_handler)
-register_large_data_metadata_handler("Image", _image_metadata_handler)
-
-
-image_cached_datatype = add_node_options()
+# Prebuilt decorator for easy reference
+image_cached_datatype = add_node_options(
+    cached_handlers=[
+        LargeDataHandlerSpec(
+            type_name="Image",
+            match_type=Image,
+            upload=_image_upload_handler,
+            metadata=_image_metadata_handler,
+        )
+    ]
+)
