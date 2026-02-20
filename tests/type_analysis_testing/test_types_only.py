@@ -98,7 +98,7 @@ def test_user_model():
     assert repr_result == "Command"
 
     # Validate the types were properly parsed
-    types_dict = analyze_type(type_obj, file_path, module_ns)
+    types_dict = analyze_type(type_obj, file_path, module_ns, {})
     d(types_dict)
 
     # Check that Command is recognized as a user model
@@ -139,7 +139,7 @@ def test_simple_generic():
     print(f"{'=' * 60}\n")
 
     # Analyze the type
-    types_dict = analyze_type(type_obj, file_path, module_ns)
+    types_dict = analyze_type(type_obj, file_path, module_ns, {})
     d(types_dict)
 
 

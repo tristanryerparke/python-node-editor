@@ -8,7 +8,11 @@ import type { FrontendFieldDataWrapper } from "@/types/types";
 import useFlowStore, { useNodeData } from "@/stores/flowStore";
 import { Grip } from "lucide-react";
 
-interface ImageExpandedProps {
+interface SVGDataWrapper extends Omit<FrontendFieldDataWrapper, "value"> {
+  value: string | null;
+}
+
+interface SVGExpandedProps {
   inputData?: FrontendFieldDataWrapper;
   outputData?: FrontendFieldDataWrapper;
   path: (string | number)[];
@@ -17,11 +21,11 @@ interface ImageExpandedProps {
 const DEFAULT_AND_MIN_HEIGHT = 60; // Tailwind units
 const MAX_HEIGHT = 200; // Tailwind units
 
-export default memo(function ImageExpanded({
+export default memo(function SVGExpanded({
   inputData,
   outputData,
   path,
-}: ImageExpandedProps) {
+}: SVGExpandedProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
 
   // Get height from store
@@ -40,13 +44,14 @@ export default memo(function ImageExpanded({
     return <div>No data</div>;
   }
 
-  const preview = (data as any).preview as string | undefined;
-  const filename = (data as any).filename as string | undefined;
-  const cacheKey =
-    typeof data.value === "string" && data.value.startsWith("$cacheKey:")
-      ? data.value.slice("$cacheKey:".length)
-      : undefined;
-  const hasImage = !!preview || !!cacheKey;
+  const svgData = data as SVGDataWrapper;
+  const svgContent = svgData.value;
+  const hasSVG = svgContent !== null;
+
+  // Convert SVG to data URI for img tag
+  const svgDataUri = hasSVG
+    ? `data:image/svg+xml;base64,${btoa(svgContent || "")}`
+    : "";
 
   return (
     <div className="flex flex-col flex-1">
@@ -58,16 +63,16 @@ export default memo(function ImageExpanded({
         useTailwindScale={true}
       >
         <div className="w-full h-full flex items-center justify-center bg-muted/30 rounded-md border border-input overflow-hidden relative">
-          {hasImage && preview ? (
+          {hasSVG ? (
             <img
-              src={`data:image/webp;base64,${preview}`}
-              alt="Preview"
+              src={svgDataUri}
+              alt="SVG Graphic"
               className="w-full h-full object-contain"
+              style={{ width: "100%", height: "100%" }}
               draggable={false}
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
           ) : (
-            <span className="text-sm text-muted-foreground">No image</span>
+            <span className="text-sm text-muted-foreground">No SVG</span>
           )}
           <ResizableHeightHandle>
             <SyncedWidthHandle>
@@ -78,9 +83,6 @@ export default memo(function ImageExpanded({
           </ResizableHeightHandle>
         </div>
       </ResizableHeight>
-      {hasImage && filename && (
-        <p className="text-xs text-muted-foreground mt-1">{filename}</p>
-      )}
     </div>
   );
 });

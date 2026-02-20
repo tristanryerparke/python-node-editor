@@ -7,14 +7,14 @@
     "label": "Python Active File",
     "adapter": "Debugpy",
     "program": "$ZED_FILE",
-    "request": "launch"
+    "request": "launch",
   },
   {
     "label": "Launch Backend",
     "adapter": "Debugpy",
     "program": "main.py",
-    "args": ["examples/images/basic_blur.py", "-v"],
-    "request": "launch"
+    "args": ["examples/images/blur.py", "-v"],
+    "request": "launch",
   },
   {
     "label": "Chrome with Debugger",
@@ -24,7 +24,7 @@
     "url": "http://localhost:3000/",
     "webRoot": "$ZED_WORKTREE_ROOT/frontend/src",
     "console": "integratedTerminal",
-    "skipFiles": ["<node_internals>/**"]
+    "skipFiles": ["<node_internals>/**"],
   },
   {
     "label": "Launch Frontend",
@@ -38,8 +38,8 @@
     "build": {
       "command": "bun",
       "args": ["run", "dev"],
-      "cwd": "${ZED_WORKTREE_ROOT}/frontend"
+      "cwd": "${ZED_WORKTREE_ROOT}/frontend",
     },
-    "skipFiles": ["<node_internals>/**"]
-  }
+    "skipFiles": ["<node_internals>/**"],
+  },
 ]

@@ -82,6 +82,8 @@ class CachedImageDataModel(CachedDataWrapper):
     @computed_field
     @property
     def display_name(self) -> str:
+        if self.value is None:
+            return "Image"
         return f"Image({self.value.width}x{self.value.height}, {self.value.mode})"
 
 

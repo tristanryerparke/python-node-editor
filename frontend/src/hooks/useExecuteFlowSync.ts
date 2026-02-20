@@ -47,6 +47,9 @@ export function useExecuteFlowSync() {
               `Node ${nodeId} failed with output:`,
               update.terminalOutput,
             );
+            // Automatically open the drawer when an error occurs
+            console.log(`Auto-opening drawer for node ${nodeId} due to error`);
+            updateNodeData([nodeId, "_terminal_drawer", "_expanded"], true);
           }
         });
       } else {

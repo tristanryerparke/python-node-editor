@@ -19,6 +19,7 @@ from python_node_editor.schema_base import (
 
 # We don't want the fields on MultipleOutputs to be converted to camel case
 class MultipleOutputs(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     pass
 
 
@@ -107,7 +108,56 @@ class NodeDataFromFrontend(CamelBaseModel):
                             # Replace the dict with the instance in the data
                             arguments[arg_name] = cached_instance
 
+            # Also handle builtin_subclass types dynamically
+            cls._reconstruct_builtin_subclass_types(arguments)
+
         return data
+
+    @classmethod
+    def _reconstruct_builtin_subclass_types(cls, data_dict: dict) -> None:
+        """Helper method to dynamically reconstruct builtin_subclass types."""
+        from python_node_editor.server import TYPES
+
+        for key, value in list(data_dict.items()):
+            if isinstance(value, dict):
+                type_info = value.get("type")
+                value_data = value.get("value")
+
+                # Handle simple builtin_subclass types
+                if (
+                    isinstance(type_info, str)
+                    and type_info in TYPES
+                    and TYPES[type_info].kind == "builtin_subclass"
+                ):
+                    type_def = TYPES[type_info]
+                    # Get the actual class to instantiate
+                    target_class = type_def._class
+
+                    if target_class and isinstance(value_data, str):
+                        # Create instance of the actual class
+                        instance = target_class(value_data)
+                        data_dict[key] = instance
+
+                # Handle list types with builtin_subclass items
+                elif (
+                    isinstance(type_info, dict)
+                    and type_info.get("structureType") == "list"
+                    and isinstance(type_info.get("itemsType"), str)
+                    and type_info["itemsType"] in TYPES
+                    and TYPES[type_info["itemsType"]].kind == "builtin_subclass"
+                ):
+                    list_value = value.get("value", [])
+                    if isinstance(list_value, list):
+                        items_type = type_info["itemsType"]
+                        target_class = TYPES[items_type]._class
+
+                        if target_class:
+                            # Convert each string to the appropriate class instance
+                            converted_list = [
+                                target_class(item) if isinstance(item, str) else item
+                                for item in list_value
+                            ]
+                            data_dict[key] = {"type": "list", "value": converted_list}
 
 
 class NodeFromFrontend(CamelBaseModel):

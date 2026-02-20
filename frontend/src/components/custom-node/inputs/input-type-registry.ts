@@ -3,8 +3,10 @@ import FloatInput from "../../../common/leaf-inputs/float-input";
 import IntInput from "../../../common/leaf-inputs/int-input";
 import StringInput from "../../../common/leaf-inputs/string-input";
 import ImageInput from "../../../common/leaf-inputs/image-input";
+import SVGInput from "../../../common/leaf-inputs/svg-input";
 import StringExpanded from "../../../common/leaf-inputs/expanded/string-expanded";
 import ImageExpanded from "../../../common/leaf-inputs/expanded/image-expanded";
+import SVGExpanded from "../../../common/leaf-inputs/expanded/svg-expanded";
 // import { GrowingComponent } from "@/common/leaf-inputs/expanded/max-size-component-test";
 
 export interface InputRendererProps {
@@ -40,4 +42,5 @@ export const INPUT_TYPE_COMPONENT_REGISTRY: Record<
   },
   Image: { main: ImageInput, expanded: ImageExpanded },
   // Image: { main: ImageInput, expanded: GrowingComponent },
+  SVG: { main: SVGInput, expanded: SVGExpanded },
 };

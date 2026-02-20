@@ -52,6 +52,11 @@ def analyze_function(
     # Local dict for types found in this function
     found_types: Dict[str, Any] = {}
 
+    # Build analysis context from decorator metadata
+    analysis_context = {}
+    if hasattr(func_obj, "_type_datamodel_mappings"):
+        analysis_context["cached_types"] = func_obj._type_datamodel_mappings
+
     # Get the input arguments schema of the function and register the types
     arguments = {}
     dynamic_input_type = None
@@ -71,7 +76,7 @@ def analyze_function(
                 items_type=get_type_repr(ann, module_ns, short_repr=True),  # type: ignore[arg-type]
             )
             # Analyze the argument type and merge with found types
-            arg_types = analyze_type(ann, file_path, module_ns)
+            arg_types = analyze_type(ann, file_path, module_ns, analysis_context)
             merge_types_dict(found_types, arg_types)
             continue
 
@@ -87,7 +92,7 @@ def analyze_function(
                 items_type=get_type_repr(ann, module_ns, short_repr=True),  # type: ignore[arg-type]
             )
             # Analyze the argument type and merge with found types
-            arg_types = analyze_type(ann, file_path, module_ns)
+            arg_types = analyze_type(ann, file_path, module_ns, analysis_context)
             merge_types_dict(found_types, arg_types)
             continue
 
@@ -98,16 +103,28 @@ def analyze_function(
             raise ParameterNotTypeAnnotated(f"Parameter {arg.name} has no annotation")
 
         arg_value = arg.default if arg.default is not inspect.Parameter.empty else None
-        arg_entry = DataWrapper(
-            type=get_type_repr(ann, module_ns, short_repr=True),  # type: ignore[arg-type]
-            value=arg_value,
-        )
-
-        arguments[arg.name] = arg_entry
+        type_repr = get_type_repr(ann, module_ns, short_repr=True)  # type: ignore[arg-type]
 
         # Analyze the argument type and merge with found types
-        arg_types = analyze_type(ann, file_path, module_ns)
+        arg_types = analyze_type(ann, file_path, module_ns, analysis_context)
         merge_types_dict(found_types, arg_types)
+
+        # Check if this is a cached type and create appropriate wrapper
+        # Only check found_types if type_repr is a string (simple type), not StructDescr/UnionDescr
+        if (
+            isinstance(type_repr, str)
+            and type_repr in found_types
+            and hasattr(found_types[type_repr], "_referenced_datamodel")
+        ):
+            cached_datamodel = found_types[type_repr]._referenced_datamodel
+            if cached_datamodel is not None:
+                arg_entry = cached_datamodel(type=type_repr, value=arg_value)
+            else:
+                arg_entry = DataWrapper(type=type_repr, value=arg_value)
+        else:
+            arg_entry = DataWrapper(type=type_repr, value=arg_value)
+
+        arguments[arg.name] = arg_entry
 
     # Handle return type and detect multiple outputs
     ret_ann = type_hints.get("return", sig.return_annotation)
@@ -128,18 +145,32 @@ def analyze_function(
         output_style = "multiple"
         for field_name, field_info in ret_ann.model_fields.items():
             if field_info.annotation is not None:
-                output_entry = DataWrapper(
-                    type=get_type_repr(  # type: ignore[arg-type]
-                        field_info.annotation, module_ns, short_repr=True
-                    ),
-                    value=None,
+                type_repr = get_type_repr(  # type: ignore[arg-type]
+                    field_info.annotation, module_ns, short_repr=True
                 )
 
-                outputs[field_name] = output_entry
-
                 # Analyze the output field type and merge with found types
-                field_types = analyze_type(field_info.annotation, file_path, module_ns)
+                field_types = analyze_type(
+                    field_info.annotation, file_path, module_ns, analysis_context
+                )
                 merge_types_dict(found_types, field_types)
+
+                # Check if this is a cached type and create appropriate wrapper
+                # Only check found_types if type_repr is a string (simple type), not StructDescr/UnionDescr
+                if (
+                    isinstance(type_repr, str)
+                    and type_repr in found_types
+                    and hasattr(found_types[type_repr], "_referenced_datamodel")
+                ):
+                    cached_datamodel = found_types[type_repr]._referenced_datamodel
+                    if cached_datamodel is not None:
+                        output_entry = cached_datamodel(type=type_repr, value=None)
+                    else:
+                        output_entry = DataWrapper(type=type_repr, value=None)
+                else:
+                    output_entry = DataWrapper(type=type_repr, value=None)
+
+                outputs[field_name] = output_entry
 
     # Basic single output
     else:
@@ -147,36 +178,28 @@ def analyze_function(
         # Check if function has a custom return_value_name from decorator
         return_value_name_temp = getattr(func_obj, "return_value_name", None)
         output_key = return_value_name_temp if return_value_name_temp else "return"
-        output_entry = DataWrapper(
-            type=get_type_repr(ret_ann, module_ns, short_repr=True),  # type: ignore[arg-type]
-            value=None,
-        )
+        type_repr = get_type_repr(ret_ann, module_ns, short_repr=True)  # type: ignore[arg-type]
+
+        # Analyze the return type and merge found types
+        ret_types = analyze_type(ret_ann, file_path, module_ns, analysis_context)
+        merge_types_dict(found_types, ret_types)
+
+        # Check if this is a cached type and create dynamically create the appropriate wrapper
+        # Only check found_types if type_repr is a string (simple type), not StructDescr/UnionDescr
+        if (
+            isinstance(type_repr, str)
+            and type_repr in found_types
+            and hasattr(found_types[type_repr], "_referenced_datamodel")
+        ):
+            cached_datamodel = found_types[type_repr]._referenced_datamodel
+            if cached_datamodel is not None:
+                output_entry = cached_datamodel(type=type_repr, value=None)
+            else:
+                output_entry = DataWrapper(type=type_repr, value=None)
+        else:
+            output_entry = DataWrapper(type=type_repr, value=None)
 
         outputs[output_key] = output_entry
-
-    # Analyze the return type and merge found types
-    ret_types = analyze_type(ret_ann, file_path, module_ns)
-    merge_types_dict(found_types, ret_types)
-
-    # Apply type-to-datamodel mappings from decorator
-    if hasattr(func_obj, "_type_datamodel_mappings"):
-        mappings = func_obj._type_datamodel_mappings
-        # mappings is a list of dicts like [{"argument_type": Image, "associated_datamodel": CachedImageDataModel}]
-        for mapping in mappings:
-            argument_type = mapping.get("argument_type")
-            associated_datamodel = mapping.get("associated_datamodel")
-
-            if argument_type is None or associated_datamodel is None:
-                continue
-
-            # Find the type name for this argument_type class in found_types
-            type_name = get_type_repr(argument_type, module_ns, short_repr=True)
-
-            if type_name in found_types:
-                type_def = found_types[type_name]
-                # Set _referenced_datamodel on the CachedTypeDefModel instance
-                if hasattr(type_def, "_referenced_datamodel"):
-                    type_def._referenced_datamodel = associated_datamodel
 
     # Generate callable_id by hashing the function's source code
     source_code = inspect.getsource(original_func)

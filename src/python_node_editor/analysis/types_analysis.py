@@ -2,10 +2,11 @@ import inspect
 import os
 import types
 import typing
-from typing import Any, Dict, Set
+from typing import Any, Dict, Set, Type
 
 from python_node_editor.schema import MultipleOutputs
 from python_node_editor.schema_base import (
+    VALID_BUILTIN_CLASSES,
     CachedTypeDefModel,
     StructDescr,
     TypeDefModel,
@@ -72,12 +73,10 @@ def get_type_repr(tp, module_ns, short_repr=True):
 
 
 def analyze_type(
-    tp: Any,
-    file_path: str,
-    module_ns: Dict[str, Any],
+    tp: Any, file_path: str, module_ns: Dict[str, Any], analysis_context: dict = {}
 ) -> Dict[str, Dict[str, Any]]:
     """Analyze a type and return a dict of type schemas for it and all constituent types."""
-    types_dict: Dict[str, Dict[str, Any]] = {}
+    types_dict: Dict[str, TypeDefModel] = {}
     found_types_set: Set[Any] = set()
 
     # Get absolute and relative file paths
@@ -120,31 +119,33 @@ def analyze_type(
             return
 
         # Cached types (detected by _is_cached_type marker)
-        if inspect.isclass(t) and hasattr(t, "_is_cached_type"):
-            # Try to find the name in the module namespace first
-            type_name = None
-            for name, val in module_ns.items():
-                if val is t and name.isidentifier():
-                    type_name = name
-                    break
+        # if inspect.isclass(t) and hasattr(t, "_is_cached_type"):
+        #     raise ValueError("Cached types are not supported")
 
-            # If not found in module_ns, use the class's __name__
-            if type_name is None:
-                type_name = t.__name__
+        # # Try to find the name in the module namespace first
+        # type_name = None
+        # for name, val in module_ns.items():
+        #     if val is t and name.isidentifier():
+        #         type_name = name
+        #         break
 
-            if type_name not in types_dict:
-                type_def = CachedTypeDefModel(
-                    kind="user",
-                    category=os.path.splitext(rel_file_path)[0]
-                    .replace(os.sep, "/")
-                    .split("/"),
-                )
-                type_def._class = t
-                types_dict[type_name] = type_def
-            return
+        # # If not found in module_ns, use the class's __name__
+        # if type_name is None:
+        #     type_name = t.__name__
+
+        # if type_name not in types_dict:
+        #     type_def = CachedTypeDefModel(
+        #         kind="user",
+        #         category=os.path.splitext(rel_file_path)[0]
+        #         .replace(os.sep, "/")
+        #         .split("/"),
+        #     )
+        #     type_def._class = t
+        #     types_dict[type_name] = type_def
+        # return
 
         # Builtin type
-        if inspect.isclass(t) and t.__module__ == "builtins":
+        if inspect.isclass(t) and t in VALID_BUILTIN_CLASSES:
             tname = t.__name__
             if tname not in types_dict:
                 type_def = TypeDefModel(kind="builtin")
@@ -177,6 +178,13 @@ def analyze_type(
                         types_dict[name] = type_def
                     break
 
+        elif inspect.isclass(t) and issubclass(t, VALID_BUILTIN_CLASSES):
+            tname = t.__name__
+            if tname not in types_dict:
+                type_def = TypeDefModel(kind="builtin_subclass")
+                type_def._class = t
+                types_dict[tname] = type_def
+
         # Handle third-party classes (not builtin, not UserModel, not cached)
         elif inspect.isclass(t):
             # Try to find the name in the module namespace
@@ -186,21 +194,33 @@ def analyze_type(
                     type_name = name
                     break
 
+            # Check if this type is in the analysis_context's cached_types
+            cached_types = analysis_context.get("cached_types", [])
+            associated_datamodel = None
+            for cached_type_info in cached_types:
+                if cached_type_info.get("argument_type") is t:
+                    associated_datamodel = cached_type_info.get("associated_datamodel")
+                    break
+
             # If found in module namespace but not a recognized type, it might be:
             # 1. A third-party type that will get a referenced_datamodel via decorator
             # 2. A user class that should inherit from UserModel (error case)
             if type_name is not None:
-                # Add it as a cached type placeholder
-                # The referenced_datamodel field will be added by functions_analysis.py if applicable
-                if type_name not in types_dict:
-                    type_def = CachedTypeDefModel(
-                        kind="cached",
-                        category=os.path.splitext(rel_file_path)[0]
-                        .replace(os.sep, "/")
-                        .split("/"),
-                    )
-                    type_def._class = t
-                    types_dict[type_name] = type_def
+                # If it's a cached type (has associated_datamodel), create CachedTypeDefModel
+                if associated_datamodel is not None:
+                    if type_name not in types_dict:
+                        type_def = CachedTypeDefModel(
+                            kind="cached",
+                            category=os.path.splitext(rel_file_path)[0]
+                            .replace(os.sep, "/")
+                            .split("/"),
+                        )
+                        type_def._class = t
+                        type_def._referenced_datamodel = associated_datamodel
+                        types_dict[type_name] = type_def
+                else:
+                    # Not a recognized type and not in cached_types
+                    raise ValueError(f"Type not recognized: {type_name}")
 
         # Lists and dicts of user-defined types (e.g., list[int], dict[str, float])
         if hasattr(t, "__origin__") and hasattr(t, "__args__"):

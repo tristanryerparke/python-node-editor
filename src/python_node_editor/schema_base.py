@@ -1,20 +1,21 @@
 from typing import ClassVar, Literal, TypeAlias
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, PrivateAttr
 from pydantic.alias_generators import to_camel
 
 
 class UserModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # These are flags used to indicate whether a construct/deconstruct node should be generated for subclasses of the model
     _deconstruct_node: ClassVar[bool] = True
     _construct_node: ClassVar[bool] = True
 
 
-# Base types that don't depend on anything
-# Note: UserModel is included to support user-defined model instances
-# Note: list and dict are included to support structured types like list[float], dict[str, float]
-BASE_DATATYPES: TypeAlias = int | float | str | list | dict | UserModel
+VALID_BUILTIN_CLASSES = (int, float, str, list, dict)
+VALID_BUILTINS: TypeAlias = int | float | str
+STRUCTURED_TYPES: TypeAlias = list[VALID_BUILTINS] | dict[str, VALID_BUILTINS]
+BASE_DATATYPES: TypeAlias = VALID_BUILTINS | UserModel | STRUCTURED_TYPES
 
 
 class CamelBaseModel(BaseModel):
@@ -37,8 +38,8 @@ class StructDescr(CamelBaseModel):
     items_type: str | UnionDescr
 
 
-class TypeDefModel(BaseModel):
-    """Base model for type definitions. Does not use CamelBaseModel."""
+class TypeDefModel(CamelBaseModel):
+    """basic structure for type definitions, _class does not get serialized"""
 
     kind: str
     _class: type | None = PrivateAttr(default=None)

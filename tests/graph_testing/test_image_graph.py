@@ -7,14 +7,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 from PIL import Image
-from python_node_editor.large_data.large_files_endpoint import router as data_router
 
 import python_node_editor.server as server_module
-from examples._custom_datatypes.cached_image import CachedImageDataModel
 from python_node_editor.analysis.functions_analysis import analyze_function
+from python_node_editor.datatypes.cached_image import CachedImageDataModel
 from python_node_editor.execution.exec_sync import router as graph_router
+from python_node_editor.large_data.large_files_endpoint import router as data_router
 from python_node_editor.schema import Edge, Graph
-from tests.assets.blur import blur_image
+from tests.assets.cached_image_function import blur_image
 from tests.assets.graph_utils import node_from_schema
 
 # Analyze the blur_image function to get types
@@ -68,7 +68,7 @@ def test_app_setup():
     assert image_type._referenced_datamodel is not None
 
     # Verify referenced_datamodel points to the correct class
-    from examples._custom_datatypes.cached_image import CachedImageDataModel
+    from python_node_editor.datatypes.cached_image import CachedImageDataModel
 
     assert image_type._referenced_datamodel is CachedImageDataModel
 

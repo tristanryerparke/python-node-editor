@@ -97,11 +97,12 @@ def analyze_file(file_path: str):
         print(f"Module '{file_path}' could not be imported: {e}")
         return [], {}, {}
 
-    # Find all functions in the module
+    # Find all functions in the module (skip functions starting with underscore)
     funcs = {
         name: obj
         for name, obj in inspect.getmembers(module, inspect.isfunction)
-        if obj.__module__ == module_name or obj.__module__ == module.__name__
+        if (obj.__module__ == module_name or obj.__module__ == module.__name__)
+        and not name.startswith("_")
     }
 
     functions_schemas_list = []
