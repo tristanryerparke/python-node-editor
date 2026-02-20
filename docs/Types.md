@@ -57,6 +57,17 @@ The large data will still be uploaded to the backend via the frontend, but the p
 You can see in [input-type-registry.ts](https://github.com/tristanryerparke/python-node-editor/blob/main/frontend/src/components/custom-node/inputs/input-type-registry.ts) that the key value in the registry is "Image", so we should use this key in our python code as follows:
 
 ```python
+@add_node_options(
+    cached_handlers=[
+        LargeDataHandlerSpec(
+            type_name="Image",
+            match_type=Image,
+            upload=_image_upload_handler,
+            metadata=_image_metadata_handler,
+        )
+    ]
+)
+```
 
 
 
