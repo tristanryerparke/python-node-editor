@@ -1,7 +1,7 @@
 import pytest
 
 from python_node_editor.analysis.functions_analysis import ParameterNotTypeAnnotated, analyze_function
-
+print(__file__)
 
 def test_unannotated_regular_parameter():
     """Test that ParameterNotTypeAnnotated is raised when a regular parameter lacks type annotation."""

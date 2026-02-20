@@ -161,7 +161,7 @@ def analyze_function(
     # Apply type-to-datamodel mappings from decorator
     if hasattr(func_obj, "_type_datamodel_mappings"):
         mappings = func_obj._type_datamodel_mappings
-        # mappings is a list of dicts like [{"argument_type": Image, "associated_datamodel": CachedImageDataModel}]
+        # mappings is a list of dicts like [{"argument_type": Image, "associated_datamodel": SomeDataModel}]
         for mapping in mappings:
             argument_type = mapping.get("argument_type")
             associated_datamodel = mapping.get("associated_datamodel")

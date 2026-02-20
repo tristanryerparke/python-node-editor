@@ -9,18 +9,18 @@ router = APIRouter()
 class LargeDataUpload(CamelBaseModel):
     """Generic upload payload for any large data type"""
 
-    type: str  # Discriminator: "CachedImage", "CachedDataFrame", etc.
-    filename: str
+    type: str  # Discriminator: "Image", "CachedDataFrame", etc.
+    filename: str | None = None
     data: dict  # Type-specific data (e.g., {"img_base64": "..."})
 
 
-@router.post("/upload_large_data")
-async def upload_large_data(upload: LargeDataUpload):
+@router.post("/cache")
+async def cache_large_data(upload: LargeDataUpload):
     """
     Universal endpoint for uploading large data of any registered cached type.
 
-    Uses server.TYPES to look up the cached type class.
-    Each class's deserialize_to_cache() method parses its specific format into a python object and caches it.
+    Uses server.TYPES to verify the cached type.
+    CachedDataWrapper.deserialize_to_cache() parses the payload and caches the data.
     """
     from python_node_editor.server import TYPES
 
@@ -39,34 +39,11 @@ async def upload_large_data(upload: LargeDataUpload):
                 f"Kind: {type_def.kind}",
             )
 
-        # Get the _referenced_datamodel (the CachedDataWrapper subclass)
-        if (
-            not hasattr(type_def, "_referenced_datamodel")
-            or type_def._referenced_datamodel is None
-        ):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Type {upload.type} does not have a referenced_datamodel",
-            )
-
-        cached_data_class = type_def._referenced_datamodel
-
-        # Verify it's a CachedDataWrapper subclass
-        if not issubclass(cached_data_class, CachedDataWrapper):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Type {upload.type} class is not a CachedDataWrapper subclass",
-            )
-
         # Prepare full data dict for deserialization
-        full_data = {
-            "type": upload.type,
-            "filename": upload.filename,
-            **upload.data,
-        }
+        full_data = upload.model_dump()
 
-        # Deserialize using the class-specific method
-        instance = cached_data_class.deserialize_to_cache(full_data)
+        # Deserialize using the generic wrapper
+        instance = CachedDataWrapper.deserialize_to_cache(full_data)
 
         # Return serialized dict with all computed fields included
         return instance.model_dump()

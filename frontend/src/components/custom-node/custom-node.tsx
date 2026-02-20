@@ -33,7 +33,7 @@ export default memo(function CustomNode({
   const nodeWidth = (useNodeData([id, "_nodeWidth"]) as number | null) || null;
 
   const setNodeWidth = (width: number) => {
-    updateNodeData([id, "_nodeWidth"], width);
+    void updateNodeData([id, "_nodeWidth"], width);
   };
 
   return (

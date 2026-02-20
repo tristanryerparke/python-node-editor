@@ -98,7 +98,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
 
   const handleTypeChange = (newType: string) => {
     if (path) {
-      updateNodeData([...path, "_selectedType"], newType);
+      void updateNodeData([...path, "_selectedType"], newType);
     }
   };
 
@@ -106,7 +106,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
     if (!path) return;
 
     const newExpandedState = !isExpanded;
-    updateNodeData([...path, "_expanded"], newExpandedState);
+    void updateNodeData([...path, "_expanded"], newExpandedState);
 
     // If minimizing, clear the stored height
     if (!newExpandedState) {

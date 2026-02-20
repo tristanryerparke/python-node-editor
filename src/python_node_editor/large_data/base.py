@@ -1,5 +1,6 @@
+import json
 import uuid
-from typing import Any, ClassVar, Self
+from typing import Any, Callable, ClassVar, Self
 
 from pydantic import (
     ConfigDict,
@@ -17,53 +18,74 @@ from python_node_editor.schema_base import CamelBaseModel
 LARGE_DATA_CACHE = {}
 CACHE_KEY_PREFIX = "$cacheKey:"
 
+LargeDataUploadHandler = Callable[[dict], tuple[Any, dict]]
+LargeDataMetadataHandler = Callable[[Any], dict]
+
+_LARGE_DATA_UPLOAD_HANDLERS: dict[str, LargeDataUploadHandler] = {}
+_LARGE_DATA_METADATA_HANDLERS: dict[str, LargeDataMetadataHandler] = {}
+
+
+def register_large_data_upload_handler(type_name: str, handler: LargeDataUploadHandler):
+    _LARGE_DATA_UPLOAD_HANDLERS[type_name] = handler
+
+
+def register_large_data_metadata_handler(type_name: str, handler: LargeDataMetadataHandler):
+    _LARGE_DATA_METADATA_HANDLERS[type_name] = handler
+
+
+def _get_large_data_upload_handler(type_name: str) -> LargeDataUploadHandler | None:
+    return _LARGE_DATA_UPLOAD_HANDLERS.get(type_name)
+
+
+def _get_large_data_metadata_handler(type_name: str) -> LargeDataMetadataHandler | None:
+    return _LARGE_DATA_METADATA_HANDLERS.get(type_name)
+
+
+def _estimate_size_bytes(value: Any) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, (bytes, bytearray)):
+        return len(value)
+    if isinstance(value, str):
+        return len(value.encode("utf-8"))
+    try:
+        return len(json.dumps(value).encode("utf-8"))
+    except Exception:
+        return None
+
+
+def _default_display_name(type_name: str, size_bytes: int | None) -> str:
+    if size_bytes is None:
+        return type_name
+    size_kb = size_bytes / 1024
+    return f"{type_name} ({size_kb:.1f} KB)"
+
 
 class CachedDataWrapper(CamelBaseModel):
     """
-    Base class for all cached data types (so far just images)
+    Generic wrapper for cached data types.
 
     Cached types are too large to send back and forth with the execute and update messages.
     Instead we store them in LARGE_DATA_CACHE during execution with a cache_key.
     On the frontend there will be an upload input component that will populate the cache
-    via the /upload_large_data endpoint which will return a value field like
+    via the /cache endpoint which will return a value field like
     "$cacheKey:xxx" as a reference on the frontend.
-    Subclasses of CachedDataWrapper can use pydantic's @computer_field decorator to add a preview
-    (like a thumbnail) that gets sent back up along with the cache key.
-    Then when the execute message gets recieved, the backend prorgamatically creates an instance of that
-    subclass, and retrieves the value prop from the cache.
+    Metadata like preview/thumbnail can be attached via registered handlers.
+    Then when the execute message gets recieved, the backend programmatically creates an instance of this
+    wrapper and retrieves the value from the cache.
 
-    Cached types get linked to a specifc type in the add_node_options decorator like so:
-    @add_node_options(cached_types=[{
-        "argument_type": Image,
-        "associated_datamodel": CachedImageDataModel # which is the subclass in question
-    }])
-    def blur_image(image: Image, radius: int = 40) -> Image:
-
-    This notation ensures creates the 'referenced_datamodel' property in the types dict like so:
-    'Image': {
-        'kind': 'cached',
-        '_class': <class 'PIL.Image.Image'>,
-        'category': [
-            'examples',
-            'images',
-            'basic_blur',
-        ],
-        'referenced_datamodel': <class 'examples.images.cached_image.CachedImageDataModel'>,
-    }
-
-    the model validator in schema.py detects this and automatically populates the wrapper class with
-    an instantiated instance of the subclass, which retrieves the value from the cache, which gets
-    passed to the function we annotated.
-
-    This also enables automatic exclusion of the full data when the updates are sent to the frontend,
-    but the preview and other computed fields are sent.
+    The model validator in schema.py detects cached values and populates this wrapper,
+    retrieving the value from the cache and making it available to the execution engine.
 
     For propogating updates across edges, we just set the input's wrapper to a model_copy() of
-    the wrapper subclass.
+    the wrapper.
     """
 
     model_config = ConfigDict(
-        arbitrary_types_allowed=True, extra="ignore", serialize_by_alias=True
+        arbitrary_types_allowed=True,
+        extra="ignore",
+        serialize_by_alias=True,
+        populate_by_name=True,
     )
     _is_cached_type: ClassVar[bool] = True  # Marker for type discovery
 
@@ -73,6 +95,10 @@ class CachedDataWrapper(CamelBaseModel):
         serialization_alias="value",
         default_factory=lambda: str(uuid.uuid4()),
     )
+    preview: str | None = None
+    display_name: str | None = None
+    filename: str | None = None
+    size_bytes: int | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -116,6 +142,27 @@ class CachedDataWrapper(CamelBaseModel):
             self.value = LARGE_DATA_CACHE[self.cache_key]
         return self
 
+    @model_validator(mode="after")
+    def populate_metadata_from_value(self):
+        if self.value is None:
+            return self
+
+        metadata_handler = _get_large_data_metadata_handler(self.type)
+        if metadata_handler and (self.preview is None or self.display_name is None):
+            metadata = metadata_handler(self.value)
+            for key, value in metadata.items():
+                if value is None:
+                    continue
+                if hasattr(self, key) and getattr(self, key) is None:
+                    setattr(self, key, value)
+
+        if self.size_bytes is None:
+            self.size_bytes = _estimate_size_bytes(self.value)
+        if self.display_name is None:
+            self.display_name = _default_display_name(self.type, self.size_bytes)
+
+        return self
+
     @model_serializer(mode="wrap")
     def serialize_with_cache_hook(self, handler: SerializerFunctionWrapHandler):
         """This is essentially a hook on the serialization process that ensures the cache data
@@ -129,10 +176,34 @@ class CachedDataWrapper(CamelBaseModel):
     @classmethod
     def deserialize_to_cache(cls, data: dict) -> Self:
         """
-        Deserialize from full data uploaded via the  frontend.
-        MUST be overridden by subclasses to handle their specific data format.
+        Deserialize from full data uploaded via the frontend.
         """
-        raise NotImplementedError
+        type_name = data.get("type")
+        if not type_name:
+            raise ValueError("Missing required field for CachedDataWrapper: type")
+
+        handler = _get_large_data_upload_handler(type_name)
+        if handler:
+            value, metadata = handler(data)
+        else:
+            payload = data.get("data")
+            if isinstance(payload, dict) and "value" in payload and len(payload) == 1:
+                value = payload.get("value")
+            else:
+                value = payload
+            metadata = {}
+
+        size_bytes = metadata.get("size_bytes") or _estimate_size_bytes(value)
+        if size_bytes is not None:
+            metadata.setdefault("size_bytes", size_bytes)
+
+        if "display_name" not in metadata:
+            metadata["display_name"] = _default_display_name(type_name, size_bytes)
+
+        if "filename" not in metadata and data.get("filename") is not None:
+            metadata["filename"] = data.get("filename")
+
+        return cls(type=type_name, value=value, **metadata)
 
     @classmethod
     def from_cache_key(
@@ -140,7 +211,7 @@ class CachedDataWrapper(CamelBaseModel):
     ) -> "CachedDataWrapper":
         """
         Universal method to retrieve cached data by key.
-        Works for all CachedDataWrapper subclasses.
+        Works for all cached values.
 
         Used by graph.py to reconstruct cached values during execution.
 

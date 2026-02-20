@@ -126,7 +126,7 @@ export const clearOutputsAndConnectedInputs = () => {
   const originalNodes = new Map(nodes.map((node) => [node.id, node]));
   updatedNodes.forEach((node, nodeId) => {
     if (originalNodes.get(nodeId) !== node) {
-      updateNodeData([nodeId], node.data);
+      void updateNodeData([nodeId], node.data);
     }
   });
 

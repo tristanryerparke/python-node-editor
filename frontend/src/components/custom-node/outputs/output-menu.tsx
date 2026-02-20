@@ -52,7 +52,7 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
 
   const handleToggleExpanded = () => {
     const newExpandedState = !isExpanded;
-    updateNodeData([...path, "_expanded"], newExpandedState);
+    void updateNodeData([...path, "_expanded"], newExpandedState);
 
     // If minimizing, clear the stored height
     if (!newExpandedState) {

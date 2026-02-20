@@ -1,7 +1,6 @@
 import { memo, useRef, useState, useEffect } from "react";
 import useFlowStore from "../../stores/flowStore";
 import { useNodeConnections } from "@xyflow/react";
-import { preserveUIData } from "../../utils/preserve-ui-data";
 import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
 import type { FrontendFieldDataWrapper } from "../../types/types";
@@ -42,7 +41,7 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
       .then((data) => {
         if (!data.exists) {
           // Clear the image data if cache key doesn't exist
-          updateNodeData(path, {
+          void updateNodeData(path, {
             type: "Image",
             value: null,
             _expanded: inputData._expanded,
@@ -74,53 +73,17 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
 
     setUploading(true);
 
-    // Convert file to base64
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const base64 = reader.result as string;
-        // Remove data URL prefix (e.g., "data:image/png;base64,")
-        const base64Data = base64.split(",")[1];
-
-        // Upload to backend
-        const response = await fetch(
-          "http://localhost:8000/data/upload_large_data",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              type: "Image",
-              filename: file.name,
-              data: {
-                img_base64: base64Data,
-              },
-            }),
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to upload image");
-        }
-
-        const data = await response.json();
-
-        // Preserve UI data from existing inputData, merge with all new data from backend
-        const mergedData = preserveUIData(imageData, data);
-        updateNodeData(path, mergedData);
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        setErrorMessage(
-          "Failed to upload image. Please ensure the backend server is running.",
-        );
-        setShowErrorDialog(true);
-      } finally {
-        setUploading(false);
-      }
-    };
-
-    reader.readAsDataURL(file);
+    try {
+      await updateNodeData([...path, "value"], file, { fromUser: true });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setErrorMessage(
+        "Failed to upload image. Please ensure the backend server is running.",
+      );
+      setShowErrorDialog(true);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const displayName = imageData.displayName || "Generated Image";

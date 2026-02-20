@@ -10,7 +10,7 @@ from PIL import Image
 from python_node_editor.large_data.large_files_endpoint import router as data_router
 
 import python_node_editor.server as server_module
-from examples._custom_datatypes.cached_image import CachedImageDataModel
+from python_node_editor.large_data.base import CACHE_KEY_PREFIX, CachedDataWrapper
 from python_node_editor.analysis.functions_analysis import analyze_function
 from python_node_editor.execution.exec_sync import router as graph_router
 from python_node_editor.schema import Edge, Graph
@@ -48,7 +48,6 @@ app.add_middleware(
 )
 
 client = TestClient(app)
-CACHE_KEY_PREFIX = "$cacheKey:"
 
 
 def extract_cache_key(value: str) -> str:
@@ -57,7 +56,7 @@ def extract_cache_key(value: str) -> str:
 
 
 def test_app_setup():
-    """Test that the blur_image function was analyzed correctly and Image type is registered with referenced_datamodel"""
+    """Test that the blur_image function was analyzed correctly and Image type is registered"""
     # Verify Image type exists
     assert "Image" in server_module.TYPES.keys()
 
@@ -65,12 +64,7 @@ def test_app_setup():
     image_type = server_module.TYPES["Image"]
     assert image_type.kind == "cached"
     assert image_type._class is Image.Image
-    assert image_type._referenced_datamodel is not None
-
-    # Verify referenced_datamodel points to the correct class
-    from examples._custom_datatypes.cached_image import CachedImageDataModel
-
-    assert image_type._referenced_datamodel is CachedImageDataModel
+    assert image_type._referenced_datamodel is None
 
     # Verify blur_image is registered
     assert schema.callable_id in server_module.CALLABLES
@@ -91,7 +85,7 @@ def test_image_upload():
         "data": {"img_base64": img_base64},
     }
 
-    response = client.post("/data/upload_large_data", json=payload)
+    response = client.post("/data/cache", json=payload)
     assert response.status_code == 200
 
     result = response.json()
@@ -100,6 +94,8 @@ def test_image_upload():
     assert result["filename"] == "test_image.png"
     assert "preview" in result
     assert "displayName" in result
+    assert result["value"].startswith(CACHE_KEY_PREFIX)
+    assert len(result["preview"]) > 0
     assert "Image(100x100, RGB)" in result["displayName"]
 
 
@@ -117,7 +113,7 @@ def test_cache_exists():
         "data": {"img_base64": img_base64},
     }
 
-    response = client.post("/data/upload_large_data", json=payload)
+    response = client.post("/data/cache", json=payload)
     assert response.status_code == 200
     cache_key = extract_cache_key(response.json()["value"])
 
@@ -150,14 +146,14 @@ def test_single_image_node_execute():
         "data": {"img_base64": img_base64},
     }
 
-    upload_response = client.post("/data/upload_large_data", json=upload_payload)
+    upload_response = client.post("/data/cache", json=upload_payload)
     assert upload_response.status_code == 200
     upload_result = upload_response.json()
     cache_key = extract_cache_key(upload_result["value"])
 
     # Create graph with blur_image node
     node1 = node_from_schema("blur-node-1", schema)
-    node1.data.arguments["image"] = CachedImageDataModel.from_cache_key(
+    node1.data.arguments["image"] = CachedDataWrapper.from_cache_key(
         cache_key, type_str="Image"
     )
     node1.data.arguments["radius"].value = 20
@@ -182,6 +178,8 @@ def test_single_image_node_execute():
     assert output["type"] == "Image"
     assert "value" in output
     assert "preview" in output
+    assert "displayName" in output
+    assert output["value"].startswith(CACHE_KEY_PREFIX)
     assert len(output["preview"]) > 0
 
 
@@ -199,13 +197,13 @@ def test_two_connected_image_nodes():
         "data": {"img_base64": img_base64},
     }
 
-    upload_response = client.post("/data/upload_large_data", json=upload_payload)
+    upload_response = client.post("/data/cache", json=upload_payload)
     assert upload_response.status_code == 200
     cache_key = extract_cache_key(upload_response.json()["value"])
 
     # Create graph with two connected blur nodes
     node1 = node_from_schema("blur-node-1", schema)
-    node1.data.arguments["image"] = CachedImageDataModel.from_cache_key(
+    node1.data.arguments["image"] = CachedDataWrapper.from_cache_key(
         cache_key, type_str="Image"
     )
     node1.data.arguments["radius"].value = 10

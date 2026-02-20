@@ -160,6 +160,7 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
 
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
+    from python_node_editor.large_data.base import CachedDataWrapper
     from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
     from python_node_editor.server import TYPES
 
@@ -190,15 +191,12 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
 
         concrete_type = infer_concrete_type(new_value, data.type, TYPES)
 
-        # If the type has a custom referenced data model, find and create an instance of it
-        # Otheriwse use the generic DataWrapper
         if (
             isinstance(concrete_type, str)
             and concrete_type in TYPES
-            and hasattr(TYPES[concrete_type], "_referenced_datamodel")
-            and TYPES[concrete_type]._referenced_datamodel is not None
+            and TYPES[concrete_type].kind == "cached"
         ):
-            output_class = TYPES[concrete_type]._referenced_datamodel
+            output_class = CachedDataWrapper
         else:
             output_class = DataWrapper
 

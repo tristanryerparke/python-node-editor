@@ -29,7 +29,7 @@ export function useExecuteFlowSync() {
       if (result.status === "success") {
         // Process updates in execution order
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        result.updates.forEach((update: any) => {
+        for (const update of result.updates as any[]) {
           const nodeId = update.nodeId;
 
           // Get existing node data and merge while preserving ui only-data
@@ -39,7 +39,7 @@ export function useExecuteFlowSync() {
           const mergedNodeData = preserveUIData(existingNodeData, updateData);
 
           // Update the entire node data at once
-          updateNodeData([nodeId], mergedNodeData);
+          await updateNodeData([nodeId], mergedNodeData);
 
           // Log errors for debugging
           if (update.status === "error") {
@@ -48,7 +48,7 @@ export function useExecuteFlowSync() {
               update.terminalOutput,
             );
           }
-        });
+        }
       } else {
         console.error("Graph execution failed:", result.message);
         throw new Error(result.message || "Graph execution failed");

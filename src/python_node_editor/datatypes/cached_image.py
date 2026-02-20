@@ -1,17 +1,15 @@
-# pyright: reportOptionalMemberAccess=false
 import base64
 import io
 
 from PIL import Image as ImageLibrary
 from PIL import ImageOps
 from PIL.Image import Image
-from pydantic import (
-    Field,
-    computed_field,
-)
 
 from python_node_editor.display import add_node_options
-from python_node_editor.large_data.base import CachedDataWrapper
+from python_node_editor.large_data.base import (
+    register_large_data_metadata_handler,
+    register_large_data_upload_handler,
+)
 
 THUMBNAIL_MAX_SIZE = 500
 
@@ -35,58 +33,42 @@ def generate_thumbnail_base64(image: Image, max_size: int = THUMBNAIL_MAX_SIZE) 
     return thumb_base64
 
 
-class CachedImageDataModel(CachedDataWrapper):
-    """Cached image data wrapper for PIL Image objects"""
-
-    value: Image | None = Field(
-        exclude=True, default=None
-    )  # we can't send the image object to the frontend so we exclude it
-    filename: str | None = Field(default=None)
-
-    @classmethod
-    def deserialize_to_cache(cls, data: dict):
-        """
-        Deserialize image from base64 data uploaded from a non-execution action on the frontend.
-
-        Expected data format:
-        {
-            "type": "Image",
-            "filename": "example.png",
-            "img_base64": "base64_encoded_string..."
-        }
-        """
-        try:
-            img_data = base64.b64decode(data["img_base64"])
-            img = ImageLibrary.open(io.BytesIO(img_data))
-            # Strip rotation data (not required)
-            img = ImageOps.exif_transpose(img)
-            img.info.pop("exif", None)
-
-            return cls(
-                type="Image",
-                value=img,
-                filename=data.get("filename"),
-            )
-        except KeyError as e:
-            raise ValueError(f"Missing required field for CachedImageDataModel: {e}")
-        except Exception as e:
-            raise ValueError(f"Failed to deserialize CachedImageDataModel: {str(e)}")
-
-    @computed_field
-    @property
-    def preview(self) -> str:
-        if self.value is None:
-            return ""
-        return generate_thumbnail_base64(self.value)
-
-    @computed_field
-    @property
-    def display_name(self) -> str:
-        return f"Image({self.value.width}x{self.value.height}, {self.value.mode})"
+def _decode_image_base64(img_base64: str) -> Image:
+    img_data = base64.b64decode(img_base64)
+    img = ImageLibrary.open(io.BytesIO(img_data))
+    # Strip rotation data (not required)
+    img = ImageOps.exif_transpose(img)
+    img.info.pop("exif", None)
+    return img
 
 
-image_cached_datatype = add_node_options(
-    cached_types=[
-        {"argument_type": Image, "associated_datamodel": CachedImageDataModel}
-    ],
-)
+def _image_upload_handler(payload: dict) -> tuple[Image, dict]:
+    data = payload.get("data") or {}
+    if not isinstance(data, dict):
+        raise ValueError("Image upload data must be a dict")
+    if "img_base64" not in data:
+        raise ValueError("Missing required field for Image upload: img_base64")
+
+    img = _decode_image_base64(data["img_base64"])
+    preview = generate_thumbnail_base64(img)
+    display_name = f"Image({img.width}x{img.height}, {img.mode})"
+
+    return img, {
+        "preview": preview,
+        "display_name": display_name,
+        "filename": payload.get("filename"),
+    }
+
+
+def _image_metadata_handler(value: Image) -> dict:
+    return {
+        "preview": generate_thumbnail_base64(value),
+        "display_name": f"Image({value.width}x{value.height}, {value.mode})",
+    }
+
+
+register_large_data_upload_handler("Image", _image_upload_handler)
+register_large_data_metadata_handler("Image", _image_metadata_handler)
+
+
+image_cached_datatype = add_node_options()

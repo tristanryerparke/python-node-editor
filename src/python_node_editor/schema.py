@@ -76,8 +76,8 @@ class NodeDataFromFrontend(CamelBaseModel):
 
         This validator:
         1. Detects cached data by the presence of a "$cacheKey:" marker in value
-        2. Looks up the referenced_datamodel class from the TYPES registry
-        3. Pre-instantiates the proper 3rd party datamodel instances
+        2. Looks up the cached type in the TYPES registry
+        3. Instantiates CachedDataWrapper to load from the cache
         4. Replaces the dict with the instance before Pydantic validates
 
         This allows 3rd party CachedDataWrapper subclasses to be properly instantiated
@@ -98,14 +98,13 @@ class NodeDataFromFrontend(CamelBaseModel):
                     type_def = TYPES.get(type_str)
 
                     if type_def and type_def.kind == "cached":
-                        datamodel_class = type_def._referenced_datamodel
-                        if datamodel_class:
-                            # Create properly typed instance with context
-                            cached_instance = datamodel_class.model_validate(
-                                arg_value, context={"populate_from_cache": True}
-                            )
-                            # Replace the dict with the instance in the data
-                            arguments[arg_name] = cached_instance
+                        from python_node_editor.large_data.base import CachedDataWrapper
+
+                        cached_instance = CachedDataWrapper.model_validate(
+                            arg_value, context={"populate_from_cache": True}
+                        )
+                        # Replace the dict with the instance in the data
+                        arguments[arg_name] = cached_instance
 
         return data
 

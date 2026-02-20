@@ -31,7 +31,7 @@ export default memo(function ImageExpanded({
   const height = storedHeight || DEFAULT_AND_MIN_HEIGHT;
 
   const setHeight = (newHeight: number) => {
-    updateNodeData([...path, "_expandedHeight"], newHeight);
+    void updateNodeData([...path, "_expandedHeight"], newHeight);
   };
 
   // Support both inputData and outputData
