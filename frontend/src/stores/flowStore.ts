@@ -16,7 +16,6 @@ import {
   getConcreteType,
   isArgumentValuePath,
   isCacheKeyString,
-  shouldCacheLargeData,
   uploadLargeData,
 } from "../utils/large-data-utils";
 import { preserveUIData } from "../utils/preserve-ui-data";
@@ -113,24 +112,31 @@ const useFlowStore = createWithEqualityFn<
           ) as FrontendFieldDataWrapper | undefined;
           const concreteType = getConcreteType(wrapper);
 
-          if (shouldCacheLargeData(concreteType, newData)) {
+          if (concreteType) {
             const nodeId = String(wrapperPath[0]);
             const nodeData = get().getNodeData([
               nodeId,
             ]) as FunctionNode["data"] | undefined;
-            const callableId = nodeData?.callableId;
-            if (callableId) {
-              const cachedData = await uploadLargeData(
-                concreteType,
-                newData,
-                callableId,
-              );
-              dataToSet = preserveUIData(wrapper, cachedData);
-              targetPath = wrapperPath;
-            } else {
-              console.error(
-                `Missing callableId for cached upload (node: ${nodeId})`,
-              );
+            const cachedTypes =
+              nodeData && Array.isArray(nodeData.cachedTypes)
+                ? nodeData.cachedTypes
+                : [];
+
+            if (cachedTypes.includes(concreteType)) {
+              const callableId = nodeData?.callableId;
+              if (callableId) {
+                const cachedData = await uploadLargeData(
+                  concreteType,
+                  newData,
+                  callableId,
+                );
+                dataToSet = preserveUIData(wrapper, cachedData);
+                targetPath = wrapperPath;
+              } else {
+                console.error(
+                  `Missing callableId for cached upload (node: ${nodeId})`,
+                );
+              }
             }
           }
         }

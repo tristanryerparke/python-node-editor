@@ -3,6 +3,7 @@ from typing import Any, Literal
 from pydantic import (
     BaseModel,
     ConfigDict,
+    Field,
     field_serializer,
     model_validator,
 )
@@ -59,6 +60,7 @@ class FunctionSchema(CamelBaseModel):
     dynamic_input_type: StructDescr | None = None
     output_style: Literal["single", "multiple"] = "single"
     outputs: dict[str, DataWrapper | CachedDataWrapper]
+    cached_types: list[str] = Field(default_factory=list)
     auto_generated: bool = False
 
 

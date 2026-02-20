@@ -185,6 +185,13 @@ def analyze_type(
                 if val is t and name.isidentifier():
                     type_name = name
                     break
+            # Fallback: if the class is exposed as a module attribute
+            if type_name is None and hasattr(t, "__name__"):
+                for _, val in module_ns.items():
+                    if inspect.ismodule(val) and hasattr(val, t.__name__):
+                        if getattr(val, t.__name__) is t:
+                            type_name = t.__name__
+                            break
 
             # If found in module namespace but not a recognized type, it might be:
             # 1. A third-party type that will get a referenced_datamodel via decorator

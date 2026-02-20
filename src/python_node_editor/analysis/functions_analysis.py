@@ -179,10 +179,11 @@ def analyze_function(
                     type_def._referenced_datamodel = associated_datamodel
 
     # Validate any cached handlers defined on the function
-    if hasattr(func_obj, "_large_data_handlers"):
-        from python_node_editor.large_data.base import get_large_data_handlers
+    from python_node_editor.large_data.base import get_large_data_handlers
 
-        handlers = get_large_data_handlers(func_obj)
+    handlers = get_large_data_handlers(func_obj)
+    cached_types = list(handlers.keys())
+    if handlers:
         for type_name, handler_spec in handlers.items():
             match_type = handler_spec.match_type
             if match_type is not None:
@@ -225,6 +226,7 @@ def analyze_function(
             output_style=output_style,
             outputs=outputs,
             dynamic_input_type=dynamic_input_type,
+            cached_types=cached_types,
         ),
         func_obj,
         found_types,

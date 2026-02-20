@@ -39,4 +39,27 @@ Also note that in the nodes panel, there are an extra two nodes with an `auto` f
 
 <img alt="localhost_8000_ (7).png" src="images/localhost_8000_ (7).png">
     
-<!--# Large Data Types-->
+# Cached Data Types
+
+Let's say you want to work with large data. This could be big images, spreadsheet-style data, numpy arrays, SVGs, etc. PNE has a frontend and backend and it needs to send inputs to the backend and outputs back to the frontend. With large data that's a lot of (potentially slow) back and forth.
+
+To help with this PNE provides some utilities for caching data in the backend and sending only previews (or thumbnails, etc) to the frontend.
+
+To enable this from the your python function you can use the `add_node_options` decorator whose other functions are described in [Node-Customization](https://github.com/tristanryerparke/python-node-editor/wiki/Node-Customization). 
+
+Let's use blurring an image as an example. Uploading an image requires a special input on the frontend. Development of custom inputs is described in [Development](https://github.com/tristanryerparke/python-node-editor/wiki/Development), but for images, this input is built into PNE already. 
+
+The large data will still be uploaded to the backend via the frontend, but the point of cached data is that this happens only once. But in order for this to work, we need to tell the backend what to do during the lifecyle of the cached data.
+- When large data comes in from the frontend, it could be compressed, serialized or encoded, so we need to parse it and create an instance of the python class we want to use as our function input. In the case of the image, this would be the user sending a base64-encoded image, and the backend needs to know how to parse it and turn it into an instance of `PIL.Image.Image` and cache that data in a store in the backend, in the store it will be filed under a cache key uuid.
+- Once the data is cached, for images we need to send back up a small representation of the data, like a 
+- If an instance of this class 
+
+You can see in [input-type-registry.ts](https://github.com/tristanryerparke/python-node-editor/blob/main/frontend/src/components/custom-node/inputs/input-type-registry.ts) that the key value in the registry is "Image", so we should use this key in our python code as follows:
+
+```python
+
+
+
+
+
+
