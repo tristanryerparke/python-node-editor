@@ -19,6 +19,7 @@ import {
   uploadLargeData,
 } from "../utils/large-data-utils";
 import { preserveUIData } from "../utils/preserve-ui-data";
+import { findNodeIndexById } from "../utils/store-utils";
 
 type FlowStoreState = {
   nodes: FunctionNode[];
@@ -143,9 +144,7 @@ const useFlowStore = createWithEqualityFn<
 
         set(
           produce((state: FlowState) => {
-            const nodeIndex = state.nodes.findIndex(
-              (node) => node.id === targetPath[0],
-            );
+            const nodeIndex = findNodeIndexById(state.nodes, targetPath[0]);
             if (nodeIndex !== -1) {
               const pathToProperty = targetPath.slice(1);
 
@@ -190,7 +189,7 @@ const useFlowStore = createWithEqualityFn<
 
       getNodeData: (path) => {
         const nodes = get().nodes;
-        const nodeIndex = nodes.findIndex((node) => node.id === path[0]);
+        const nodeIndex = findNodeIndexById(nodes, path[0]);
 
         if (nodeIndex === -1) {
           return undefined;
@@ -214,9 +213,7 @@ const useFlowStore = createWithEqualityFn<
       deleteNodeData: (path) => {
         set(
           produce((state: FlowState) => {
-            const nodeIndex = state.nodes.findIndex(
-              (node) => node.id === path[0],
-            );
+            const nodeIndex = findNodeIndexById(state.nodes, path[0]);
             if (nodeIndex !== -1) {
               let current = state.nodes[nodeIndex].data;
               const pathToProperty = path.slice(1);
@@ -258,7 +255,8 @@ const useFlowStore = createWithEqualityFn<
 
 export const useNodeData = (path: (string | number)[]) => {
   return useFlowStore((state) => {
-    const node = state.nodes.find((n) => n.id === path[0]);
+    const nodeIndex = findNodeIndexById(state.nodes, path[0]);
+    const node = nodeIndex === -1 ? undefined : state.nodes[nodeIndex];
     if (!node) return undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let current: any = node.data;

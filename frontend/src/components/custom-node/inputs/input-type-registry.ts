@@ -5,7 +5,6 @@ import StringInput from "../../../common/leaf-inputs/string-input";
 import ImageInput from "../../../common/leaf-inputs/image-input";
 import StringExpanded from "../../../common/leaf-inputs/expanded/string-expanded";
 import ImageExpanded from "../../../common/leaf-inputs/expanded/image-expanded";
-// import { GrowingComponent } from "@/common/leaf-inputs/expanded/max-size-component-test";
 
 export interface InputRendererProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,5 +38,4 @@ export const INPUT_TYPE_COMPONENT_REGISTRY: Record<
     hideMainWhenExpanded: true,
   },
   Image: { main: ImageInput, expanded: ImageExpanded },
-  // Image: { main: ImageInput, expanded: GrowingComponent },
 };
