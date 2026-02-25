@@ -8,9 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 from PIL import Image
 from python_node_editor.large_data.large_files_endpoint import router as data_router
+from python_node_editor.large_data.models import CachedDataWrapper
+from python_node_editor.large_data.types import CACHE_KEY_PREFIX
 
 import python_node_editor.server as server_module
-from python_node_editor.large_data.base import CACHE_KEY_PREFIX, CachedDataWrapper
 from python_node_editor.analysis.functions_analysis import analyze_function
 from python_node_editor.execution.exec_sync import router as graph_router
 from python_node_editor.schema import Edge, Graph

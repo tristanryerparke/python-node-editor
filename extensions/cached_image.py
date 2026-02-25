@@ -1,17 +1,20 @@
 import base64
 import io
 
-from PIL import Image as ImageLibrary
+from typing import Any
+from PIL import Image
 from PIL import ImageOps
-from PIL.Image import Image
 
 from python_node_editor.display import add_node_options
-from python_node_editor.large_data.base import LargeDataHandlerSpec
+from python_node_editor.large_data.types import (
+
+    LargeDataHandlerSpec,
+)
 
 THUMBNAIL_MAX_SIZE = 500
 
 
-def generate_thumbnail_base64(image: Image, max_size: int = THUMBNAIL_MAX_SIZE) -> str:
+def generate_thumbnail_base64(image: Image.Image, max_size: int = THUMBNAIL_MAX_SIZE) -> str:
     width, height = image.size
     if width > height:
         new_width = max_size
@@ -21,7 +24,7 @@ def generate_thumbnail_base64(image: Image, max_size: int = THUMBNAIL_MAX_SIZE) 
         new_width = int((width / height) * max_size)
 
     thumbnail = image.copy()
-    thumbnail.thumbnail((new_width, new_height), ImageLibrary.Resampling.LANCZOS)
+    thumbnail.thumbnail((new_width, new_height), Image.Resampling.LANCZOS)
 
     thumb_buffer = io.BytesIO()
     thumbnail.save(thumb_buffer, format="WEBP")
@@ -30,16 +33,16 @@ def generate_thumbnail_base64(image: Image, max_size: int = THUMBNAIL_MAX_SIZE) 
     return thumb_base64
 
 
-def _decode_image_base64(img_base64: str) -> Image:
+def _decode_image_base64(img_base64: str) -> Image.Image:
     img_data = base64.b64decode(img_base64)
-    img = ImageLibrary.open(io.BytesIO(img_data))
+    img = Image.open(io.BytesIO(img_data))
     # Strip rotation data (not required)
     img = ImageOps.exif_transpose(img)
     img.info.pop("exif", None)
     return img
 
 
-def _image_upload_handler(payload: dict) -> tuple[Image, dict]:
+def deserialize_image_from_frontend(payload: dict) -> tuple[Any, dict]:
     data = payload.get("data") or {}
     if not isinstance(data, dict):
         raise ValueError("Image upload data must be a dict")
@@ -47,30 +50,25 @@ def _image_upload_handler(payload: dict) -> tuple[Image, dict]:
         raise ValueError("Missing required field for Image upload: img_base64")
 
     img = _decode_image_base64(data["img_base64"])
-    preview = generate_thumbnail_base64(img)
-    display_name = f"Image({img.width}x{img.height}, {img.mode})"
-
-    return img, {
-        "preview": preview,
-        "display_name": display_name,
-        "filename": payload.get("filename"),
-    }
+    # We can only get the filename metadata here
+    return img, {"filename": payload.get("filename")}
 
 
-def _image_metadata_handler(value: Image) -> dict:
+def generate_metadata(value: Image.Image) -> dict:
     return {
-        "preview": generate_thumbnail_base64(value),
-        "display_name": f"Image({value.width}x{value.height}, {value.mode})",
+        "preview":generate_thumbnail_base64(value),
+        "display_name":f"Image({value.width}x{value.height}, {value.mode})",
     }
+
 
 # Prebuilt decorator for easy reference
 image_cached_datatype = add_node_options(
     cached_handlers=[
         LargeDataHandlerSpec(
             type_name="Image",
-            match_type=Image,
-            upload=_image_upload_handler,
-            metadata=_image_metadata_handler,
+            type_def=Image.Image,
+            deserializer=deserialize_image_from_frontend,
+            metadata_generator=generate_metadata,
         )
     ]
 )

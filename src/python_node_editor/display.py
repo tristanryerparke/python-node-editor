@@ -1,10 +1,18 @@
 from functools import wraps
 from typing import Any, Callable, TypeVar, cast
 
-F = TypeVar("F", bound=Callable[..., Any])
-
 # Import the progress context variable for flush_output_to_frontend
 from python_node_editor.execution.context import progress_context
+
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def _handlers_to_dict(handlers):
+    if not handlers:
+        return {}
+    if isinstance(handlers, dict):
+        return dict(handlers)
+    return {handler.type_name: handler for handler in handlers}
 
 
 def add_node_options(
@@ -32,10 +40,8 @@ def add_node_options(
         if cached_types is not None:
             wrapper._type_datamodel_mappings = cached_types  # type: ignore
         if cached_handlers is not None:
-            from python_node_editor.large_data.base import normalize_large_data_handlers
-
             existing = getattr(wrapper, "_large_data_handlers", None)
-            merged = {**normalize_large_data_handlers(existing), **normalize_large_data_handlers(cached_handlers)}
+            merged = {**_handlers_to_dict(existing), **_handlers_to_dict(cached_handlers)}
             wrapper._large_data_handlers = merged  # type: ignore
 
         return cast(F, wrapper)
