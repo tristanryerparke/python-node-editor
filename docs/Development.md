@@ -17,4 +17,4 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 ```
 
-There is also a frontend build utility script available at [build-frontend.sh](https://github.com/tristanryerparke/python-node-editor/blob/main/scripts/build-frontend.sh) that is used to build the frontend for production.
+There is also a frontend build utility script available at [build-frontend.sh](../scripts/build-frontend.sh) that is used to build the frontend for production.

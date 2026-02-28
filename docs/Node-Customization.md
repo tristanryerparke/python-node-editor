@@ -5,7 +5,7 @@ These examples assume you have [PNE installed](https://github.com/tristanryerpar
 
 # Basic Customization
 
-Examples for node customization are in this file: [examples/basic_custominfo.py](https://github.com/tristanryerparke/python-node-editor/blob/main/examples/basic_custominfo.py) and can be run with `uv run pne examples/custom_info.py`
+Examples for node customization are in this file: [examples/basic_custominfo.py](../examples/basic_custominfo.py) and can be run with `uv run pne examples/custom_info.py`
 
 ## Docstrings
 Docstring analysis is built into PNE by default. When you add a docstring on your function, it appears when you mouse over the function the node picker.
@@ -36,7 +36,7 @@ def calculate_rectangle_area(width: float, height: float) -> float:
 # Multiple Outputs
 
 Python functions can't really have multiple outputs, you can return a tuple and unpack it, but that tuple is still a single return value.
-In node-based editors, you might want a node to have more than one output. PNE provides an easy way to do this, with type annotations as well. [examples/multiple_outputs.py](https://github.com/tristanryerparke/python-node-editor/blob/main/examples/basic_multiple_outputs.py) provides an example which can be run with `uv run pne examples/multiple_outputs.py`. The main concept is as follows:
+In node-based editors, you might want a node to have more than one output. PNE provides an easy way to do this, with type annotations as well. [examples/multiple_outputs.py](../examples/basic_multiple_outputs.py) provides an example which can be run with `uv run pne examples/multiple_outputs.py`. The main concept is as follows:
 
 ```python
 from app.schema import MultipleOutputs

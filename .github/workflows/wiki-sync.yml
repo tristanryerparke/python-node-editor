@@ -18,6 +18,19 @@ jobs:
         run: |
           git clone "$WIKI_REPO" wiki
           rsync -av --delete --exclude '.git' docs/ wiki/
+          # Source docs keep repo-file links local-relative (../...), so local editors
+          # open files directly. In the wiki copy, rewrite only non-doc ../ links to
+          # GitHub blob URLs for clickable source links on GitHub wiki pages.
+          LC_ALL=C find wiki -type f -name '*.md' -print0 | xargs -0 perl -i -pe '
+            s{\]\((\.\./([^)#?\s]+))([#?][^)]+)?\)}{
+              my ($original_url, $path, $suffix) = ($1, $2, $3 // "");
+              if ($path =~ /\.md$/i || $path =~ m{^docs/}) {
+                "]($original_url$suffix)"
+              } else {
+                "](https://github.com/$ENV{GITHUB_REPOSITORY}/blob/$ENV{GITHUB_REF_NAME}/$path$suffix)"
+              }
+            }ge;
+          '
           cd wiki
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

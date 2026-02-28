@@ -10,7 +10,7 @@ A function argument annotated with a union type can be displayed by the frontend
 def add_with_union(a: int | float, b: int) -> float:
     return a + b
 ```
-Running PNE on it: `uv run pne examples/union_args.py` ([examples/union_args.py](https://github.com/tristanryerparke/python-node-editor/blob/main/examples/union_args.py)) will result in a small menu being added to the respective input in the frontend, which allows you to choose which input component you want to use based on the types allowed by the union. The default input component is the first type defined in the union. Note that the older `Union[int, float]` definition will also work. 
+Running PNE on it: `uv run pne examples/union_args.py` ([examples/union_args.py](../examples/union_args.py)) will result in a small menu being added to the respective input in the frontend, which allows you to choose which input component you want to use based on the types allowed by the union. The default input component is the first type defined in the union. Note that the older `Union[int, float]` definition will also work. 
 
 <img alt="localhost_8000_ (6).png" src="images/localhost_8000_ (6).png">
 
@@ -18,7 +18,7 @@ Running PNE on it: `uv run pne examples/union_args.py` ([examples/union_args.py]
 ## User Model Types
 PNE uses [pydantic](https://docs.pydantic.dev/latest/) data models for serialziation/validation hooks and defining it's own internal schemas. If you create a pydantic-style class using the provided *UserModel* class and use it in a function type annotation, the code analysis in PNE will automatically create nodes to construct and deconstruct instances of the model. This allows you to create named data structures and pass them around as a new type and query their fields without writing frontend code.
 
-[user_model.py](https://github.com/tristanryerparke/python-node-editor/blob/main/examples/user_model.py) - Run with `uv run pne examples/user_model.py`
+[user_model.py](../examples/user_model.py) - Run with `uv run pne examples/user_model.py`
 ```python
 from python_node_editor.schema import UserModel
 
@@ -55,7 +55,7 @@ The backend expects two extension hooks for each cached type:
 - `deserializer(payload: dict) -> tuple[value, metadata_dict]`
 - `metadata_generator(value) -> dict` (optional, used to attach preview/display metadata)
 
-You can see in [input-type-registry.ts](https://github.com/tristanryerparke/python-node-editor/blob/main/frontend/src/components/custom-node/inputs/input-type-registry.ts) that the registry key for the built-in image input is `"Image"`. The extension setup should match that key:
+You can see in [input-type-registry.ts](../frontend/src/components/custom-node/inputs/input-type-registry.ts) that the registry key for the built-in image input is `"Image"`. The extension setup should match that key:
 
 ```python
 import base64
