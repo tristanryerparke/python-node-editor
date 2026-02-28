@@ -132,11 +132,16 @@ def build_frontend():
 
 def analyze():
     import argparse
+    import json
     import os
 
     from devtools import debug as d
 
-    from python_node_editor.analysis.utils import analyze_file_structure
+    from python_node_editor.analysis.utils import (
+        FunctionNotFoundError,
+        analyze_file_structure,
+        split_search_path_and_function,
+    )
 
     parser = argparse.ArgumentParser(
         description="Analyze Python files for functions and types"
@@ -152,21 +157,66 @@ def analyze():
         action="store_true",
         help="Do not ignore files and folders starting with underscore",
     )
+    parser.add_argument(
+        "-j",
+        "--json",
+        nargs="?",
+        const="-",
+        metavar="OUTPUT_FILE",
+        help="Output analysis as JSON. Use -j for stdout or -j <file> to write a file.",
+    )
 
     args = parser.parse_args()
 
     search_paths = [p.strip() for p in args.path.split(",")]
 
     for search_path in search_paths:
-        if not os.path.exists(search_path):
+        path_part, function_name = split_search_path_and_function(search_path)
+        if not os.path.exists(path_part):
             print(f"The path {search_path} does not exist")
             exit(1)
+        if function_name is not None and os.path.isdir(path_part):
+            print(
+                f"The function selector in {search_path} is only supported for Python files"
+            )
+            exit(1)
 
-    print(f"Analyzing: {', '.join(search_paths)}")
+    if args.json is None:
+        print(f"Analyzing: {', '.join(search_paths)}")
     ignore_underscore = not args.do_not_ignore_underscore_prefix
-    function_schemas, callables, types = analyze_file_structure(
-        search_paths, ignore_underscore_prefix=ignore_underscore
-    )
+    try:
+        function_schemas, callables, types = analyze_file_structure(
+            search_paths, ignore_underscore_prefix=ignore_underscore
+        )
+    except (FunctionNotFoundError, ValueError) as error:
+        print(error)
+        exit(1)
+
+    if args.json is not None:
+        serialized_function_schemas = [
+            schema.model_dump(mode="json", exclude_defaults=True)
+            for schema in function_schemas
+        ]
+        serialized_types = {k: v.model_dump(mode="json") for k, v in types.items()}
+        json_output = json.dumps(
+            {
+                "FUNCTION_SCHEMAS": serialized_function_schemas,
+                "TYPES": serialized_types,
+            },
+            indent=2,
+        )
+
+        if args.json == "-":
+            print(json_output)
+            return
+
+        try:
+            with open(args.json, "w", encoding="utf-8") as f:
+                f.write(json_output + "\n")
+        except OSError as error:
+            print(f"Could not write JSON output to {args.json}: {error}")
+            exit(1)
+        return
 
     print(f"\nFound {len(function_schemas)} functions and {len(types)} types")
 

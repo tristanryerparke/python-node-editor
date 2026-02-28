@@ -15,6 +15,21 @@ class DuplicateFunctionError(Exception):
     pass
 
 
+class FunctionNotFoundError(Exception):
+    pass
+
+
+def split_search_path_and_function(search_path: str) -> tuple[str, str | None]:
+    if ":" not in search_path:
+        return search_path, None
+
+    path_part, function_name = search_path.rsplit(":", 1)
+    if path_part.endswith(".py") and function_name:
+        return path_part, function_name
+
+    return search_path, None
+
+
 def check_for_duplicate_callable_ids(functions_schemas_list: list[Any]) -> None:
     callable_id_to_functions = {}
 
@@ -78,7 +93,7 @@ def find_python_files(
     return py_files
 
 
-def analyze_file(file_path: str):
+def analyze_file(file_path: str, function_names: set[str] | None = None):
     """Analyze a single file for functions that can be turned into nodes.
     Also collects the input and output types of the functions and returns them."""
 
@@ -104,6 +119,15 @@ def analyze_file(file_path: str):
         if obj.__module__ == module_name or obj.__module__ == module.__name__
     }
 
+    if function_names is not None:
+        missing_function_names = function_names.difference(funcs.keys())
+        if missing_function_names:
+            missing_sorted = ", ".join(sorted(missing_function_names))
+            raise FunctionNotFoundError(
+                f"The function(s) {missing_sorted} do not exist in {file_path}"
+            )
+        funcs = {name: obj for name, obj in funcs.items() if name in function_names}
+
     functions_schemas_list = []
     callables_dict = {}
     types_dict = {}
@@ -124,7 +148,9 @@ def analyze_file(file_path: str):
     return functions_schemas_list, callables_dict, types_dict
 
 
-def analyze_files(py_files: list[str], base_dir: str):
+def analyze_files(
+    py_files_with_function_filters: list[tuple[str, set[str] | None]], base_dir: str
+):
     """Takes in a flat list of python files and analyzes the functions in them"""
     # Initialize accumulation structures
     all_function_schemas = []
@@ -135,11 +161,13 @@ def analyze_files(py_files: list[str], base_dir: str):
     if base_dir not in sys.path:
         sys.path.insert(0, base_dir)
 
-    for py_file in py_files:
+    for py_file, function_names in py_files_with_function_filters:
         # print(f"Analyzing {py_file}:")
 
         # Analyze the file
-        file_functions, file_callables, file_types = analyze_file(py_file)
+        file_functions, file_callables, file_types = analyze_file(
+            py_file, function_names=function_names
+        )
 
         # Merge functions schemas from this file
         all_function_schemas.extend(file_functions)
@@ -171,16 +199,34 @@ def analyze_file_structure(
     if isinstance(search_paths, str):
         search_paths = [search_paths]
 
-    py_files_flat = []
+    py_files_with_function_filters = {}
     base_dirs = set()
 
     for search_path in search_paths:
-        py_files_flat.extend(find_python_files(search_path, ignore_underscore_prefix))
+        path_part, function_name = split_search_path_and_function(search_path)
 
-        if os.path.isdir(search_path):
-            base_dirs.add(os.path.dirname(search_path))
+        py_files = find_python_files(path_part, ignore_underscore_prefix)
+        if function_name is not None and len(py_files) != 1:
+            raise ValueError(
+                "Function selectors are only supported for a single Python file path"
+            )
+
+        for py_file in py_files:
+            current_filter = py_files_with_function_filters.get(py_file)
+            if current_filter is None and py_file in py_files_with_function_filters:
+                continue
+            if function_name is None:
+                py_files_with_function_filters[py_file] = None
+                continue
+            if current_filter is None:
+                py_files_with_function_filters[py_file] = {function_name}
+            else:
+                current_filter.add(function_name)
+
+        if os.path.isdir(path_part):
+            base_dirs.add(os.path.dirname(path_part))
         else:
-            base_dirs.add(os.path.dirname(search_path))
+            base_dirs.add(os.path.dirname(path_part))
 
     # Use the common base directory or the first one
     base_dir = (
@@ -195,4 +241,4 @@ def analyze_file_structure(
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
 
-    return analyze_files(py_files_flat, base_dir)
+    return analyze_files(list(py_files_with_function_filters.items()), base_dir)
