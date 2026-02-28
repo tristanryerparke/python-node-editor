@@ -49,28 +49,67 @@ To enable this from the your python function you can use the `add_node_options` 
 
 Let's use blurring an image as an example. Uploading an image requires a special input on the frontend. Development of custom inputs is described in [Development](https://github.com/tristanryerparke/python-node-editor/wiki/Development), but for images, this input is built into PNE already. 
 
-The large data will still be uploaded to the backend via the frontend, but the point of cached data is that this happens only once. But in order for this to work, we need to tell the backend what to do during the lifecyle of the cached data.
-- When large data comes in from the frontend, it could be compressed, serialized or encoded, so we need to parse it and create an instance of the python class we want to use as our function input. In the case of the image, this would be the user sending a base64-encoded image, and the backend needs to know how to parse it and turn it into an instance of `PIL.Image.Image` and cache that data in a store in the backend, in the store it will be filed under a cache key uuid.
-- Once the data is cached, for images we need to send back up a small representation of the data, like a 
-- If an instance of this class 
+The large data will still be uploaded to the backend via the frontend, but cached data is designed so that upload only happens once and later graph execution passes cache-key references.
 
-You can see in [input-type-registry.ts](https://github.com/tristanryerparke/python-node-editor/blob/main/frontend/src/components/custom-node/inputs/input-type-registry.ts) that the key value in the registry is "Image", so we should use this key in our python code as follows:
+The backend expects two extension hooks for each cached type:
+- `deserializer(payload: dict) -> tuple[value, metadata_dict]`
+- `metadata_generator(value) -> dict` (optional, used to attach preview/display metadata)
+
+You can see in [input-type-registry.ts](https://github.com/tristanryerparke/python-node-editor/blob/main/frontend/src/components/custom-node/inputs/input-type-registry.ts) that the registry key for the built-in image input is `"Image"`. The extension setup should match that key:
 
 ```python
-@add_node_options(
+import base64
+import io
+
+from typing import Any
+from PIL import Image
+from PIL import ImageOps
+
+from python_node_editor.display import add_node_options
+from python_node_editor.large_data.types import LargeDataHandlerSpec
+
+
+def _decode_image_base64(img_base64: str) -> Image.Image:
+    img_data = base64.b64decode(img_base64)
+    img = Image.open(io.BytesIO(img_data))
+    return img
+
+
+def deserialize_image_from_frontend(payload: dict) -> tuple[Any, dict]:
+    data = payload.get("data") or {}
+    if not isinstance(data, dict):
+        raise ValueError("Image upload data must be a dict")
+    if "img_base64" not in data:
+        raise ValueError("Missing required field for Image upload: img_base64")
+    img = _decode_image_base64(data["img_base64"])
+    return img, {"filename": payload.get("filename")}
+
+
+def generate_metadata(value: Image.Image) -> dict:
+    return {
+        "preview": "...",
+        "display_name": f"Image({value.width}x{value.height}, {value.mode})",
+    }
+
+
+image_cached_datatype = add_node_options(
     cached_handlers=[
         LargeDataHandlerSpec(
             type_name="Image",
-            match_type=Image,
-            upload=_image_upload_handler,
-            metadata=_image_metadata_handler,
+            type_def=Image.Image,
+            deserializer=deserialize_image_from_frontend,
+            metadata_generator=generate_metadata,
         )
     ]
 )
 ```
 
+Then apply the prebuilt decorator on your node function:
 
+```python
+@image_cached_datatype
+def blur_image(image: Image.Image, radius: int = 40) -> Image.Image:
+    ...
+```
 
-
-
-
+to be continued

@@ -1,0 +1,211 @@
+{
+  "main": {
+    "id": "bd105653959e9b40",
+    "type": "split",
+    "children": [
+      {
+        "id": "728347fd7026d31f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "44c30497e910c16d",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "dataflow-canvas.canvas",
+                "viewState": {
+                  "x": -1214.2660998438894,
+                  "y": -65.66345374872108,
+                  "zoom": -0.2965536993741988
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "dataflow-canvas"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "372bd6e6bd65136c",
+    "type": "split",
+    "children": [
+      {
+        "id": "dfc29b7460361f54",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "83a944d0868a0818",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "6b970961561f83b4",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "59ed2c0591ac5779",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d2805fa39b98ff2f",
+    "type": "split",
+    "children": [
+      {
+        "id": "5d04af8649ec4905",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8b405c668ee91daf",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "dataflow-canvas.canvas",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for dataflow-canvas"
+            }
+          },
+          {
+            "id": "bda4e97af50ab14d",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "dataflow-canvas.canvas",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from dataflow-canvas"
+            }
+          },
+          {
+            "id": "2492062dbb404467",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "c750f05d9b14cbef",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "491197b216d5e914",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "dataflow-canvas.canvas",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of dataflow-canvas"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "44c30497e910c16d",
+  "lastOpenFiles": [
+    "src/python_node_editor/large_data/__pycache__/base.cpython-312 2.pyc",
+    "scripts/build-frontend.sh",
+    "scripts",
+    "AGENTS.md",
+    "pyproject.toml",
+    "README.md",
+    "uv.lock",
+    "pytest.ini",
+    "main.py",
+    "frontend/tsconfig.node.json",
+    "frontend/components.json",
+    "frontend/tsconfig.json",
+    "frontend/index.html",
+    "docs/Usage-Introduction.md",
+    "docs/Installation.md",
+    "docs/Types.md",
+    "docs/Node-Customization.md",
+    "docs/Development.md",
+    "dataflow-canvas.canvas"
+  ]
+}

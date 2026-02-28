@@ -8,7 +8,7 @@ from pydantic import (
     model_validator,
 )
 
-from python_node_editor.large_data.base import CachedDataWrapper
+from python_node_editor.large_data.models import CachedDataWrapper
 from python_node_editor.schema_base import (
     BASE_DATATYPES,
     CamelBaseModel,
@@ -100,7 +100,7 @@ class NodeDataFromFrontend(CamelBaseModel):
                     type_def = TYPES.get(type_str)
 
                     if type_def and type_def.kind == "cached":
-                        from python_node_editor.large_data.base import CachedDataWrapper
+                        from python_node_editor.large_data.models import CachedDataWrapper
 
                         cached_instance = CachedDataWrapper.model_validate(
                             arg_value, context={"populate_from_cache": True}

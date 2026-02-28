@@ -160,7 +160,7 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
 
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
-    from python_node_editor.large_data.base import CachedDataWrapper, get_large_data_handler
+    from python_node_editor.large_data.models import CachedDataWrapper
     from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
     from python_node_editor.server import CALLABLES, TYPES
 
@@ -198,14 +198,17 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
             and TYPES[concrete_type].kind == "cached"
         ):
             func_obj = CALLABLES.get(node.data.callable_id)
-            handler_spec = (
-                get_large_data_handler(func_obj, concrete_type)
-                if func_obj is not None
-                else None
+            handlers = (
+                getattr(func_obj, "_large_data_handlers", None) if func_obj else None
             )
-            metadata_handler = handler_spec.metadata if handler_spec else None
+            if isinstance(handlers, list):
+                handlers = {handler.type_name: handler for handler in handlers}
+            if not isinstance(handlers, dict):
+                handlers = {}
+            handler_spec = handlers.get(concrete_type)
+            metadata_handler = handler_spec.metadata_generator if handler_spec else None
             if metadata_handler is not None:
-                metadata = metadata_handler(new_value) or {}
+                metadata = metadata_handler(new_value)
             output_class = CachedDataWrapper
         else:
             output_class = DataWrapper

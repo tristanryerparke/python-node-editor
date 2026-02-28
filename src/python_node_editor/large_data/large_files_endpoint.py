@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException
 
-from python_node_editor.large_data.base import LARGE_DATA_CACHE, CachedDataWrapper
+from python_node_editor.large_data.models import CachedDataWrapper
+from python_node_editor.large_data.types import (
+    LARGE_DATA_CACHE,
+)
 from python_node_editor.schema_base import CamelBaseModel
 
 router = APIRouter()
@@ -23,12 +26,12 @@ async def cache_large_data(upload: LargeDataUpload):
     Uses server.TYPES to verify the cached type.
     CachedDataWrapper.deserialize_to_cache() parses the payload and caches the data.
     """
-    from python_node_editor.large_data.base import get_large_data_handler
     from python_node_editor.server import CALLABLES, TYPES
 
     try:
-        if not upload.callable_id:
-            raise HTTPException(status_code=400, detail="Missing callable_id")
+        # this shouldn't be able to happen..?
+        # if not upload.callable_id:
+        #     raise HTTPException(status_code=400, detail="Missing callable_id")
 
         func_obj = CALLABLES.get(upload.callable_id)
         if func_obj is None:
@@ -37,12 +40,18 @@ async def cache_large_data(upload: LargeDataUpload):
                 detail=f"Unknown callable_id: {upload.callable_id}",
             )
 
-        handler_spec = get_large_data_handler(func_obj, upload.type)
-        upload_handler = handler_spec.upload if handler_spec else None
-        if upload_handler is None:
+        handlers = getattr(func_obj, "_large_data_handlers", None)
+        if isinstance(handlers, list):
+            handlers = {handler.type_name: handler for handler in handlers}
+        if not isinstance(handlers, dict):
+            handlers = {}
+        handler_spec = handlers.get(upload.type)
+        deserializer = handler_spec.deserializer if handler_spec else None
+        metadata_handler = handler_spec.metadata_generator if handler_spec else None
+        if deserializer is None:
             raise HTTPException(
                 status_code=400,
-                detail=f"No upload handler registered for type {upload.type} on callable {upload.callable_id}",
+                detail=f"No deserializer registered for type {upload.type} on callable {upload.callable_id}",
             )
 
         # Look up the cached type in TYPES dictionary
@@ -64,8 +73,12 @@ async def cache_large_data(upload: LargeDataUpload):
 
         # Deserialize using the provided handler
         instance = CachedDataWrapper.deserialize_to_cache(
-            full_data, upload_handler=upload_handler
+            full_data, deserializer=deserializer
         )
+        if metadata_handler is not None:
+            metadata = metadata_handler(instance.value)
+            if metadata:
+                instance = instance.model_copy(update=metadata)
 
         # Return serialized dict with all computed fields included
         return instance.model_dump()
