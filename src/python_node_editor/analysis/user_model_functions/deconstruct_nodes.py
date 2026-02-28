@@ -63,7 +63,7 @@ def create_deconstruct_node(
         name=f"deconstruct-{type_name}",
         callable_id=callable_id,
         category=type_def.category,
-        file_path=[file_path, line_number],
+        definition_path=f"{file_path}:{line_number}",
         doc=f"Deconstruct a {type_name} instance into its fields",
         arguments=arguments,
         output_style="multiple",

@@ -10,18 +10,17 @@ import {
 import useSettingsStore from "@/stores/settingsStore";
 
 type SourceCodeButtonProps = {
-  filePath: [string, number];
+  definitionPath: string;
 };
 
 export default memo(function SourceCodeButton({
-  filePath,
+  definitionPath,
 }: SourceCodeButtonProps) {
   const openInEditorName = useSettingsStore((state) => state.openInEditorName);
 
   const handleClick = () => {
     const editorName = openInEditorName || "vscode";
-    const [path, lineNumber] = filePath;
-    window.open(`${editorName}://file${path}:${lineNumber}`, "_blank");
+    window.open(`${editorName}://file${definitionPath}`, "_blank");
   };
 
   return (

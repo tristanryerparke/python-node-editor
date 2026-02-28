@@ -54,7 +54,7 @@ def create_construct_node(
         name=f"construct-{type_name}",
         callable_id=callable_id,
         category=type_def.category,
-        file_path=[file_path, line_number],
+        definition_path=f"{file_path}:{line_number}",
         doc=f"Construct a {type_name} instance",
         arguments=arguments,
         output_style="single",

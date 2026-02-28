@@ -27,7 +27,7 @@ export default memo(function NodeHeader({ data, nodeId }: NodeHeaderProps) {
     <div className="h-fit flex items-center justify-between p-1 w-full">
       <span className="px-1 text-sm font-bold shrink-0">{data.name}</span>
       <div className="flex items-center gap-1">
-        <SourceCodeButton filePath={data.filePath} />
+        <SourceCodeButton definitionPath={data.definitionPath} />
         <NodeStatus
           status={data.status ?? "not-executed"}
           onToggleDrawer={handleToggleDrawer}

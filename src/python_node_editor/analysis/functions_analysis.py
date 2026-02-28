@@ -202,7 +202,7 @@ def analyze_function(
             name=func_name,
             callable_id=callable_id,
             category=category_path,
-            file_path=[abs_file_path, line_number],
+            definition_path=f"{abs_file_path}:{line_number}",
             doc=inspect.getdoc(func_obj),
             arguments=arguments,
             output_style=output_style,

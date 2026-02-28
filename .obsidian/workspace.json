@@ -15,9 +15,9 @@
               "state": {
                 "file": "dataflow-canvas.canvas",
                 "viewState": {
-                  "x": -1301.0757687211121,
-                  "y": 23.43068009895495,
-                  "zoom": -0.2965536993741988
+                  "x": -824.092660556401,
+                  "y": 216.22459613577146,
+                  "zoom": -0.7855941474437709
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -188,19 +188,19 @@
   },
   "active": "44c30497e910c16d",
   "lastOpenFiles": [
-    "src/python_node_editor/__pycache__/cli.cpython-312.pyc",
-    "tests/function_analysis_testing/__pycache__/test_file_target_filters.cpython-312-pytest-9.0.0.pyc",
-    "tests/function_analysis_testing/test_file_target_filters.py",
-    "src/python_node_editor/large_data/__pycache__/base.cpython-312 2.pyc",
-    "scripts/build-frontend.sh",
-    "scripts",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/construct_nodes.cpython-312.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/user_model_nodes.cpython-312.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/deconstruct_nodes.cpython-312.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/__init__.cpython-312.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/construct_nodes.cpython-312 2.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/user_model_nodes.cpython-312 2.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/deconstruct_nodes.cpython-312 2.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__/__init__.cpython-312 2.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__ 3/__init__.cpython-312 2.pyc",
+    "src/python_node_editor/analysis/user_model_functions/__pycache__ 3/user_model_nodes.cpython-312 2.pyc",
     "AGENTS.md",
-    "pyproject.toml",
     "README.md",
-    "uv.lock",
-    "pytest.ini",
-    "main.py",
-    "frontend/tsconfig.node.json",
     "docs/Usage-Introduction.md",
     "docs/Installation.md",
     "docs/Types.md",

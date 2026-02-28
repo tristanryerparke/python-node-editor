@@ -50,7 +50,7 @@ def check_for_duplicate_callable_ids(functions_schemas_list: list[Any]) -> None:
     if duplicates:
         error_messages = []
         for callable_id, funcs in duplicates.items():
-            func_names = [f"{f.name} ({f.file_path})" for f in funcs]
+            func_names = [f"{f.name} ({f.definition_path})" for f in funcs]
             error_messages.append(
                 f"Callable ID '{callable_id}' is shared by: {', '.join(func_names)}"
             )

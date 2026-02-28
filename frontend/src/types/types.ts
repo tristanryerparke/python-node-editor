@@ -36,7 +36,7 @@ export interface FunctionSchema {
   name: string;
   callableId: string;
   category: string[];
-  filePath: [string, number];
+  definitionPath: string;
   doc?: string | null;
   arguments: Record<string, FrontendFieldDataWrapper>;
   dynamicInputType?: StructDescr | null;

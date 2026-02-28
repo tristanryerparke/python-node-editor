@@ -54,7 +54,7 @@ class FunctionSchema(CamelBaseModel):
     name: str
     callable_id: str
     category: list[str]
-    file_path: list[str | int]
+    definition_path: str
     doc: str | None = None
     arguments: dict[str, DataWrapper | CachedDataWrapper]
     dynamic_input_type: StructDescr | None = None
