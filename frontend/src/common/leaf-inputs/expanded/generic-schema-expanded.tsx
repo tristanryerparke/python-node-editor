@@ -80,7 +80,7 @@ export default memo(function GenericSchemaExpanded({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col nodrag nopan nowheel">
       <ResizableHeight
         height={height}
         setHeight={setHeight}
@@ -90,7 +90,7 @@ export default memo(function GenericSchemaExpanded({
       >
         <div
           className={cn(
-            "w-full h-full flex items-center justify-center bg-muted/30 rounded-md border border-input",
+            "w-full h-full flex items-center justify-center bg-muted/30 rounded-md border border-input nodrag nopan nowheel",
             !validationResult.valid && "border-destructive",
           )}
         >
@@ -99,7 +99,7 @@ export default memo(function GenericSchemaExpanded({
             onChange={(e) => setValue(e.target.value)}
             onBlur={(e) => setValue(e.target.value)}
             disabled={isConnected}
-            className={cn("nopan nowheel border-none", "w-full h-full")}
+            className={cn("nodrag nopan nowheel border-none", "w-full h-full")}
             placeholder={resolvedPlaceholder}
             style={{
               wordBreak: "break-word",
@@ -110,7 +110,7 @@ export default memo(function GenericSchemaExpanded({
           />
           <ResizableHeightHandle>
             <SyncedWidthHandle>
-              <div className="nodrag shrink-0 cursor-nwse-resize absolute bottom-0 right-0 p-0.5 opacity-50 hover:opacity-100 transition-opacity">
+              <div className="nodrag shrink-0 cursor-nwse-resize absolute bottom-1 right-1 p-0.5 opacity-50 hover:opacity-100 transition-opacity">
                 <Grip className="h-3 w-3 text-muted-foreground" />
               </div>
             </SyncedWidthHandle>

@@ -69,7 +69,7 @@ const ReadOnlyStringExpanded = memo(function ReadOnlyStringExpanded({
           />
           <ResizableHeightHandle>
             <SyncedWidthHandle>
-              <div className="nodrag shrink-0 cursor-nwse-resize absolute bottom-0 right-0 p-0.5 opacity-50 hover:opacity-100 transition-opacity">
+              <div className="nodrag shrink-0 cursor-nwse-resize absolute bottom-1 right-1 p-0.5 opacity-50 hover:opacity-100 transition-opacity">
                 <Grip className="h-3 w-3 text-muted-foreground" />
               </div>
             </SyncedWidthHandle>

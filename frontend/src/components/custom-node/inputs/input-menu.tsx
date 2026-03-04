@@ -74,8 +74,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
         effectiveType.structureType === "dict")) ||
     (typeof effectiveType === "string" &&
       !registryEntry &&
-      !isUserModelType &&
-      effectiveType !== "Image");
+      !isUserModelType);
   const hasExpandable = hasRegistryExpandable || hasGenericExpandable;
   const isExpanded = fieldData._expanded ?? false;
 
