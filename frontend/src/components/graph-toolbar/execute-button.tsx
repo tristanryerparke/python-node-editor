@@ -7,20 +7,30 @@ import {
 } from "@/components/ui/tooltip";
 import { LoaderIcon } from "lucide-react";
 import useSettingsStore from "../../stores/settingsStore";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { type Graph } from "../../utils/strip-graph";
 import { useBackendConnection } from "../../hooks/useBackendConnection";
 import { useExecuteFlowSync } from "../../hooks/useExecuteFlowSync";
 import { useExecuteFlowAsync } from "../../hooks/useExecuteFlowAsync";
 import { clearOutputsAndConnectedInputs } from "../../utils/clear-outputs";
+import useFlowStore from "@/stores/flowStore";
+import { getInvalidNodeInputIssues } from "@/utils/input-execution-validation";
 
 export default function ExecuteMenu() {
   const [loading, setLoading] = useState(false);
   const { isConnected, isChecking } = useBackendConnection();
   const executionMode = useSettingsStore((state) => state.executionMode);
+  const nodes = useFlowStore((state) => state.nodes);
+  const edges = useFlowStore((state) => state.edges);
 
   const { execute: executeSyncFn } = useExecuteFlowSync();
   const { execute: executeAsyncFn } = useExecuteFlowAsync();
+
+  const invalidInputIssues = useMemo(
+    () => getInvalidNodeInputIssues(nodes, edges),
+    [edges, nodes],
+  );
+  const hasInvalidInputs = invalidInputIssues.length > 0;
 
   const execute = useCallback(async () => {
     setLoading(true);
@@ -44,9 +54,23 @@ export default function ExecuteMenu() {
     }
   }, [executionMode, executeSyncFn, executeAsyncFn]);
 
-  const isDisabled = loading || !isConnected || isChecking;
+  const disabledReasons: string[] = [];
+  if (loading) {
+    disabledReasons.push("Execution in progress");
+  }
+  if (isChecking) {
+    disabledReasons.push("Checking backend connection");
+  }
+  if (!isConnected && !isChecking) {
+    disabledReasons.push("Backend not connected");
+  }
+  if (hasInvalidInputs) {
+    disabledReasons.push("Invalid node inputs");
+  }
+
+  const isDisabled = disabledReasons.length > 0;
   const buttonClass =
-    isConnected && !isChecking
+    isConnected && !isChecking && !hasInvalidInputs
       ? "w-25 text-green-700! border-green-700!"
       : "w-25";
 
@@ -62,7 +86,7 @@ export default function ExecuteMenu() {
     </Button>
   );
 
-  if (!isConnected && !isChecking) {
+  if (isDisabled) {
     return (
       <div className="w-full">
         <TooltipProvider>
@@ -71,7 +95,9 @@ export default function ExecuteMenu() {
               <span className="inline-block w-full">{button}</span>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>Backend not connected</p>
+              {disabledReasons.map((reason) => (
+                <p key={reason}>{reason}</p>
+              ))}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

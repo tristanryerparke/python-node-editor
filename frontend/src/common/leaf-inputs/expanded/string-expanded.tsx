@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Grip } from "lucide-react";
 import {
   ResizableHeight,
   ResizableHeightHandle,
@@ -6,11 +7,9 @@ import {
 import { SyncedWidthHandle } from "../../utility-components/synced-width-resizable";
 import { Textarea } from "../../../components/ui/textarea";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
-import { useNodeConnections } from "@xyflow/react";
-import { useControlledDebounce } from "../../../hooks/useControlledDebounce";
 import type { DataWrapper } from "@/types/types";
+import GenericSchemaExpanded from "./generic-schema-expanded";
 import { cn } from "@/lib/utils";
-import { Grip } from "lucide-react";
 
 interface StringExpandedProps {
   inputData?: DataWrapper;
@@ -19,40 +18,21 @@ interface StringExpandedProps {
   readOnly?: boolean;
 }
 
-const DEFAULT_AND_MIN_HEIGHT = 30; // Tailwind units
-const MAX_HEIGHT = 200; // Tailwind units
+const DEFAULT_AND_MIN_HEIGHT = 30;
+const MAX_HEIGHT = 200;
 
-export default memo(function StringExpanded({
-  inputData,
-  outputData,
+const encodeAsJsonString = (value: string) => JSON.stringify(value);
+const valueToPlainText = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
+const ReadOnlyStringExpanded = memo(function ReadOnlyStringExpanded({
+  data,
   path,
-  readOnly = false,
-}: StringExpandedProps) {
+}: {
+  data: DataWrapper;
+  path: (string | number)[];
+}) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
-
-  // Call all hooks before any early returns
-  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({
-    handleType: "target",
-    handleId: handleId,
-  });
-
-  // Support both inputData and outputData
-  const data = inputData || outputData;
-
-  const externalValue = typeof data?.value === "string" ? data.value : "";
-
-  const [value, setValue] = useControlledDebounce(
-    externalValue,
-    (debouncedValue) => {
-      void updateNodeData([...path, "value"], debouncedValue, {
-        fromUser: true,
-      });
-    },
-    200,
-  );
-
-  // Get height from store
   const storedHeight = useNodeData([...path, "_expandedHeight"]) as
     | number
     | undefined;
@@ -62,19 +42,7 @@ export default memo(function StringExpanded({
     void updateNodeData([...path, "_expandedHeight"], newHeight);
   };
 
-  // Early return after all hooks
-  if (!data) {
-    return <div>No data</div>;
-  }
-
-  const isConnected =
-    connections.length > 0 && connections[0].targetHandle === handleId;
-
-  const isDisabled = readOnly || isConnected;
-
-  const handleValueChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value);
-  };
+  const value = typeof data.value === "string" ? data.value : "";
 
   return (
     <div className="flex flex-col">
@@ -88,19 +56,13 @@ export default memo(function StringExpanded({
         <div className="w-full h-full flex items-center justify-center bg-muted/30 rounded-md border border-input">
           <Textarea
             value={value}
-            onChange={handleValueChange}
-            onBlur={(e) => setValue(e.target.value)}
-            disabled={isDisabled}
-            className={cn(
-              "nopan nowheel border-none",
-              "w-full h-full",
-              readOnly && "cursor-default",
-            )}
+            disabled={true}
+            className={cn("nopan nowheel border-none", "w-full h-full", "cursor-default")}
             placeholder=""
             style={{
               wordBreak: "break-word",
               overflowWrap: "anywhere",
-              opacity: readOnly ? 1 : undefined,
+              opacity: 1,
               resize: "none",
               fieldSizing: "fixed",
             }}
@@ -116,4 +78,42 @@ export default memo(function StringExpanded({
       </ResizableHeight>
     </div>
   );
+});
+
+const InputStringExpanded = memo(function InputStringExpanded({
+  inputData,
+  path,
+}: {
+  inputData: DataWrapper;
+  path: (string | number)[];
+}) {
+  return (
+    <GenericSchemaExpanded
+      inputData={inputData}
+      path={path}
+      displayToRawInput={encodeAsJsonString}
+      valueToDisplay={valueToPlainText}
+    />
+  );
+});
+
+export default memo(function StringExpanded({
+  inputData,
+  outputData,
+  path,
+  readOnly = false,
+}: StringExpandedProps) {
+  if (readOnly || outputData) {
+    if (!outputData) {
+      return <div>No data</div>;
+    }
+
+    return <ReadOnlyStringExpanded data={outputData} path={path} />;
+  }
+
+  if (!inputData) {
+    return <div>No data</div>;
+  }
+
+  return <InputStringExpanded inputData={inputData} path={path} />;
 });

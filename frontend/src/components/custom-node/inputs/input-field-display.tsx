@@ -3,10 +3,10 @@ import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
 import useTypesStore from "@/stores/typesStore";
-import ListDisplay from "@/common/leaf-inputs/list-display";
-import DictDisplay from "@/common/leaf-inputs/dict-display";
 import UserModelDisplay from "../../../common/leaf-inputs/user-model-display";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import GenericSchemaInput from "@/common/leaf-inputs/generic-schema-input";
+import GenericSchemaExpanded from "@/common/leaf-inputs/expanded/generic-schema-expanded";
 import type {
   FrontendFieldDataWrapper,
   StructDescr,
@@ -50,6 +50,19 @@ export default memo(function InputFieldDisplay({
     actualType = fieldData._selectedType || fieldData.type.anyOf[0];
   }
 
+  const isExpanded = fieldData._expanded ?? false;
+
+  const hasRegistryComponent =
+    typeof actualType === "string" &&
+    Boolean(INPUT_TYPE_COMPONENT_REGISTRY[actualType]);
+
+  const typeInfo =
+    typeof actualType === "string" ? types[actualType] : undefined;
+  const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
+
+  const usesGenericRenderer = !hasRegistryComponent && !isUserModel;
+  const genericHideMainWhenExpanded = true;
+
   // Function to render the main input component
   const renderMainInput = () => {
     // Check if we have a specific component for this type
@@ -63,7 +76,6 @@ export default memo(function InputFieldDisplay({
         "main" in registryEntry
       ) {
         // Check if we should hide the main component when expanded
-        const isExpanded = fieldData._expanded ?? false;
         const shouldHide = isExpanded && registryEntry.hideMainWhenExpanded;
 
         if (shouldHide) {
@@ -81,72 +93,62 @@ export default memo(function InputFieldDisplay({
     }
 
     // Check if this type exists in the store and is a user_model
-    if (typeof actualType === "string") {
-      const typeInfo = types[actualType];
-      if (typeInfo && typeInfo.kind === "user_model") {
-        return (
-          <UserModelDisplay
-            inputData={{ ...fieldData, type: actualType }}
-            path={path}
-            typeInfo={typeInfo}
-          />
-        );
-      }
+    if (typeof actualType === "string" && typeInfo && typeInfo.kind === "user_model") {
+      return (
+        <UserModelDisplay
+          inputData={{ ...fieldData, type: actualType }}
+          path={path}
+          typeInfo={typeInfo}
+        />
+      );
     }
 
-    // Handle complex types like object and list
-    if (typeof actualType === "object" && "structureType" in actualType) {
-      if (actualType.structureType === "list") {
-        return (
-          <ListDisplay
-            inputData={{ ...fieldData, type: actualType }}
-            path={path}
-          />
-        );
-      }
-      if (actualType.structureType === "dict") {
-        return (
-          <DictDisplay
-            inputData={{ ...fieldData, type: actualType }}
-            path={path}
-          />
-        );
-      }
+    if (usesGenericRenderer && isExpanded && genericHideMainWhenExpanded) {
+      return <div className="flex flex-1 min-h-8" />;
     }
 
-    // For types without a component, show a generic message
-    console.log("No component for type:", actualType);
-    return <div>InputRenderer: {JSON.stringify(fieldData)}</div>;
+    return (
+      <GenericSchemaInput
+        inputData={{ ...fieldData, type: actualType }}
+        path={path}
+      />
+    );
   };
 
   // Function to render the expanded component if it exists and is enabled
   const renderExpandedContent = () => {
-    if (typeof actualType !== "string") {
-      return null;
+    if (typeof actualType === "string") {
+      const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
+      if (registryEntry && typeof registryEntry === "object") {
+        // Check if expanded component exists and is enabled
+        const expandedComponent = registryEntry.expanded;
+
+        if (expandedComponent && isExpanded) {
+          const ExpandedComponent = expandedComponent;
+
+          return (
+            <div
+              className={
+                registryEntry.hideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"
+              }
+            >
+              <ExpandedComponent
+                inputData={{ ...fieldData, type: actualType }}
+                path={path}
+              />
+            </div>
+          );
+        }
+      }
     }
 
-    const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-    if (!registryEntry || typeof registryEntry !== "object") {
+    if (!usesGenericRenderer || !isExpanded) {
       return null;
     }
-
-    // Check if expanded component exists and is enabled
-    const expandedComponent = registryEntry.expanded;
-    const isExpanded = fieldData._expanded ?? false;
-
-    if (!expandedComponent || !isExpanded) {
-      return null;
-    }
-
-    const ExpandedComponent = expandedComponent;
 
     return (
-      <div
-        className={
-          registryEntry.hideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"
-        }
-      >
-        <ExpandedComponent
+      <div className={genericHideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"}>
+        <GenericSchemaExpanded
           inputData={{ ...fieldData, type: actualType }}
           path={path}
         />

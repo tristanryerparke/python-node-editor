@@ -1,5 +1,7 @@
 import { memo } from "react";
+import { Pencil } from "lucide-react";
 import SingleLineTextDisplay from "./single-line-text-display";
+import { Button } from "@/components/ui/button";
 import type { FrontendFieldDataWrapper, StructDescr } from "@/types/types";
 
 interface ListDisplayProps {
@@ -7,13 +9,28 @@ interface ListDisplayProps {
   path: (string | number)[];
 }
 
-export default memo(function ListDisplay({ inputData }: ListDisplayProps) {
+function ListEditButton() {
+  return (
+    <Button variant="ghost" size="icon-xs" className="shrink-0 rounded-sm">
+      <Pencil className="h-3 w-3" />
+    </Button>
+  );
+}
+
+export default memo(function ListDisplay({ inputData, path }: ListDisplayProps) {
   const listType = inputData.type as StructDescr;
   const value = inputData.value as unknown[] | null;
 
   // If there's no value, show the "attach" message
   if (value === null || value === undefined) {
-    return <SingleLineTextDisplay dimmed content={"no data"} />;
+    return (
+      <SingleLineTextDisplay
+        dimmed
+        content={"no data"}
+        path={path}
+        rightButton={ListEditButton}
+      />
+    );
   }
 
   // If there's a value, display it

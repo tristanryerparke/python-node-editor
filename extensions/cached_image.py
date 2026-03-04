@@ -6,10 +6,7 @@ from PIL import Image
 from PIL import ImageOps
 
 from python_node_editor.display import add_node_options
-from python_node_editor.large_data.types import (
-
-    LargeDataHandlerSpec,
-)
+from python_node_editor.large_data.types import LargeDataHandlerSpec
 
 THUMBNAIL_MAX_SIZE = 500
 

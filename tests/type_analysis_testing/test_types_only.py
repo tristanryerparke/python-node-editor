@@ -1,6 +1,7 @@
 from devtools import debug as d
 
 from python_node_editor.analysis.types_analysis import analyze_type, get_type_repr
+from python_node_editor.large_data.models import CachedDataWrapper
 from python_node_editor.schema_base import StructDescr, UnionDescr
 from tests.assets.types_only import (
     basic_single_types,
@@ -141,6 +142,16 @@ def test_simple_generic():
     # Analyze the type
     types_dict = analyze_type(type_obj, file_path, module_ns)
     d(types_dict)
+
+
+def test_cached_type_kind_is_cached():
+    """Cached wrappers should be emitted with kind='cached'."""
+
+    types_dict = analyze_type(CachedDataWrapper, file_path, module_ns)
+    d(types_dict)
+
+    assert "CachedDataWrapper" in types_dict
+    assert types_dict["CachedDataWrapper"].kind == "cached"
 
 
 if __name__ == "__main__":

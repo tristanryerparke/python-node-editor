@@ -25,6 +25,7 @@ type JsonViewerProps = {
   className?: string;
   textSize?: string;
   textLimit?: number;
+  showArrayIndices?: boolean;
 };
 
 export function JsonViewer({
@@ -34,6 +35,7 @@ export function JsonViewer({
   className,
   textSize = "text-sm",
   textLimit = 40,
+  showArrayIndices = false,
 }: JsonViewerProps) {
   return (
     <TooltipProvider>
@@ -44,6 +46,7 @@ export function JsonViewer({
           isRoot={true}
           defaultExpanded={defaultExpanded}
           textLimit={textLimit}
+          showArrayIndices={showArrayIndices}
         />
       </div>
     </TooltipProvider>
@@ -58,6 +61,7 @@ type JsonNodeProps = {
   defaultExpanded?: boolean;
   level?: number;
   textLimit?: number;
+  showArrayIndices?: boolean;
 };
 
 function JsonNode({
@@ -67,6 +71,7 @@ function JsonNode({
   defaultExpanded = true,
   level = 0,
   textLimit = 40,
+  showArrayIndices = false,
 }: JsonNodeProps) {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
   const [isCopied, setIsCopied] = React.useState(false);
@@ -93,32 +98,42 @@ function JsonNode({
     isExpandable && data !== null && data !== undefined
       ? Object.keys(data).length
       : 0;
+  const shouldRenderName = name.length > 0;
+  const getChildName = (key: string) =>
+    dataType === "array" && !showArrayIndices ? "" : key;
 
-  // For root node, just render children directly without the root header
+  // For root node, render outer braces/brackets without a root header label.
   if (isRoot && isExpandable && data !== null && data !== undefined) {
     return (
       <div>
+        <div className="text-muted-foreground py-1">
+          {dataType === "array" ? "[" : "{"}
+        </div>
         {Object.keys(data).map((key) => (
           <JsonNode
             key={key}
-            name={dataType === "array" ? `${key}` : key}
+            name={getChildName(key)}
             data={data[key]}
             level={0}
             defaultExpanded={defaultExpanded}
             textLimit={textLimit}
+            showArrayIndices={showArrayIndices}
           />
         ))}
+        <div className="text-muted-foreground py-1">
+          {dataType === "array" ? "]" : "}"}
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className={cn("pl-4 group/object", level > 0 && "border-l border-border")}
+      className={cn("pl-2 group/object", level > 0 && "border-l border-border")}
     >
       <div
         className={cn(
-          "flex items-center gap-1 py-1 hover:bg-muted/50 rounded px-1 -ml-4 cursor-pointer group/property",
+          "flex items-center gap-1 py-1 hover:bg-muted/50 rounded px-1 -ml-2 cursor-pointer group/property",
           isRoot && "text-primary font-semibold",
         )}
         onClick={isExpandable ? handleToggle : undefined}
@@ -135,7 +150,7 @@ function JsonNode({
           <div className="w-4" />
         )}
 
-        <span className="text-primary">{name}</span>
+        {shouldRenderName && <span className="text-primary">{name}</span>}
 
         <span className="text-muted-foreground">
           {isExpandable ? (
@@ -149,9 +164,10 @@ function JsonNode({
                 </span>
               )}
             </>
-          ) : (
+          ) : shouldRenderName ? (
             ":"
-          )}
+          ) : null
+          }
         </span>
 
         {!isExpandable && <JsonValue data={data} textLimit={textLimit} />}
@@ -172,18 +188,19 @@ function JsonNode({
       </div>
 
       {isExpandable && isExpanded && data !== null && data !== undefined && (
-        <div className="pl-4">
+        <div className="pl-2">
           {Object.keys(data).map((key) => (
             <JsonNode
               key={key}
-              name={dataType === "array" ? `${key}` : key}
+              name={getChildName(key)}
               data={data[key]}
               level={level + 1}
               defaultExpanded={defaultExpanded}
               textLimit={textLimit}
+              showArrayIndices={showArrayIndices}
             />
           ))}
-          <div className="text-muted-foreground pl-4 py-1">
+          <div className="text-muted-foreground pl-2 py-1">
             {dataType === "array" ? "]" : "}"}
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
 } from "../../ui/dropdown-menu";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import useTypesStore from "@/stores/typesStore";
 import type {
   FrontendFieldDataWrapper,
   StructDescr,
@@ -26,6 +27,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const getNodeData = useFlowStore((state) => state.getNodeData);
+  const types = useTypesStore((state) => state.types);
 
   const nodeId = path ? path[0] : undefined;
 
@@ -56,10 +58,25 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
     typeof effectiveType === "string"
       ? INPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
       : undefined;
-  const hasExpandable =
+
+  const hasRegistryExpandable = Boolean(
     registryEntry &&
-    typeof registryEntry === "object" &&
-    registryEntry.expanded !== undefined;
+      typeof registryEntry === "object" &&
+      registryEntry.expanded !== undefined,
+  );
+  const isUserModelType =
+    typeof effectiveType === "string" &&
+    Boolean(types[effectiveType] && types[effectiveType].kind === "user_model");
+  const hasGenericExpandable =
+    (typeof effectiveType === "object" &&
+      "structureType" in effectiveType &&
+      (effectiveType.structureType === "list" ||
+        effectiveType.structureType === "dict")) ||
+    (typeof effectiveType === "string" &&
+      !registryEntry &&
+      !isUserModelType &&
+      effectiveType !== "Image");
+  const hasExpandable = hasRegistryExpandable || hasGenericExpandable;
   const isExpanded = fieldData._expanded ?? false;
 
   // Detect if this is a dynamic list input
