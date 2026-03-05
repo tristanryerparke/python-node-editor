@@ -8,7 +8,6 @@ from pydantic import (
     model_validator,
 )
 
-from python_node_editor.large_data.models import CachedDataWrapper
 from python_node_editor.schema_base import (
     BASE_DATATYPES,
     CamelBaseModel,
@@ -56,57 +55,66 @@ class FunctionSchema(CamelBaseModel):
     category: list[str]
     definition_path: str
     doc: str | None = None
-    arguments: dict[str, DataWrapper | CachedDataWrapper]
+    arguments: dict[str, DataWrapper]
     dynamic_input_type: StructDescr | None = None
     output_style: Literal["single", "multiple"] = "single"
-    outputs: dict[str, DataWrapper | CachedDataWrapper]
+    outputs: dict[str, DataWrapper]
     cached_types: list[str] = Field(default_factory=list)
     auto_generated: bool = False
 
 
 class NodeDataFromFrontend(CamelBaseModel):
     callable_id: str
-    arguments: dict[str, DataWrapper | CachedDataWrapper]
-    outputs: dict[str, DataWrapper | CachedDataWrapper]
+    arguments: dict[str, DataWrapper]
+    outputs: dict[str, DataWrapper]
     output_style: Literal["single", "multiple"] = "single"
 
     @model_validator(mode="before")
     @classmethod
     def reconstruct_cached_types(cls, data: Any) -> Any:
         """
-        Pre-processes data before validation to instantiate cached data types.
-
-        This validator:
-        1. Detects cached data by the presence of a "$cacheKey:" marker in value
-        2. Looks up the cached type in the TYPES registry
-        3. Instantiates CachedDataWrapper to load from the cache
-        4. Replaces the dict with the instance before Pydantic validates
-
-        This allows 3rd party CachedDataWrapper subclasses to be properly instantiated
-        without hardcoding union types in the schema.
+        Pre-processes cached values into backend canonical
+        {instance_type, cache_key, ...} shape.
+        CamelBaseModel handles camelCase <-> snake_case conversion.
         """
+        from python_node_editor.large_data.models import normalize_cached_value_reference
         from python_node_editor.server import TYPES
 
-        # Pre-process: replace dicts with instantiated cached models BEFORE validation
-        if isinstance(data, dict):
-            arguments = data.get("arguments", {})
-            for arg_name, arg_value in arguments.items():
-                if (
-                    isinstance(arg_value, dict)
-                    and isinstance(arg_value.get("value"), str)
-                    and arg_value["value"].startswith("$cacheKey:")
-                ):
-                    type_str = arg_value.get("type")
-                    type_def = TYPES.get(type_str)
+        if not isinstance(data, dict):
+            return data
 
-                    if type_def and type_def.kind == "cached":
-                        from python_node_editor.large_data.models import CachedDataWrapper
+        arguments = data.get("arguments")
+        if not isinstance(arguments, dict):
+            return data
 
-                        cached_instance = CachedDataWrapper.model_validate(
-                            arg_value, context={"populate_from_cache": True}
-                        )
-                        # Replace the dict with the instance in the data
-                        arguments[arg_name] = cached_instance
+        data_changed = False
+        normalized_arguments = dict(arguments)
+        for arg_name, arg_value in arguments.items():
+            if not isinstance(arg_value, dict):
+                continue
+
+            type_str = arg_value.get("type")
+            if not isinstance(type_str, str):
+                continue
+
+            type_def = TYPES.get(type_str)
+            if not type_def or type_def.kind != "cached":
+                continue
+
+            normalized_value = normalize_cached_value_reference(
+                arg_value.get("value"), expected_type=type_str
+            )
+            if normalized_value is None:
+                continue
+
+            updated_wrapper = dict(arg_value)
+            updated_wrapper["value"] = normalized_value
+            normalized_arguments[arg_name] = updated_wrapper
+            data_changed = True
+
+        if data_changed:
+            data = dict(data)
+            data["arguments"] = normalized_arguments
 
         return data
 
@@ -135,13 +143,13 @@ class NodeUpdate(CamelBaseModel):
 
     node_id: str
     status: Literal["executing", "executed", "error"] | None = None
-    outputs: dict[str, DataWrapper | CachedDataWrapper] | None = None
-    arguments: dict[str, DataWrapper | CachedDataWrapper] | None = None
+    outputs: dict[str, DataWrapper] | None = None
+    arguments: dict[str, DataWrapper] | None = None
     terminal_output: str = ""
 
     @field_serializer("outputs", "arguments", when_used="unless-none")
     def serialize_wrappers(self, value, _info):
-        """Custom serializer to ensure nested CachedDataWrapper subclasses properly serialize computed fields"""
+        """Serialize nested wrapper models with aliases and without null fields."""
         return {
             key: wrapper.model_dump(by_alias=True, exclude_none=True)
             for key, wrapper in value.items()

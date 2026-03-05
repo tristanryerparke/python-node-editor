@@ -45,9 +45,46 @@ def execute_node(
 
     Returns a tuple of (success, result, error_message)
     """
-    from python_node_editor.server import CALLABLES
+    from python_node_editor.large_data.models import (
+        CachedValueReference,
+        resolve_cached_runtime_value,
+    )
+    from python_node_editor.server import CALLABLES, TYPES
 
     callable = CALLABLES[node.callable_id]
+    handlers = getattr(callable, "_large_data_handlers", None)
+    if isinstance(handlers, list):
+        handlers = {handler.type_name: handler for handler in handlers}
+    if not isinstance(handlers, dict):
+        handlers = {}
+
+    def resolve_argument_value(wrapper) -> Any:
+        arg_value = wrapper.value
+        declared_type = wrapper.type if isinstance(wrapper.type, str) else None
+        cached_type_name = declared_type
+        if cached_type_name is None:
+            return arg_value
+
+        type_def = TYPES.get(cached_type_name)
+        if not type_def or type_def.kind != "cached":
+            return arg_value
+
+        if arg_value is None:
+            return None
+
+        handler_spec = handlers.get(cached_type_name)
+        reference_model = (
+            handler_spec.reference_model
+            if handler_spec and handler_spec.reference_model is not None
+            else CachedValueReference
+        )
+
+        return resolve_cached_runtime_value(
+            arg_value,
+            expected_type=cached_type_name,
+            reference_model=reference_model,
+            expected_class=type_def._class,
+        )
 
     old_stdout = sys.stdout
     old_stderr = sys.stderr
@@ -65,7 +102,7 @@ def execute_node(
             named_args = {}
 
             for k, v in node.arguments.items():
-                arg_value = v.value
+                arg_value = resolve_argument_value(v)
 
                 if k.isdigit():
                     numbered_args[int(k)] = arg_value
@@ -84,13 +121,13 @@ def execute_node(
         elif getattr(callable, "dict_inputs", False):
             args = {}
             for k, v in node.arguments.items():
-                args[k] = v.value
+                args[k] = resolve_argument_value(v)
 
             result = callable(**args)
         else:
             args = {}
             for k, v in node.arguments.items():
-                args[k] = v.value
+                args[k] = resolve_argument_value(v)
 
             result = callable(**args)
 
@@ -160,7 +197,10 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
 
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
-    from python_node_editor.large_data.models import CachedDataWrapper
+    from python_node_editor.large_data.models import (
+        CachedValueReference,
+        cache_runtime_value,
+    )
     from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
     from python_node_editor.server import CALLABLES, TYPES
 
@@ -207,13 +247,21 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
                 handlers = {}
             handler_spec = handlers.get(concrete_type)
             metadata_handler = handler_spec.metadata_generator if handler_spec else None
+            reference_model = (
+                handler_spec.reference_model
+                if handler_spec and handler_spec.reference_model is not None
+                else CachedValueReference
+            )
             if metadata_handler is not None:
                 metadata = metadata_handler(new_value)
-            output_class = CachedDataWrapper
-        else:
-            output_class = DataWrapper
+            new_value = cache_runtime_value(
+                type_name=concrete_type,
+                value=new_value,
+                metadata=metadata,
+                reference_model=reference_model,
+            )
 
-        output_data_model = output_class(type=concrete_type, value=new_value, **metadata)
+        output_data_model = DataWrapper(type=concrete_type, value=new_value)
 
         outputs[output_name] = output_data_model
 

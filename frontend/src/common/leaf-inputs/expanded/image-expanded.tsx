@@ -7,6 +7,10 @@ import { SyncedWidthHandle } from "../../utility-components/synced-width-resizab
 import type { FrontendFieldDataWrapper } from "@/types/types";
 import useFlowStore, { useNodeData } from "@/stores/flowStore";
 import { Grip } from "lucide-react";
+import {
+  getCacheKeyFromValue,
+  isCachedValueReference,
+} from "@/utils/large-data-utils";
 
 interface ImageExpandedProps {
   inputData?: FrontendFieldDataWrapper;
@@ -40,12 +44,12 @@ export default memo(function ImageExpanded({
     return <div>No data</div>;
   }
 
-  const preview = (data as any).preview as string | undefined;
-  const filename = (data as any).filename as string | undefined;
-  const cacheKey =
-    typeof data.value === "string" && data.value.startsWith("$cacheKey:")
-      ? data.value.slice("$cacheKey:".length)
-      : undefined;
+  const imageValue = isCachedValueReference(data.value) ? data.value : undefined;
+  const preview =
+    typeof imageValue?.preview === "string" ? imageValue.preview : undefined;
+  const filename =
+    typeof imageValue?.filename === "string" ? imageValue.filename : undefined;
+  const cacheKey = getCacheKeyFromValue(data.value);
   const hasImage = !!preview || !!cacheKey;
 
   return (

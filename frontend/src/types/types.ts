@@ -1,14 +1,21 @@
 import type { Node } from "@xyflow/react";
 
-export interface ImageData {
-  cache_ref: string;
-  thumb_base64: string;
-  width: number;
-  height: number;
-  mode: string;
+export interface CachedValueReference {
+  instanceType?: string;
+  cacheKey: string;
+  preview?: string;
+  displayName?: string;
+  filename?: string;
+  [key: string]: unknown;
 }
 
-export type BaseDataTypes = number | string | ImageData;
+export type BaseDataTypes =
+  | number
+  | string
+  | boolean
+  | CachedValueReference
+  | Record<string, unknown>
+  | unknown[];
 
 export interface StructDescr {
   structureType: "list" | "dict";

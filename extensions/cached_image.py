@@ -6,9 +6,15 @@ from PIL import Image
 from PIL import ImageOps
 
 from python_node_editor.display import add_node_options
-from python_node_editor.large_data.types import LargeDataHandlerSpec
+from python_node_editor.large_data.large_files_endpoint import LargeDataHandlerSpec, CachedValueReference
 
 THUMBNAIL_MAX_SIZE = 500
+
+
+class CachedImageReference(CachedValueReference):
+    preview: str | None = None
+    display_name: str | None = None
+    filename: str | None = None
 
 
 def generate_thumbnail_base64(image: Image.Image, max_size: int = THUMBNAIL_MAX_SIZE) -> str:
@@ -39,22 +45,16 @@ def _decode_image_base64(img_base64: str) -> Image.Image:
     return img
 
 
-def deserialize_image_from_frontend(payload: dict) -> tuple[Any, dict]:
-    data = payload.get("data") or {}
-    if not isinstance(data, dict):
-        raise ValueError("Image upload data must be a dict")
-    if "img_base64" not in data:
-        raise ValueError("Missing required field for Image upload: img_base64")
+def deserialize_image_from_frontend(data: dict) -> tuple[Any, dict]:
 
     img = _decode_image_base64(data["img_base64"])
-    # We can only get the filename metadata here
-    return img, {"filename": payload.get("filename")}
+    return img, {"filename": data.get("filename")}
 
 
 def generate_metadata(value: Image.Image) -> dict:
     return {
-        "preview":generate_thumbnail_base64(value),
-        "display_name":f"Image({value.width}x{value.height}, {value.mode})",
+        "preview": generate_thumbnail_base64(value),
+        "display_name": f"Image({value.width}x{value.height}, {value.mode})",
     }
 
 
@@ -66,6 +66,7 @@ image_cached_datatype = add_node_options(
             type_def=Image.Image,
             deserializer=deserialize_image_from_frontend,
             metadata_generator=generate_metadata,
+            reference_model=CachedImageReference,
         )
     ]
 )

@@ -6,12 +6,6 @@ import { cn } from "@/lib/utils";
 import type { FrontendFieldDataWrapper } from "../../types/types";
 import { ErrorDialog } from "./leaf-utils/error-dialog";
 
-interface CachedImageData extends FrontendFieldDataWrapper {
-  preview?: string;
-  displayName?: string;
-  _filename?: string;
-}
-
 interface ImageInputProps {
   inputData: FrontendFieldDataWrapper;
   path: (string | number)[];
@@ -24,12 +18,19 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const imageData = inputData as CachedImageData;
-  const cacheKey =
-    typeof imageData.value === "string" &&
-    imageData.value.startsWith("$cacheKey:")
-      ? imageData.value.slice("$cacheKey:".length)
+  const imageValue =
+    typeof inputData.value === "object" &&
+    inputData.value !== null &&
+    !Array.isArray(inputData.value)
+      ? (inputData.value as Record<string, unknown>)
       : undefined;
+
+  const cacheKey =
+    typeof imageValue?.cacheKey === "string"
+      ? imageValue.cacheKey
+      : typeof imageValue?.cache_key === "string"
+        ? imageValue.cache_key
+        : undefined;
 
   // Check if cache key exists on mount (after page reload with persisted state)
   useEffect(() => {
@@ -86,7 +87,13 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
     }
   };
 
-  const displayName = imageData.displayName || "Generated Image";
+  const displayName =
+    (typeof imageValue?.displayName === "string"
+      ? imageValue.displayName
+      : typeof imageValue?.display_name === "string"
+        ? imageValue.display_name
+      : undefined) ||
+    "Generated Image";
 
   // When connected, show as read-only display (like output)
   if (isConnected) {
@@ -108,7 +115,7 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
   }
 
   // When not connected, show file picker
-  const uploadText = imageData.displayName || "Upload Image";
+  const uploadText = cacheKey ? displayName : "Upload Image";
 
   return (
     <>
