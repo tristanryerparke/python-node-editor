@@ -3,7 +3,7 @@ import type {
   FrontendFieldDataWrapper,
   FunctionNode,
 } from "@/types/types";
-import type { StructDescrJson, UnionDescrJson } from "@/types/backend-schema";
+import type { StructDescr, UnionDescr } from "@/types/backend-schema";
 import {
   validateValueAgainstSchema,
   type SchemaType,
@@ -30,11 +30,11 @@ function getEffectiveSchema(fieldData: FrontendFieldDataWrapper): SchemaType {
   return fieldData.type as SchemaType;
 }
 
-function isSupportedUnion(schema: UnionDescrJson): boolean {
+function isSupportedUnion(schema: UnionDescr): boolean {
   return schema.anyOf.every((typeName) => SUPPORTED_SCALAR_TYPES.has(typeName));
 }
 
-function isSupportedStruct(schema: StructDescrJson): boolean {
+function isSupportedStruct(schema: StructDescr): boolean {
   if (typeof schema.itemsType === "string") {
     return SUPPORTED_SCALAR_TYPES.has(schema.itemsType);
   }

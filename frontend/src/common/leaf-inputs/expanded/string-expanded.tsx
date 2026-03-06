@@ -7,7 +7,7 @@ import {
 import { SyncedWidthHandle } from "../../utility-components/synced-width-resizable";
 import { Textarea } from "../../../components/ui/textarea";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
-import type { DataWrapper } from "@/types/types";
+import type { DataWrapper } from "@/types/backend-schema";
 import GenericSchemaExpanded from "./generic-schema-expanded";
 import { cn } from "@/lib/utils";
 

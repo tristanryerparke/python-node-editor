@@ -1,10 +1,10 @@
 import type {
-  StructDescrJson,
-  TypeExprJson,
-  UnionDescrJson,
+  StructDescr,
+  TypeExpr,
+  UnionDescr,
 } from "@/types/backend-schema";
 
-export type SchemaType = TypeExprJson;
+export type SchemaType = TypeExpr;
 
 export type ValidationResult<T = unknown> =
   | {
@@ -69,7 +69,7 @@ function validateValue(
 
 function validateStructType(
   value: unknown,
-  schema: StructDescrJson,
+  schema: StructDescr,
   path: string,
 ): ValidationResult {
   if (schema.structureType === "list") {
@@ -152,7 +152,7 @@ function validateScalarType(
   };
 }
 
-function isUnionDescr(schema: TypeExprJson): schema is UnionDescrJson {
+function isUnionDescr(schema: TypeExpr): schema is UnionDescr {
   return typeof schema === "object" && schema !== null && "anyOf" in schema;
 }
 

@@ -1,10 +1,10 @@
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/vanilla/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { FunctionSchema } from "@/types/types";
+import type { FrontendNodeData } from "@/types/types";
 
 export interface NodesResponse {
-  [functionName: string]: FunctionSchema;
+  [functionName: string]: FrontendNodeData;
 }
 
 type SchemasStoreState = {

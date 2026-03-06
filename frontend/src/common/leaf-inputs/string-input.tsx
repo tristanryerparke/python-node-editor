@@ -1,6 +1,6 @@
 import { memo } from "react";
 import GenericSchemaInput from "./generic-schema-input";
-import type { DataWrapper } from "@/types/types";
+import type { DataWrapper } from "@/types/backend-schema";
 
 interface StringInputProps {
   inputData: DataWrapper;

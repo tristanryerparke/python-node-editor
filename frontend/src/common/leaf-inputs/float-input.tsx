@@ -3,7 +3,7 @@ import { NumberInput } from "../../components/ui/number-input";
 import useFlowStore from "../../stores/flowStore";
 import { useNodeConnections } from "@xyflow/react";
 import { useControlledDebounce } from "../../hooks/useControlledDebounce";
-import type { DataWrapper } from "@/types/types";
+import type { DataWrapper } from "@/types/backend-schema";
 import { validateValueAgainstSchema } from "@/utils/schema-input-validator";
 
 interface FloatInputProps {

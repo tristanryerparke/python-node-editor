@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useControlledDebounce } from "@/hooks/useControlledDebounce";
 import { cn } from "@/lib/utils";
 import useFlowStore from "@/stores/flowStore";
-import type { DataWrapper } from "@/types/types";
+import type { DataWrapper } from "@/types/backend-schema";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 

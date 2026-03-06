@@ -115,7 +115,11 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
   }
 
   // When not connected, show file picker
-  const uploadText = cacheKey ? displayName : "Upload Image";
+  const uploadText = uploading
+    ? "Uploading..."
+    : cacheKey
+      ? displayName
+      : "Upload Image";
 
   return (
     <>
@@ -145,9 +149,6 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
         >
           <span className="truncate min-w-0 flex-1">{uploadText}</span>
         </div>
-        {uploading && (
-          <p className="text-xs text-muted-foreground">Uploading...</p>
-        )}
       </div>
 
       <ErrorDialog

@@ -14,7 +14,7 @@ import useFlowStore, { useNodeData } from "../../../stores/flowStore";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import useTypesStore from "@/stores/typesStore";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
-import type { StructDescrJson } from "@/types/backend-schema";
+import type { StructDescr } from "@/types/backend-schema";
 
 interface InputMenuProps {
   path?: (string | number)[];
@@ -32,7 +32,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   // Get data from Zustand store
   const dynamicInputType = useNodeData(
     nodeId ? [nodeId, "dynamicInputType"] : [],
-  ) as StructDescrJson | null | undefined;
+  ) as StructDescr | null | undefined;
   const arguments_ = useNodeData(nodeId ? [nodeId, "arguments"] : []) as
     | Record<string, FrontendFieldDataWrapper>
     | undefined;
@@ -79,12 +79,12 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   // Detect if this is a dynamic list input
   const argName = path ? String(path[path.length - 1]) : "";
   const isDynamicListInput =
-    fieldData._structuredInputType === "list" &&
+    fieldData._dynamicInputType === "list" &&
     dynamicInputType?.structureType === "list";
 
   // Detect if this is a dynamic dict input
   const isDynamicDictInput =
-    fieldData._structuredInputType === "dict" &&
+    fieldData._dynamicInputType === "dict" &&
     dynamicInputType?.structureType === "dict";
 
   // Calculate if this is the highest numbered list input for deletion purposes

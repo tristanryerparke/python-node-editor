@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useControlledDebounce } from "@/hooks/useControlledDebounce";
 import { cn } from "@/lib/utils";
 import useFlowStore, { useNodeData } from "@/stores/flowStore";
-import type { DataWrapper } from "@/types/types";
+import type { DataWrapper } from "@/types/backend-schema";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 import {

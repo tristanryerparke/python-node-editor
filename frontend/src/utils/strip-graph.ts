@@ -10,11 +10,6 @@ export interface Graph {
   edges: object[];
 }
 
-interface StrippedGraph {
-  nodes: GraphNode[];
-  edges: object[];
-}
-
 const NODE_DATA_FIELDS_TO_KEEP = [
   "callableId",
   "arguments",
@@ -22,7 +17,7 @@ const NODE_DATA_FIELDS_TO_KEEP = [
   "outputStyle",
 ] as const;
 
-export function stripGraphForExecute(graph: Graph): StrippedGraph {
+export function stripGraphForExecute(graph: Graph): Graph {
   const strippedNodes = graph.nodes.map((node) => {
     const strippedData: any = {};
     NODE_DATA_FIELDS_TO_KEEP.forEach((field) => {
