@@ -16,20 +16,20 @@ LARGE_DATA_CACHE: dict[str, Any] = {}
 class LargeDataHandlerSpec:
     type_name: str
     type_def: type
-    deserializer: Callable
-    metadata_generator: Callable | None = None
+    deserializer: Callable[[dict], tuple[Any, dict | None]]
+    metadata_generator: Callable[[Any], dict[str, Any]] | None = None
     reference_model: type | None = None
 
 class CachedValueReference(CamelBaseModel):
-    """Canonical backend representation for cached value references."""
+    """Small class to to represent a cached value in the backend
+    can be sent two and from the frontend"""
 
     instance_type: str | None = None
     cache_key: str
 
 
 class LargeDataUpload(CamelBaseModel):
-    """Generic upload payload for any large data type"""
-
+    """Input model for receiving large data via the /cache endpoint"""
     callable_id: str | None = None
     type: str  # Discriminator: "Image", "CachedDataFrame", etc.
     data: dict 
@@ -39,7 +39,7 @@ class LargeDataUpload(CamelBaseModel):
 async def cache_large_data(upload: LargeDataUpload):
     from python_node_editor.server import CALLABLES
 
-
+    # Find the function that stores the handlers we need to
     func_obj = CALLABLES.get(upload.callable_id)
     if func_obj is None:
         raise HTTPException(
@@ -59,11 +59,11 @@ async def cache_large_data(upload: LargeDataUpload):
 
     backend_metadata = handler_spec.metadata_generator(data_deserialized)
 
-    # Construct compound object
-    frontend_object = {
-        "instance_type": upload.type,
-        "cache_key": cache_key
-    } | frontend_metadata | backend_metadata
+    frontend_object = handler_spec.reference_model(
+        cache_key=cache_key, 
+        instance_type=upload.type,
+        **backend_metadata | frontend_metadata
+    )
 
     return frontend_object
 
@@ -72,11 +72,5 @@ async def cache_large_data(upload: LargeDataUpload):
 
 @router.get("/cache_exists/{cache_key}")
 async def cache_exists(cache_key: str):
-    """
-    Check if a cache key exists in LARGE_DATA_CACHE.
-
-    Returns:
-        {"exists": true} if the key exists
-        {"exists": false} if the key does not exist
-    """
+    """Check if a cache key exists in LARGE_DATA_CACHE"""
     return {"exists": cache_key in LARGE_DATA_CACHE}

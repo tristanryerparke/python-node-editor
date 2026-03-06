@@ -1,10 +1,13 @@
+import uuid
 import io
 import sys
 import traceback
 from typing import Any
 
+from devtools import debug as d
 from python_node_editor.schema import Graph, NodeDataFromFrontend, NodeFromFrontend
 from python_node_editor.schema_base import StructDescr, UnionDescr
+from python_node_editor.large_data.large_files_endpoint import LARGE_DATA_CACHE
 
 VERBOSE = False
 
@@ -45,46 +48,9 @@ def execute_node(
 
     Returns a tuple of (success, result, error_message)
     """
-    from python_node_editor.large_data.models import (
-        CachedValueReference,
-        resolve_cached_runtime_value,
-    )
-    from python_node_editor.server import CALLABLES, TYPES
+    from python_node_editor.server import CALLABLES
 
     callable = CALLABLES[node.callable_id]
-    handlers = getattr(callable, "_large_data_handlers", None)
-    if isinstance(handlers, list):
-        handlers = {handler.type_name: handler for handler in handlers}
-    if not isinstance(handlers, dict):
-        handlers = {}
-
-    def resolve_argument_value(wrapper) -> Any:
-        arg_value = wrapper.value
-        declared_type = wrapper.type if isinstance(wrapper.type, str) else None
-        cached_type_name = declared_type
-        if cached_type_name is None:
-            return arg_value
-
-        type_def = TYPES.get(cached_type_name)
-        if not type_def or type_def.kind != "cached":
-            return arg_value
-
-        if arg_value is None:
-            return None
-
-        handler_spec = handlers.get(cached_type_name)
-        reference_model = (
-            handler_spec.reference_model
-            if handler_spec and handler_spec.reference_model is not None
-            else CachedValueReference
-        )
-
-        return resolve_cached_runtime_value(
-            arg_value,
-            expected_type=cached_type_name,
-            reference_model=reference_model,
-            expected_class=type_def._class,
-        )
 
     old_stdout = sys.stdout
     old_stderr = sys.stderr
@@ -102,7 +68,7 @@ def execute_node(
             named_args = {}
 
             for k, v in node.arguments.items():
-                arg_value = resolve_argument_value(v)
+                arg_value = v.value
 
                 if k.isdigit():
                     numbered_args[int(k)] = arg_value
@@ -121,13 +87,13 @@ def execute_node(
         elif getattr(callable, "dict_inputs", False):
             args = {}
             for k, v in node.arguments.items():
-                args[k] = resolve_argument_value(v)
+                args[k] = v.value
 
             result = callable(**args)
         else:
             args = {}
             for k, v in node.arguments.items():
-                args[k] = resolve_argument_value(v)
+                args[k] = v.value
 
             result = callable(**args)
 
@@ -197,10 +163,6 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
 
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
-    from python_node_editor.large_data.models import (
-        CachedValueReference,
-        cache_runtime_value,
-    )
     from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
     from python_node_editor.server import CALLABLES, TYPES
 
@@ -230,8 +192,20 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
         new_value = result_dict[output_name]
 
         concrete_type = infer_concrete_type(new_value, data.type, TYPES)
+        if VERBOSE:
+            d(
+                {
+                    "stage": "pre_cache_wrap",
+                    "node_id": node.id,
+                    "output_name": output_name,
+                    "declared_type": data.type,
+                    "concrete_type": concrete_type,
+                    "new_value": new_value,
+                    "new_value_runtime_type": type(new_value),
+                }
+            )
 
-        metadata = {}
+        # Check if we need to cache the output data and send a value reference object
         if (
             isinstance(concrete_type, str)
             and concrete_type in TYPES
@@ -246,22 +220,23 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
             if not isinstance(handlers, dict):
                 handlers = {}
             handler_spec = handlers.get(concrete_type)
-            metadata_handler = handler_spec.metadata_generator if handler_spec else None
-            reference_model = (
-                handler_spec.reference_model
-                if handler_spec and handler_spec.reference_model is not None
-                else CachedValueReference
-            )
-            if metadata_handler is not None:
-                metadata = metadata_handler(new_value)
-            new_value = cache_runtime_value(
-                type_name=concrete_type,
-                value=new_value,
-                metadata=metadata,
-                reference_model=reference_model,
+
+            # Create the cache key and store the data
+            cache_key = str(uuid.uuid4())
+            LARGE_DATA_CACHE[cache_key] = new_value
+
+            backend_metadata = handler_spec.metadata_generator(new_value)
+            
+            frontend_object = handler_spec.reference_model(
+                cache_key=cache_key, 
+                instance_type=concrete_type,
+                **backend_metadata
             )
 
+            new_value = frontend_object
+
         output_data_model = DataWrapper(type=concrete_type, value=new_value)
+
 
         outputs[output_name] = output_data_model
 

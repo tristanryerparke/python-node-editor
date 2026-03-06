@@ -1,52 +1,18 @@
-import base64
-import io
-
 from typing import Any
 from PIL import Image
-from PIL import ImageOps
 
 from python_node_editor.display import add_node_options
 from python_node_editor.large_data.large_files_endpoint import LargeDataHandlerSpec, CachedValueReference
-
-THUMBNAIL_MAX_SIZE = 500
-
+from extensions.image_utils import generate_thumbnail_base64, _decode_image_base64
 
 class CachedImageReference(CachedValueReference):
     preview: str | None = None
     display_name: str | None = None
     filename: str | None = None
 
-
-def generate_thumbnail_base64(image: Image.Image, max_size: int = THUMBNAIL_MAX_SIZE) -> str:
-    width, height = image.size
-    if width > height:
-        new_width = max_size
-        new_height = int((height / width) * max_size)
-    else:
-        new_height = max_size
-        new_width = int((width / height) * max_size)
-
-    thumbnail = image.copy()
-    thumbnail.thumbnail((new_width, new_height), Image.Resampling.LANCZOS)
-
-    thumb_buffer = io.BytesIO()
-    thumbnail.save(thumb_buffer, format="WEBP")
-    thumb_base64 = base64.b64encode(thumb_buffer.getvalue()).decode("utf-8")
-
-    return thumb_base64
-
-
-def _decode_image_base64(img_base64: str) -> Image.Image:
-    img_data = base64.b64decode(img_base64)
-    img = Image.open(io.BytesIO(img_data))
-    # Strip rotation data (not required)
-    img = ImageOps.exif_transpose(img)
-    img.info.pop("exif", None)
-    return img
-
-
 def deserialize_image_from_frontend(data: dict) -> tuple[Any, dict]:
-
+    """This function gets called when you want to store an image in the cache
+    you need to return the image and an optional """
     img = _decode_image_base64(data["img_base64"])
     return img, {"filename": data.get("filename")}
 

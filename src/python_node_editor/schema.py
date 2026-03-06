@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import (
     BaseModel,
@@ -15,6 +15,7 @@ from python_node_editor.schema_base import (
     UnionDescr,
     UserModel,
 )
+from python_node_editor.large_data.large_files_endpoint import CachedValueReference
 
 
 # We don't want the fields on MultipleOutputs to be converted to camel case
@@ -26,7 +27,7 @@ class DataWrapper(CamelBaseModel):
     model_config = ConfigDict(extra="ignore")
 
     type: str | UnionDescr | StructDescr
-    value: BASE_DATATYPES | None = None
+    value: BASE_DATATYPES | CachedValueReference | None = None
 
     @field_serializer("value")
     def serialize_value(self, value: BASE_DATATYPES | None):
@@ -69,54 +70,27 @@ class NodeDataFromFrontend(CamelBaseModel):
     outputs: dict[str, DataWrapper]
     output_style: Literal["single", "multiple"] = "single"
 
-    @model_validator(mode="before")
-    @classmethod
-    def reconstruct_cached_types(cls, data: Any) -> Any:
-        """
-        Pre-processes cached values into backend canonical
-        {instance_type, cache_key, ...} shape.
-        CamelBaseModel handles camelCase <-> snake_case conversion.
-        """
-        from python_node_editor.large_data.models import normalize_cached_value_reference
-        from python_node_editor.server import TYPES
+    @model_validator(mode="after")
+    def reconstruct_cached_types(self):
+        from python_node_editor.server import CALLABLES
+        from python_node_editor.large_data.large_files_endpoint import LARGE_DATA_CACHE
 
-        if not isinstance(data, dict):
-            return data
+        func_obj = CALLABLES.get(self.callable_id)
+        handlers = getattr(func_obj, "_large_data_handlers", {}) or {}
+        if not handlers:
+            return self
 
-        arguments = data.get("arguments")
-        if not isinstance(arguments, dict):
-            return data
-
-        data_changed = False
-        normalized_arguments = dict(arguments)
-        for arg_name, arg_value in arguments.items():
-            if not isinstance(arg_value, dict):
+        for arg in self.arguments.values():
+            if arg.type not in handlers:
+                continue
+            if not isinstance(arg.value, dict):
                 continue
 
-            type_str = arg_value.get("type")
-            if not isinstance(type_str, str):
-                continue
+            cache_key = arg.value.get("cacheKey")
+            if isinstance(cache_key, str) and cache_key in LARGE_DATA_CACHE:
+                arg.value = LARGE_DATA_CACHE[cache_key]
 
-            type_def = TYPES.get(type_str)
-            if not type_def or type_def.kind != "cached":
-                continue
-
-            normalized_value = normalize_cached_value_reference(
-                arg_value.get("value"), expected_type=type_str
-            )
-            if normalized_value is None:
-                continue
-
-            updated_wrapper = dict(arg_value)
-            updated_wrapper["value"] = normalized_value
-            normalized_arguments[arg_name] = updated_wrapper
-            data_changed = True
-
-        if data_changed:
-            data = dict(data)
-            data["arguments"] = normalized_arguments
-
-        return data
+        return self
 
 
 class NodeFromFrontend(CamelBaseModel):
