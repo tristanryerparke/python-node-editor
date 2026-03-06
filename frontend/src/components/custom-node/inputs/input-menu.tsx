@@ -13,10 +13,8 @@ import {
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import useTypesStore from "@/stores/typesStore";
-import type {
-  FrontendFieldDataWrapper,
-  StructDescr,
-} from "../../../types/types";
+import type { FrontendFieldDataWrapper } from "../../../types/types";
+import type { StructDescrJson } from "@/types/backend-schema";
 
 interface InputMenuProps {
   path?: (string | number)[];
@@ -34,7 +32,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   // Get data from Zustand store
   const dynamicInputType = useNodeData(
     nodeId ? [nodeId, "dynamicInputType"] : [],
-  ) as StructDescr | null | undefined;
+  ) as StructDescrJson | null | undefined;
   const arguments_ = useNodeData(nodeId ? [nodeId, "arguments"] : []) as
     | Record<string, FrontendFieldDataWrapper>
     | undefined;

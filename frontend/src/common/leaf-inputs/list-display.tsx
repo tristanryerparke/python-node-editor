@@ -2,7 +2,8 @@ import { memo } from "react";
 import { Pencil } from "lucide-react";
 import SingleLineTextDisplay from "./single-line-text-display";
 import { Button } from "@/components/ui/button";
-import type { FrontendFieldDataWrapper, StructDescr } from "@/types/types";
+import type { FrontendFieldDataWrapper } from "@/types/types";
+import type { StructDescrJson } from "@/types/backend-schema";
 
 interface ListDisplayProps {
   inputData: FrontendFieldDataWrapper;
@@ -18,7 +19,7 @@ function ListEditButton() {
 }
 
 export default memo(function ListDisplay({ inputData, path }: ListDisplayProps) {
-  const listType = inputData.type as StructDescr;
+  const listType = inputData.type as StructDescrJson;
   const value = inputData.value as unknown[] | null;
 
   // If there's no value, show the "attach" message

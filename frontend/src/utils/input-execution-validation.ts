@@ -2,9 +2,8 @@ import type { Edge } from "@xyflow/react";
 import type {
   FrontendFieldDataWrapper,
   FunctionNode,
-  StructDescr,
-  UnionDescr,
 } from "@/types/types";
+import type { StructDescrJson, UnionDescrJson } from "@/types/backend-schema";
 import {
   validateValueAgainstSchema,
   type SchemaType,
@@ -31,11 +30,11 @@ function getEffectiveSchema(fieldData: FrontendFieldDataWrapper): SchemaType {
   return fieldData.type as SchemaType;
 }
 
-function isSupportedUnion(schema: UnionDescr): boolean {
+function isSupportedUnion(schema: UnionDescrJson): boolean {
   return schema.anyOf.every((typeName) => SUPPORTED_SCALAR_TYPES.has(typeName));
 }
 
-function isSupportedStruct(schema: StructDescr): boolean {
+function isSupportedStruct(schema: StructDescrJson): boolean {
   if (typeof schema.itemsType === "string") {
     return SUPPORTED_SCALAR_TYPES.has(schema.itemsType);
   }

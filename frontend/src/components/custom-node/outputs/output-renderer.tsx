@@ -3,9 +3,9 @@ import SingleLineTextDisplay from "../../../common/leaf-inputs/single-line-text-
 import useTypesStore from "@/stores/typesStore";
 import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
 import type { OutputRendererProps } from "./output-type-registry";
-import type { StructDescr } from "@/types/types";
+import type { StructDescrJson } from "@/types/backend-schema";
 
-function isStructDescr(type: unknown): type is StructDescr {
+function isStructDescr(type: unknown): type is StructDescrJson {
   return (
     typeof type === "object" &&
     type !== null &&

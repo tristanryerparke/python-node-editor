@@ -7,10 +7,8 @@ import UserModelDisplay from "../../../common/leaf-inputs/user-model-display";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import GenericSchemaInput from "@/common/leaf-inputs/generic-schema-input";
 import GenericSchemaExpanded from "@/common/leaf-inputs/expanded/generic-schema-expanded";
-import type {
-  FrontendFieldDataWrapper,
-  StructDescr,
-} from "../../../types/types";
+import type { FrontendFieldDataWrapper } from "../../../types/types";
+import type { StructDescrJson } from "@/types/backend-schema";
 
 interface InputFieldDisplayProps {
   fieldData: FrontendFieldDataWrapper;
@@ -27,7 +25,7 @@ export default memo(function InputFieldDisplay({
 
   // Detect if this is a dynamic dict input as dict inputs have editable keys
   const dynamicInputType = useNodeData([nodeId, "dynamicInputType"]) as
-    | StructDescr
+    | StructDescrJson
     | null
     | undefined;
   const isDynamicDictInput =

@@ -1,6 +1,7 @@
 import { memo } from "react";
 import SingleLineTextDisplay from "./single-line-text-display";
-import type { FrontendFieldDataWrapper, StructDescr } from "@/types/types";
+import type { FrontendFieldDataWrapper } from "@/types/types";
+import type { StructDescrJson } from "@/types/backend-schema";
 
 interface DictDisplayProps {
   inputData: FrontendFieldDataWrapper;
@@ -8,7 +9,7 @@ interface DictDisplayProps {
 }
 
 export default memo(function DictDisplay({ inputData }: DictDisplayProps) {
-  const dictType = inputData.type as StructDescr;
+  const dictType = inputData.type as StructDescrJson;
   const value = inputData.value as Record<string, unknown> | null;
 
   // If there's no value, show the "attach" message

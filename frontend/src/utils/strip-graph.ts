@@ -1,4 +1,4 @@
-interface GraphNode {
+export interface GraphNode {
   id: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
@@ -10,15 +10,8 @@ export interface Graph {
   edges: object[];
 }
 
-interface StrippedNode {
-  id: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
-  position?: { x: number; y: number };
-}
-
 interface StrippedGraph {
-  nodes: StrippedNode[];
+  nodes: GraphNode[];
   edges: object[];
 }
 
@@ -57,7 +50,7 @@ export function stripGraphForExecute(graph: Graph): StrippedGraph {
       }
     });
 
-    const strippedNode: StrippedNode = {
+    const strippedNode: GraphNode = {
       id: node.id,
       data: strippedData,
     };

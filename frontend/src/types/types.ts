@@ -1,4 +1,5 @@
 import type { Node } from "@xyflow/react";
+import type { StructDescrJson, TypeExprJson } from "./backend-schema";
 
 export interface CachedValueReference {
   instanceType?: string;
@@ -17,17 +18,8 @@ export type BaseDataTypes =
   | Record<string, unknown>
   | unknown[];
 
-export interface StructDescr {
-  structureType: "list" | "dict";
-  itemsType: string | UnionDescr;
-}
-
-export interface UnionDescr {
-  anyOf: string[];
-}
-
 export interface DataWrapper {
-  type: string | StructDescr | UnionDescr;
+  type: TypeExprJson;
   value: BaseDataTypes | null;
 }
 
@@ -46,7 +38,7 @@ export interface FunctionSchema {
   definitionPath: string;
   doc?: string | null;
   arguments: Record<string, FrontendFieldDataWrapper>;
-  dynamicInputType?: StructDescr | null;
+  dynamicInputType?: StructDescrJson | null;
   outputStyle?: "single" | "multiple";
   outputs: Record<string, FrontendFieldDataWrapper>;
   cachedTypes?: string[];

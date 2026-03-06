@@ -3,10 +3,8 @@ import { Separator } from "../../ui/separator";
 import AddListInput from "./dynamic/add-list-input";
 import AddDictInput from "./dynamic/add-dict-input";
 import { useNodeData } from "../../../stores/flowStore";
-import type {
-  FrontendFieldDataWrapper,
-  StructDescr,
-} from "../../../types/types";
+import type { FrontendFieldDataWrapper } from "../../../types/types";
+import type { StructDescrJson } from "@/types/backend-schema";
 
 interface InputsProps {
   arguments: Record<string, FrontendFieldDataWrapper>;
@@ -18,7 +16,7 @@ export default function Inputs({ arguments: args, path }: InputsProps) {
 
   // Get dynamicInputType from Zustand store
   const dynamicInputType = useNodeData([nodeId, "dynamicInputType"]) as
-    | StructDescr
+    | StructDescrJson
     | null
     | undefined;
 
