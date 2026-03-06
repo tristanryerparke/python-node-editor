@@ -351,6 +351,8 @@ def test_two_connected_image_nodes():
     )
 
     graph = Graph(nodes=[node1, node2], edges=[edge1])
+    from devtools import debug as d
+    d(graph.model_dump(by_alias=True))
 
     # Execute the graph
     response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
@@ -377,6 +379,10 @@ def test_two_connected_image_nodes():
     assert node2_input["type"] == "Image"
     assert node2_input["value"] == node1_output["value"]
 
+    
+
+    
+
     # Verify second node output
     node2_update = result["updates"][2]
     assert node2_update["nodeId"] == "blur-node-2"
@@ -387,4 +393,5 @@ def test_two_connected_image_nodes():
 
 
 if __name__ == "__main__":
-    test_app_setup()
+    # test_app_setup()
+    test_two_connected_image_nodes()
