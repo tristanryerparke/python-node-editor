@@ -2,6 +2,8 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/vanilla/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { FrontendNodeData } from "@/types/types";
+import { queryClient } from "@/lib/query-client";
+import { nodeSchemasQueryOptions } from "@/lib/backend-query-options";
 
 export interface NodesResponse {
   [functionName: string]: FrontendNodeData;
@@ -30,10 +32,9 @@ const useSchemasStore = createWithEqualityFn<
 
       fetchNodeSchemas: async () => {
         try {
-          const response = await fetch("http://localhost:8000/nodes");
-          const data = await response.json();
+          const data = await queryClient.fetchQuery(nodeSchemasQueryOptions);
           console.log("node schemas:", data);
-          set({ nodeSchemas: data });
+          set({ nodeSchemas: data as NodesResponse });
         } catch (error) {
           console.error("Failed to fetch node schemas:", error);
         }

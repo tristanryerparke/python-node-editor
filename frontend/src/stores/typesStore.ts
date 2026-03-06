@@ -2,6 +2,8 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/vanilla/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { TypeExpr, UnionDescr } from "../types/backend-schema";
+import { queryClient } from "@/lib/query-client";
+import { typesQueryOptions } from "@/lib/backend-query-options";
 
 export type PropertyType = TypeExpr;
 
@@ -36,10 +38,9 @@ const useTypesStore = createWithEqualityFn<
 
       fetchTypes: async () => {
         try {
-          const response = await fetch("http://localhost:8000/types");
-          const data = await response.json();
+          const data = await queryClient.fetchQuery(typesQueryOptions);
           console.log("types:", data);
-          set({ types: data });
+          set({ types: data as Record<string, TypeInfo> });
         } catch (error) {
           console.error("Failed to fetch types:", error);
         }
