@@ -139,7 +139,7 @@ function JsonNode({
         onClick={isExpandable ? handleToggle : undefined}
       >
         {isExpandable ? (
-          <div className="w-4 h-4 flex items-center justify-center">
+          <div className="w-4 h-4 shrink-0 flex items-center justify-center">
             {isExpanded ? (
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             ) : (
@@ -147,7 +147,7 @@ function JsonNode({
             )}
           </div>
         ) : (
-          <div className="w-4" />
+          <div className="w-4 shrink-0" />
         )}
 
         {shouldRenderName && <span className="text-primary">{name}</span>}
