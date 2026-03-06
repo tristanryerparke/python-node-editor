@@ -1,18 +1,11 @@
 import { memo, useRef, useState, useEffect } from "react";
-import useFlowStore from "../../stores/flowStore";
-import { useNodeConnections } from "@xyflow/react";
 import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
-import type { FrontendFieldDataWrapper } from "../../types/types";
+import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
 import { ErrorDialog } from "./leaf-utils/error-dialog";
 
-interface ImageInputProps {
-  inputData: FrontendFieldDataWrapper;
-  path: (string | number)[];
-}
-
-export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
+export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
+  const { setValue, disabled } = useInputField(inputData, path);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -26,11 +19,7 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
       : undefined;
 
   const cacheKey =
-    typeof imageValue?.cacheKey === "string"
-      ? imageValue.cacheKey
-      : typeof imageValue?.cache_key === "string"
-        ? imageValue.cache_key
-        : undefined;
+    typeof imageValue?.cacheKey === "string" ? imageValue.cacheKey : undefined;
 
   // Check if cache key exists on mount (after page reload with persisted state)
   useEffect(() => {
@@ -41,29 +30,13 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
       .then((response) => response.json())
       .then((data) => {
         if (!data.exists) {
-          // Clear the image data if cache key doesn't exist
-          void updateNodeData(path, {
-            type: "Image",
-            value: null,
-            _expanded: inputData._expanded,
-          });
+          void setValue(null, 0);
         }
       })
       .catch((error) => {
         console.error("Error checking cache key:", error);
       });
   }, []); // Only run on mount
-
-  // Use the xyflow hook to check if input is connected
-  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({
-    handleType: "target",
-    handleId: handleId,
-  });
-
-  // Determine if connected based on connections array
-  const isConnected =
-    connections.length > 0 && connections[0].targetHandle === handleId;
 
   // Check if there's image data
   const hasImage = !!cacheKey;
@@ -75,7 +48,7 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
     setUploading(true);
 
     try {
-      await updateNodeData([...path, "value"], file, { fromUser: true });
+      await setValue(file, 0);
     } catch (error) {
       console.error("Error uploading image:", error);
       setErrorMessage(
@@ -88,15 +61,12 @@ export default memo(function ImageInput({ path, inputData }: ImageInputProps) {
   };
 
   const displayName =
-    (typeof imageValue?.displayName === "string"
+    typeof imageValue?.displayName === "string"
       ? imageValue.displayName
-      : typeof imageValue?.display_name === "string"
-        ? imageValue.display_name
-      : undefined) ||
-    "Generated Image";
+      : "Generated Image";
 
   // When connected, show as read-only display (like output)
-  if (isConnected) {
+  if (disabled) {
     return (
       <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
         <span

@@ -5,13 +5,9 @@ import StringInput from "../../../common/leaf-inputs/string-input";
 import StringExpanded from "../../../common/leaf-inputs/expanded/string-expanded";
 import ImageInput from "../../../common/leaf-inputs/image-input";
 import ImageExpanded from "../../../common/leaf-inputs/expanded/image-expanded";
+import type { CustomInputProps } from "@/hooks/useInputField";
 
-
-export interface InputRendererProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inputData: any;
-  path: (string | number)[];
-}
+export type InputRendererProps = CustomInputProps;
 
 export type ComponentRegistryEntry =
   | React.ComponentType<InputRendererProps>

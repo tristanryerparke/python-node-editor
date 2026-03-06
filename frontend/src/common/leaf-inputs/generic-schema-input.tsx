@@ -1,10 +1,8 @@
-import { memo, useMemo } from "react";
-import { useNodeConnections } from "@xyflow/react";
+import { memo, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { useControlledDebounce } from "@/hooks/useControlledDebounce";
+import { useInputField } from "@/hooks/useInputField";
 import { cn } from "@/lib/utils";
-import useFlowStore from "@/stores/flowStore";
-import type { DataWrapper } from "@/types/backend-schema";
+import type { FrontendFieldDataWrapper } from "@/types/types";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 
@@ -12,7 +10,7 @@ export type DisplayToRawInput = (displayValue: string) => string;
 export type ValueToDisplay = (value: unknown) => string;
 
 interface GenericSchemaInputProps {
-  inputData: DataWrapper;
+  inputData: FrontendFieldDataWrapper;
   path: (string | number)[];
   placeholder?: string;
   displayToRawInput?: DisplayToRawInput;
@@ -44,47 +42,33 @@ export default memo(function GenericSchemaInput({
   displayToRawInput = defaultDisplayToRawInput,
   valueToDisplay = defaultValueToDisplay,
 }: GenericSchemaInputProps) {
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
-  const externalValue = valueToDisplay(inputData.value);
+  const { value, setValue, disabled } = useInputField(inputData, path);
 
-  const [value, setValue] = useControlledDebounce(
-    externalValue,
-    (debouncedValue) => {
-      const rawInput = displayToRawInput(debouncedValue);
-      const validationResult = validateInputAgainstSchema(rawInput, inputData.type);
-      const valueToStore = validationResult.valid
-        ? validationResult.value
-        : debouncedValue;
-
-      void updateNodeData([...path, "value"], valueToStore, {
-        fromUser: true,
-      });
+  const preprocess = useCallback(
+    (text: string) => {
+      const rawInput = displayToRawInput(text);
+      const result = validateInputAgainstSchema(rawInput, inputData.type);
+      return result.valid ? result.value : text;
     },
-    200,
+    [displayToRawInput, inputData.type],
   );
 
-  const validationResult = useMemo(() => {
-    const rawInput = displayToRawInput(value);
-    return validateInputAgainstSchema(rawInput, inputData.type);
-  }, [displayToRawInput, inputData.type, value]);
-  const resolvedPlaceholder = placeholder ?? formatTypeForDisplay(inputData.type);
+  const displayValue = useMemo(() => valueToDisplay(value), [value, valueToDisplay]);
 
-  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({
-    handleType: "target",
-    handleId: handleId,
-  });
-  const isConnected =
-    connections.length > 0 && connections[0].targetHandle === handleId;
+  const validationResult = useMemo(() => {
+    const rawInput = displayToRawInput(displayValue);
+    return validateInputAgainstSchema(rawInput, inputData.type);
+  }, [displayToRawInput, inputData.type, displayValue]);
+  const resolvedPlaceholder = placeholder ?? formatTypeForDisplay(inputData.type);
 
   return (
     <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
       <Input
         type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={(e) => setValue(e.target.value)}
-        disabled={isConnected}
+        value={displayValue}
+        onChange={(e) => setValue(preprocess(e.target.value))}
+        onBlur={() => setValue(preprocess(displayValue), 0)}
+        disabled={disabled}
         className={cn(
           "nodrag nopan nowheel",
           !validationResult.valid &&
