@@ -1,9 +1,10 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { NumberInput } from "../../components/ui/number-input";
 import useFlowStore from "../../stores/flowStore";
 import { useNodeConnections } from "@xyflow/react";
 import { useControlledDebounce } from "../../hooks/useControlledDebounce";
-import type { DataWrapper } from "@/types/types";
+import type { DataWrapper } from "@/types/backend-schema";
+import { validateValueAgainstSchema } from "@/utils/schema-input-validator";
 
 interface IntInputProps {
   inputData: DataWrapper;
@@ -21,12 +22,29 @@ export default memo(function IntInput({ inputData, path }: IntInputProps) {
   const [value, setValue] = useControlledDebounce(
     externalValue,
     (debouncedValue) => {
-      void updateNodeData([...path, "value"], debouncedValue, {
+      const validationResult =
+        debouncedValue === undefined
+          ? { valid: true as const, value: undefined }
+          : validateValueAgainstSchema(debouncedValue, inputData.type);
+
+      const valueToStore = validationResult.valid
+        ? validationResult.value
+        : debouncedValue;
+
+      void updateNodeData([...path, "value"], valueToStore, {
         fromUser: true,
       });
     },
     200,
   );
+
+  const validationResult = useMemo(() => {
+    if (value === undefined) {
+      return { valid: true as const, value: undefined };
+    }
+
+    return validateValueAgainstSchema(value, inputData.type);
+  }, [inputData.type, value]);
 
   // Use the xyflow hook to check if input is connected
   const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
@@ -53,6 +71,7 @@ export default memo(function IntInput({ inputData, path }: IntInputProps) {
         onValueChange={handleValueChange}
         onBlur={() => handleValueChange(value)}
         disabled={isConnected}
+        invalid={!validationResult.valid}
         className="nodrag nopan nowheel"
         placeholder="Enter integer"
       />

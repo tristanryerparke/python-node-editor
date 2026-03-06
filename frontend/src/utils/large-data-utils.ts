@@ -1,12 +1,76 @@
-import type { FrontendFieldDataWrapper } from "../types/types";
-
-export const CACHE_KEY_PREFIX = "$cacheKey:";
+import type {
+  CachedValueReference,
+  FrontendFieldDataWrapper,
+} from "../types/types";
 
 export const isArgumentValuePath = (path: (string | number)[]) =>
   path.length >= 4 && path[1] === "arguments" && path[3] === "value";
 
-export const isCacheKeyString = (value: unknown): value is string =>
-  typeof value === "string" && value.startsWith(CACHE_KEY_PREFIX);
+export const isCachedValueReference = (
+  value: unknown,
+): value is CachedValueReference => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const cacheKey = (value as CachedValueReference).cacheKey;
+  return typeof cacheKey === "string" && cacheKey.length > 0;
+};
+
+export const getCacheKeyFromValue = (value: unknown): string | undefined => {
+  if (!isCachedValueReference(value)) {
+    return undefined;
+  }
+
+  const cacheKey = value.cacheKey;
+  if (typeof cacheKey !== "string" || cacheKey.length == 0) {
+    return undefined;
+  }
+
+  return cacheKey;
+};
+
+const normalizeCachedValueReference = (value: unknown): CachedValueReference => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Invalid cached reference response: expected object");
+  }
+
+  const raw = value as Record<string, unknown>;
+  const cacheKey =
+    typeof raw.cacheKey === "string"
+      ? raw.cacheKey
+      : typeof raw.cache_key === "string"
+        ? raw.cache_key
+        : undefined;
+  if (!cacheKey || cacheKey.length === 0) {
+    throw new Error(
+      "Invalid cached reference response: missing required cacheKey",
+    );
+  }
+
+  const instanceType =
+    typeof raw.instanceType === "string"
+      ? raw.instanceType
+      : typeof raw.instance_type === "string"
+        ? raw.instance_type
+        : undefined;
+  const displayName =
+    typeof raw.displayName === "string"
+      ? raw.displayName
+      : typeof raw.display_name === "string"
+        ? raw.display_name
+        : undefined;
+  const filename = typeof raw.filename === "string" ? raw.filename : undefined;
+  const preview = typeof raw.preview === "string" ? raw.preview : undefined;
+
+  return {
+    cacheKey,
+    ...(instanceType ? { instanceType } : {}),
+    ...(preview ? { preview } : {}),
+    ...(displayName ? { displayName } : {}),
+    ...(filename ? { filename } : {}),
+  };
+};
 
 const readFileAsDataURL = (file: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -29,14 +93,13 @@ export const uploadLargeData = async (
   callableId: string,
 ): Promise<FrontendFieldDataWrapper> => {
   let payload: Record<string, unknown> = {};
-  let filename: string | null = null;
 
   if (value instanceof File || value instanceof Blob) {
     const dataUrl = await readFileAsDataURL(value);
     const base64Data = dataUrl.split(",")[1] || "";
-    filename = value instanceof File ? value.name : null;
     payload = {
       img_base64: base64Data,
+      filename: value instanceof File ? value.name : null,
     };
   } else {
     payload = { value };
@@ -50,7 +113,6 @@ export const uploadLargeData = async (
     body: JSON.stringify({
       callableId,
       type: typeName,
-      filename,
       data: payload,
     }),
   });
@@ -70,5 +132,9 @@ export const uploadLargeData = async (
     throw new Error(message);
   }
 
-  return (await response.json()) as FrontendFieldDataWrapper;
+  const cachedValue = normalizeCachedValueReference(await response.json());
+  return {
+    type: typeName,
+    value: cachedValue,
+  } as FrontendFieldDataWrapper;
 };

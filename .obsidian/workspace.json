@@ -15,9 +15,9 @@
               "state": {
                 "file": "dataflow-canvas.canvas",
                 "viewState": {
-                  "x": -595.6490385073133,
-                  "y": 262.41343819381984,
-                  "zoom": -0.32287167698144886
+                  "x": 1324.508328410841,
+                  "y": -34.463625621386115,
+                  "zoom": -0.9366666666666659
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -188,24 +188,17 @@
   },
   "active": "44c30497e910c16d",
   "lastOpenFiles": [
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/construct_nodes.cpython-312.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/user_model_nodes.cpython-312.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/deconstruct_nodes.cpython-312.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/__init__.cpython-312.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/construct_nodes.cpython-312 2.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/user_model_nodes.cpython-312 2.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/deconstruct_nodes.cpython-312 2.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__/__init__.cpython-312 2.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__ 3/__init__.cpython-312 2.pyc",
-    "src/python_node_editor/analysis/user_model_functions/__pycache__ 3/user_model_nodes.cpython-312 2.pyc",
-    "AGENTS.md",
-    "README.md",
-    "docs/Usage-Introduction.md",
-    "docs/Installation.md",
-    "docs/Types.md",
-    "docs/Node-Customization.md",
-    "docs/Development.md",
+    "tests/type_analysis_testing/__pycache__ 2/test_types_only.cpython-312-pytest-9.0.0 2.pyc",
+    "examples/__pycache__ 2/basic_nested_model.cpython-312.pyc",
+    "examples/__pycache__ 2/basic_dynamic_inputs.cpython-312.pyc",
+    "examples/__pycache__ 2/verbose_function.cpython-312.pyc",
+    "examples/__pycache__ 2/verbose_function.cpython-312 2.pyc",
+    "examples/__pycache__ 2/user_model.cpython-312.pyc",
+    "examples/__pycache__ 2/user_model.cpython-312 2.pyc",
+    "examples/__pycache__ 2/union_args.cpython-312.pyc",
+    "examples/__pycache__ 2/union_args.cpython-312 2.pyc",
+    "examples/__pycache__ 2/string_union_problem.cpython-312.pyc",
+    "examples/__pycache__ 2/string_union_problem.cpython-312 2.pyc",
     "dataflow-canvas.canvas"
   ]
 }

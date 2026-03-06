@@ -1,10 +1,8 @@
 import { Button } from "../../../ui/button";
 import { Plus } from "lucide-react";
 import useFlowStore, { useNodeData } from "../../../../stores/flowStore";
-import type {
-  FrontendFieldDataWrapper,
-  StructDescr,
-} from "../../../../types/types";
+import type { FrontendFieldDataWrapper } from "../../../../types/types";
+import type { StructDescr } from "@/types/backend-schema";
 
 interface AddDictInputProps {
   path: (string | number)[];
@@ -38,7 +36,7 @@ export default function AddDictInput({ path }: AddDictInputProps) {
 
     const newArg = {
       type: dynamicInputType?.itemsType || "str",
-      _structuredInputType: "dict" as const,
+      _dynamicInputType: "dict" as const,
       value: null,
     };
 

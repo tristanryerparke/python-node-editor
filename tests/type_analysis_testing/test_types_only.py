@@ -17,6 +17,10 @@ file_path = "tests/assets/types_only.py"
 module_ns = dummy_function_for_accessing_globals.__globals__
 
 
+class DummyCachedType:
+    _is_cached_type = True
+
+
 def test_basic_types():
     """Test that basic builtin types are represented correctly."""
 
@@ -141,6 +145,16 @@ def test_simple_generic():
     # Analyze the type
     types_dict = analyze_type(type_obj, file_path, module_ns)
     d(types_dict)
+
+
+def test_cached_type_kind_is_cached():
+    """Cached wrappers should be emitted with kind='cached'."""
+
+    types_dict = analyze_type(DummyCachedType, file_path, module_ns)
+    d(types_dict)
+
+    assert "DummyCachedType" in types_dict
+    assert types_dict["DummyCachedType"].kind == "cached"
 
 
 if __name__ == "__main__":

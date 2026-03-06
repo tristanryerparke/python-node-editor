@@ -21,6 +21,7 @@ export interface NumberInputProps
   decimalScale?: number;
   className?: string;
   disabled?: boolean;
+  invalid?: boolean;
 }
 
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
@@ -40,6 +41,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       value: controlledValue,
       className,
       disabled = false,
+      invalid = false,
       ...props
     },
     ref,
@@ -123,7 +125,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           prefix={prefix}
           customInput={Input}
           placeholder={placeholder}
-          className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative h-full"
+          className={cn(
+            "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative h-full",
+            invalid && "border-destructive focus-visible:border-destructive",
+          )}
           getInputRef={combinedRef}
           disabled={disabled}
           {...props}

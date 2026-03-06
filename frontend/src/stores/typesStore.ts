@@ -1,23 +1,16 @@
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/vanilla/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { TypeExpr, UnionDescr } from "../types/backend-schema";
 
-export interface UnionType {
-  anyOf: PropertyType[];
-}
-
-export interface ListType {
-  type: "list";
-  itemsType: PropertyType;
-}
-
-export type PropertyType = string | UnionType | ListType;
+export type PropertyType = TypeExpr;
 
 export interface TypeInfo {
   kind: string;
   category?: string[];
-  type: string | UnionType;
-  properties?: Record<string, PropertyType>;
+  type?: string | UnionDescr;
+  properties?: Record<string, PropertyType> | null;
+  [key: string]: unknown;
 }
 
 type TypesStoreState = {

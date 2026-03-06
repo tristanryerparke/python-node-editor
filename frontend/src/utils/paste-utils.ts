@@ -3,12 +3,6 @@ import { preserveUIData } from "./preserve-ui-data";
 import { clearNodeOutputs } from "./clear-outputs";
 import type { FrontendNodeData } from "../types/types";
 
-/**
- * Generates a unique ID for a copied node/edge
- */
-export const deriveUniqueId = (seed: string): string => {
-  return `${seed}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-};
 
 /**
  * Creates new instances of nodes with unique IDs and offsets positions

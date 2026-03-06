@@ -26,7 +26,7 @@ export default function InspectableFieldWrapper({
     selectedTarget?.nodeId === nodeId &&
     JSON.stringify(selectedTarget?.path) === JSON.stringify(path);
 
-  // Show red border when borders are enabled and this field is selected
+  // Show light blue dashed outline when borders are enabled and this field is selected
   const showSelectedBorder = showBorders && amISelected;
 
   const handleFieldClick = (e: React.MouseEvent) => {
@@ -50,9 +50,9 @@ export default function InspectableFieldWrapper({
       className={cn(
         "transition-all relative",
         isSelecting
-          ? "cursor-pointer hover:ring-2 hover:ring-red-500 hover:rounded-sm hover:z-10"
+          ? "cursor-pointer hover:outline-2 hover:outline-dashed hover:outline-sky-300 hover:rounded-sm hover:z-10"
           : null,
-        showSelectedBorder && "ring-2 ring-red-500 rounded z-10",
+        showSelectedBorder && "outline-2 outline-dashed outline-sky-300 rounded z-10",
       )}
       onClick={handleFieldClick}
     >

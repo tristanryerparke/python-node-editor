@@ -1,10 +1,11 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useNodeData } from "../../stores/flowStore";
 import useInspectorStore from "../../stores/inspectorStore";
 import { Toggle } from "../../components/ui/toggle";
 import { Button } from "../../components/ui/button";
-import { SquareMousePointer, Eye, EyeOff } from "lucide-react";
+import { SquareMousePointer, Eye, EyeOff, Copy, Check } from "lucide-react";
 import JsonViewer from "../custom-node/json-viewer";
+import { JsonViewer as JsonTreeViewer } from "../ui/json-tree-viewer";
 import useFlowStore from "../../stores/flowStore";
 
 export default function Inspector() {
@@ -19,6 +20,7 @@ export default function Inspector() {
 
   const { nodes } = useFlowStore();
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const [isPathCopied, setIsPathCopied] = useState(false);
 
   // Clear selection if the selected node no longer exists
   useEffect(() => {
@@ -66,6 +68,16 @@ export default function Inspector() {
     setShowBorders(!showBorders);
   };
 
+  const copyPathToClipboard = async () => {
+    if (!selectedTarget) return;
+
+    const copyText = JSON.stringify(selectedTarget.path, null, 2);
+
+    await navigator.clipboard.writeText(copyText);
+    setIsPathCopied(true);
+    setTimeout(() => setIsPathCopied(false), 2000);
+  };
+
   const selectedData = useNodeData(selectedTarget?.path ?? []);
 
   return (
@@ -88,23 +100,41 @@ export default function Inspector() {
       <div className="flex-1 flex flex-col gap-2 p-2 overflow-y-auto overflow-x-hidden min-h-0">
         {isSelecting}
         {selectedTarget ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             <div className="text-sm font-semibold">
               {selectedTarget.path.length === 1
                 ? "Selected Node"
                 : "Selected Field"}
             </div>
             <div className="text-xs text-muted-foreground">Path:</div>
-            <div className="w-full p-2 rounded border border-input bg-muted/50 max-h-32 overflow-y-auto shrink-0">
-              <div className="text-xs font-mono flex flex-col gap-1">
-                {selectedTarget.path.map((segment, index) => (
-                  <div key={index} className="truncate w-full">
-                    {segment}
-                  </div>
-                ))}
-              </div>
+            <div className="relative w-full p-2 rounded border border-input bg-muted/50 shrink-0">
+              <button
+                type="button"
+                onClick={copyPathToClipboard}
+                className="absolute right-2 top-2 z-10 hover:bg-muted p-1 rounded"
+                title="Copy path"
+              >
+                {isPathCopied ? (
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </button>
+              <style>{`
+                .inspector-path-tree button[title="Copy to clipboard"] {
+                  display: none !important;
+                }
+              `}</style>
+              <JsonTreeViewer
+                className="inspector-path-tree w-full h-full pr-6"
+                data={selectedTarget.path}
+                rootName="path"
+                defaultExpanded={true}
+                textSize="text-xs"
+              />
             </div>
-            <div className="mt-2 rounded border border-input bg-muted/50 overflow-auto min-h-0">
+            <div className="text-xs text-muted-foreground">Data:</div>
+            <div className="rounded border border-input bg-muted/50 overflow-auto min-h-0">
               <JsonViewer data={selectedData} textSize="text-xs" />
             </div>
           </div>

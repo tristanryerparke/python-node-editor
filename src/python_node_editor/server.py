@@ -96,7 +96,7 @@ async def get_functions():
     """get schema for all loaded functions that are to be served as nodes"""
     # Manually serialize with exclude_none to remove auto_generated when False
     return [
-        schema.model_dump(mode="json", exclude_defaults=True)
+        schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
         for schema in FUNCTION_SCHEMAS
     ]
 

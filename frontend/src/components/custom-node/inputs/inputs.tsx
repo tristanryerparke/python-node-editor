@@ -3,10 +3,8 @@ import { Separator } from "../../ui/separator";
 import AddListInput from "./dynamic/add-list-input";
 import AddDictInput from "./dynamic/add-dict-input";
 import { useNodeData } from "../../../stores/flowStore";
-import type {
-  FrontendFieldDataWrapper,
-  StructDescr,
-} from "../../../types/types";
+import type { FrontendFieldDataWrapper } from "../../../types/types";
+import type { StructDescr } from "@/types/backend-schema";
 
 interface InputsProps {
   arguments: Record<string, FrontendFieldDataWrapper>;

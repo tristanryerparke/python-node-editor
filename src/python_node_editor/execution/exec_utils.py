@@ -1,17 +1,56 @@
+import uuid
 import io
 import sys
 import traceback
 from typing import Any
 
+from devtools import debug as d
 from python_node_editor.schema import Graph, NodeDataFromFrontend, NodeFromFrontend
 from python_node_editor.schema_base import StructDescr, UnionDescr
+from python_node_editor.large_data.large_files_endpoint import (
+    CachedValueReference,
+    LARGE_DATA_CACHE,
+)
 
 VERBOSE = False
 
 
+def get_cache_key(value: Any) -> str | None:
+    """Extract cache key from either a reference model or a plain dict."""
+    if isinstance(value, CachedValueReference):
+        return value.cache_key
+    return None
+
+def get_large_data_handlers(func_obj):
+    return getattr(func_obj, "_large_data_handlers", {})
+
+def resolve_cached_references(wrappers, node):
+    """Replace cached value references in wrappers with runtime cached values."""
+    from python_node_editor.server import CALLABLES
+
+    func_obj = CALLABLES.get(node.callable_id)
+    handlers = get_large_data_handlers(func_obj)
+    # Most nodes have no cached handlers; exit fast so normal execution paths stay untouched.
+    if not handlers:
+        return wrappers
+    if not isinstance(handlers, dict):
+        handlers = {handler.type_name: handler for handler in handlers}
+
+    for wrapper in wrappers.values():
+        # Structured descriptors (e.g. StructDescr/UnionDescr) are not cache-handler keys.
+        if not isinstance(wrapper.type, str):
+            continue
+        # Skip values that arent in the handlers dict
+        if wrapper.type not in handlers:
+            continue
+        cache_key = get_cache_key(wrapper.value)
+        if cache_key is not None and cache_key in LARGE_DATA_CACHE:
+            wrapper.value = LARGE_DATA_CACHE[cache_key]
+    return wrappers
+
+
 def infer_concrete_type(value, type_descriptor, TYPES):
     """Infer the concrete type of a value from a type descriptor.
-
     Handles both simple types and union types by checking the runtime type
     of the value against the available types.
     """
@@ -38,16 +77,15 @@ def execute_node(
     node: NodeDataFromFrontend, context_dict: dict[str, Any] | None = None
 ) -> tuple[bool, Any, str]:
     """Finds a node's callable and executes it with the arguments from the frontend
-
-    Args:
-        node: The node to execute
-        context_dict: Optional dict containing 'callback' and 'buffer' keys for incremental updates
-
-    Returns a tuple of (success, result, error_message)
+    Return signature is:
+        excecution success: bool
+        result: Any
+        terminal output
     """
     from python_node_editor.server import CALLABLES
 
     callable = CALLABLES[node.callable_id]
+    node.arguments = resolve_cached_references(node.arguments, node)
 
     old_stdout = sys.stdout
     old_stderr = sys.stderr
@@ -160,9 +198,8 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
 
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
-    from python_node_editor.large_data.models import CachedDataWrapper
     from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
-    from python_node_editor.server import CALLABLES, TYPES
+    from python_node_editor.server import TYPES, CALLABLES
 
     outputs = {}
 
@@ -184,36 +221,49 @@ def create_node_update(node, success, result, terminal_output, graph, execution_
         else:
             result_dict = result
 
+    result_wrappers = {}
+    for output_name, output_wrapper in node.data.outputs.items():
+        wrapper_copy = output_wrapper.model_copy()
+        wrapper_copy.value = result_dict[output_name]
+        result_wrappers[output_name] = wrapper_copy
+    result_wrappers = resolve_cached_references(
+        result_wrappers, node.data
+    )
+
     # Generate the output data structures
     for output_name in node.data.outputs.keys():
         data = node.data.outputs[output_name]
-        new_value = result_dict[output_name]
+        source_value = result_dict[output_name]
+        new_value = result_wrappers[output_name].value
 
         concrete_type = infer_concrete_type(new_value, data.type, TYPES)
 
-        metadata = {}
+        # Check if we need to cache the output data and send a value reference object
         if (
             isinstance(concrete_type, str)
             and concrete_type in TYPES
             and TYPES[concrete_type].kind == "cached"
+            and get_cache_key(source_value) is None
         ):
-            func_obj = CALLABLES.get(node.data.callable_id)
-            handlers = (
-                getattr(func_obj, "_large_data_handlers", None) if func_obj else None
-            )
-            if isinstance(handlers, list):
-                handlers = {handler.type_name: handler for handler in handlers}
-            if not isinstance(handlers, dict):
-                handlers = {}
-            handler_spec = handlers.get(concrete_type)
-            metadata_handler = handler_spec.metadata_generator if handler_spec else None
-            if metadata_handler is not None:
-                metadata = metadata_handler(new_value)
-            output_class = CachedDataWrapper
-        else:
-            output_class = DataWrapper
+            # Create the cache key and store the data
+            cache_key = str(uuid.uuid4())
+            LARGE_DATA_CACHE[cache_key] = new_value
 
-        output_data_model = output_class(type=concrete_type, value=new_value, **metadata)
+            # In create_node_update, callable_id lives on node.data (node is NodeFromFrontend).
+            handlers = get_large_data_handlers(CALLABLES[node.data.callable_id])
+            handler_spec = handlers.get(concrete_type)
+            backend_metadata = handler_spec.metadata_generator(new_value)
+            
+            # Instantiate the reference model from the spec, with metadata and
+            # replace the new value with the cached data reference model
+            new_value = handler_spec.reference_model(
+                cache_key=cache_key, 
+                instance_type=concrete_type,
+                **backend_metadata
+            )
+
+        output_data_model = DataWrapper(type=concrete_type, value=new_value)
+
 
         outputs[output_name] = output_data_model
 

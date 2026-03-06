@@ -1,8 +1,8 @@
 import { Separator } from "../../ui/separator";
 import { DraggableNode } from "./draggable-node";
-import type { FunctionSchema } from "@/types/types";
+import type { FrontendNodeData } from "@/types/types";
 
-type FunctionSchemaWithGroup = FunctionSchema & { group: string };
+type FunctionSchemaWithGroup = FrontendNodeData & { group: string };
 
 interface CategoryGroupProps {
   category: string;

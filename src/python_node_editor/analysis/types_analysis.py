@@ -134,7 +134,7 @@ def analyze_type(
 
             if type_name not in types_dict:
                 type_def = CachedTypeDefModel(
-                    kind="user",
+                    kind="cached",
                     category=os.path.splitext(rel_file_path)[0]
                     .replace(os.sep, "/")
                     .split("/"),

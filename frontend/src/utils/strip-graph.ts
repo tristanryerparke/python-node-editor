@@ -1,4 +1,4 @@
-interface GraphNode {
+export interface GraphNode {
   id: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
@@ -10,18 +10,6 @@ export interface Graph {
   edges: object[];
 }
 
-interface StrippedNode {
-  id: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
-  position?: { x: number; y: number };
-}
-
-interface StrippedGraph {
-  nodes: StrippedNode[];
-  edges: object[];
-}
-
 const NODE_DATA_FIELDS_TO_KEEP = [
   "callableId",
   "arguments",
@@ -29,7 +17,7 @@ const NODE_DATA_FIELDS_TO_KEEP = [
   "outputStyle",
 ] as const;
 
-export function stripGraphForExecute(graph: Graph): StrippedGraph {
+export function stripGraphForExecute(graph: Graph): Graph {
   const strippedNodes = graph.nodes.map((node) => {
     const strippedData: any = {};
     NODE_DATA_FIELDS_TO_KEEP.forEach((field) => {
@@ -57,7 +45,7 @@ export function stripGraphForExecute(graph: Graph): StrippedGraph {
       }
     });
 
-    const strippedNode: StrippedNode = {
+    const strippedNode: GraphNode = {
       id: node.id,
       data: strippedData,
     };

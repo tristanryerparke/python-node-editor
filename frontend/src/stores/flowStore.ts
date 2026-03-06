@@ -15,7 +15,7 @@ import type { FrontendFieldDataWrapper, FunctionNode } from "../types/types";
 import {
   getConcreteType,
   isArgumentValuePath,
-  isCacheKeyString,
+  isCachedValueReference,
   uploadLargeData,
 } from "../utils/large-data-utils";
 import { preserveUIData } from "../utils/preserve-ui-data";
@@ -105,7 +105,7 @@ const useFlowStore = createWithEqualityFn<
           fromUser &&
           isArgumentValuePath(path) &&
           newData != null &&
-          !isCacheKeyString(newData)
+          !isCachedValueReference(newData)
         ) {
           const wrapperPath = path.slice(0, -1);
           const wrapper = get().getNodeData(

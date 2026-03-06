@@ -166,3 +166,4 @@ dmypy.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+extensions/cached_image.py

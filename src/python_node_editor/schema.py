@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import (
     BaseModel,
@@ -8,7 +8,6 @@ from pydantic import (
     model_validator,
 )
 
-from python_node_editor.large_data.models import CachedDataWrapper
 from python_node_editor.schema_base import (
     BASE_DATATYPES,
     CamelBaseModel,
@@ -16,6 +15,7 @@ from python_node_editor.schema_base import (
     UnionDescr,
     UserModel,
 )
+from python_node_editor.large_data.large_files_endpoint import CachedValueReference
 
 
 # We don't want the fields on MultipleOutputs to be converted to camel case
@@ -27,7 +27,7 @@ class DataWrapper(CamelBaseModel):
     model_config = ConfigDict(extra="ignore")
 
     type: str | UnionDescr | StructDescr
-    value: BASE_DATATYPES | None = None
+    value: BASE_DATATYPES | CachedValueReference | None = None
 
     @field_serializer("value")
     def serialize_value(self, value: BASE_DATATYPES | None):
@@ -56,59 +56,41 @@ class FunctionSchema(CamelBaseModel):
     category: list[str]
     definition_path: str
     doc: str | None = None
-    arguments: dict[str, DataWrapper | CachedDataWrapper]
+    arguments: dict[str, DataWrapper]
     dynamic_input_type: StructDescr | None = None
     output_style: Literal["single", "multiple"] = "single"
-    outputs: dict[str, DataWrapper | CachedDataWrapper]
+    outputs: dict[str, DataWrapper]
     cached_types: list[str] = Field(default_factory=list)
     auto_generated: bool = False
 
 
 class NodeDataFromFrontend(CamelBaseModel):
     callable_id: str
-    arguments: dict[str, DataWrapper | CachedDataWrapper]
-    outputs: dict[str, DataWrapper | CachedDataWrapper]
+    arguments: dict[str, DataWrapper]
+    outputs: dict[str, DataWrapper]
     output_style: Literal["single", "multiple"] = "single"
 
-    @model_validator(mode="before")
-    @classmethod
-    def reconstruct_cached_types(cls, data: Any) -> Any:
-        """
-        Pre-processes data before validation to instantiate cached data types.
+    @model_validator(mode="after")
+    def reconstruct_cached_types(self):
+        from python_node_editor.server import CALLABLES
+        from python_node_editor.large_data.large_files_endpoint import LARGE_DATA_CACHE
 
-        This validator:
-        1. Detects cached data by the presence of a "$cacheKey:" marker in value
-        2. Looks up the cached type in the TYPES registry
-        3. Instantiates CachedDataWrapper to load from the cache
-        4. Replaces the dict with the instance before Pydantic validates
+        func_obj = CALLABLES.get(self.callable_id)
+        handlers = getattr(func_obj, "_large_data_handlers", {}) or {}
+        if not handlers:
+            return self
 
-        This allows 3rd party CachedDataWrapper subclasses to be properly instantiated
-        without hardcoding union types in the schema.
-        """
-        from python_node_editor.server import TYPES
+        for arg in self.arguments.values():
+            if arg.type not in handlers:
+                continue
+            if not isinstance(arg.value, dict):
+                continue
 
-        # Pre-process: replace dicts with instantiated cached models BEFORE validation
-        if isinstance(data, dict):
-            arguments = data.get("arguments", {})
-            for arg_name, arg_value in arguments.items():
-                if (
-                    isinstance(arg_value, dict)
-                    and isinstance(arg_value.get("value"), str)
-                    and arg_value["value"].startswith("$cacheKey:")
-                ):
-                    type_str = arg_value.get("type")
-                    type_def = TYPES.get(type_str)
+            cache_key = arg.value.get("cacheKey")
+            if isinstance(cache_key, str) and cache_key in LARGE_DATA_CACHE:
+                arg.value = LARGE_DATA_CACHE[cache_key]
 
-                    if type_def and type_def.kind == "cached":
-                        from python_node_editor.large_data.models import CachedDataWrapper
-
-                        cached_instance = CachedDataWrapper.model_validate(
-                            arg_value, context={"populate_from_cache": True}
-                        )
-                        # Replace the dict with the instance in the data
-                        arguments[arg_name] = cached_instance
-
-        return data
+        return self
 
 
 class NodeFromFrontend(CamelBaseModel):
@@ -135,13 +117,13 @@ class NodeUpdate(CamelBaseModel):
 
     node_id: str
     status: Literal["executing", "executed", "error"] | None = None
-    outputs: dict[str, DataWrapper | CachedDataWrapper] | None = None
-    arguments: dict[str, DataWrapper | CachedDataWrapper] | None = None
+    outputs: dict[str, DataWrapper] | None = None
+    arguments: dict[str, DataWrapper] | None = None
     terminal_output: str = ""
 
     @field_serializer("outputs", "arguments", when_used="unless-none")
     def serialize_wrappers(self, value, _info):
-        """Custom serializer to ensure nested CachedDataWrapper subclasses properly serialize computed fields"""
+        """Serialize nested wrapper models with aliases and without null fields."""
         return {
             key: wrapper.model_dump(by_alias=True, exclude_none=True)
             for key, wrapper in value.items()

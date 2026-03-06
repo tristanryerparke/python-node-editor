@@ -35,9 +35,6 @@ def analyze_function(
     abs_file_path = os.path.abspath(file_path)
     module_ns = original_func.__globals__
 
-    # Get the line number where the function is defined
-    line_number = inspect.getsourcelines(original_func)[1]
-
     # Get relative path from current working directory
     try:
         rel_file_path = os.path.relpath(abs_file_path, os.getcwd())
@@ -184,6 +181,11 @@ def analyze_function(
     if not isinstance(handlers, dict):
         handlers = {}
     cached_types = list(handlers.keys())
+
+    # Get the line number where the function is defined.
+    # This is intentionally done after type validation so annotation errors
+    # are not masked by source-introspection issues in test contexts.
+    line_number = inspect.getsourcelines(original_func)[1]
 
     # Generate callable_id by hashing the function's source code
     source_code = inspect.getsource(original_func)

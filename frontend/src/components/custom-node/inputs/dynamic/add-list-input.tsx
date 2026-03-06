@@ -1,10 +1,8 @@
 import { Button } from "../../../ui/button";
 import { Plus } from "lucide-react";
 import useFlowStore, { useNodeData } from "../../../../stores/flowStore";
-import type {
-  FrontendFieldDataWrapper,
-  StructDescr,
-} from "../../../../types/types";
+import type { FrontendFieldDataWrapper } from "../../../../types/types";
+import type { StructDescr } from "@/types/backend-schema";
 
 interface AddListInputProps {
   path: (string | number)[];
@@ -43,7 +41,7 @@ export default function AddListInput({ path }: AddListInputProps) {
       type:
         dynamicInputType?.itemsType ||
         (arguments_ && argNames[0] ? arguments_[argNames[0]].type : "str"),
-      _structuredInputType: "list" as const,
+      _dynamicInputType: "list" as const,
       value: null,
     };
 

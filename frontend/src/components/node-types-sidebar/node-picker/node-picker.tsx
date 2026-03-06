@@ -3,9 +3,9 @@ import { SearchBar } from "@/common/utility-components/search-bar";
 import { CategoryGroup } from "./category-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import useSchemasStore, { type NodesResponse } from "@/stores/schemasStore";
-import type { FunctionSchema } from "@/types/types";
+import type { FrontendNodeData } from "@/types/types";
 
-type FunctionSchemaWithGroup = FunctionSchema & { group: string };
+type FunctionSchemaWithGroup = FrontendNodeData & { group: string };
 
 interface NodeCategories {
   [category: string]: FunctionSchemaWithGroup[];
