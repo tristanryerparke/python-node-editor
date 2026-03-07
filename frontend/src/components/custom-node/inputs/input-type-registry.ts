@@ -2,9 +2,7 @@
 import FloatInput from "../../../common/leaf-inputs/float-input";
 import IntInput from "../../../common/leaf-inputs/int-input";
 import StringInput from "../../../common/leaf-inputs/string-input";
-import StringExpanded from "../../../common/leaf-inputs/expanded/string-expanded";
 import ImageInput from "../../../common/leaf-inputs/image-input";
-import ImageExpanded from "../../../common/leaf-inputs/expanded/image-expanded";
 import type { CustomInputProps } from "@/hooks/useInputField";
 
 export type InputRendererProps = CustomInputProps;
@@ -31,8 +29,7 @@ export const INPUT_TYPE_COMPONENT_REGISTRY: Record<
   int: { main: IntInput },
   str: {
     main: StringInput,
-    expanded: StringExpanded,
     hideMainWhenExpanded: true,
   },
-  Image: { main: ImageInput, expanded: ImageExpanded },
+  Image: { main: ImageInput, hideMainWhenExpanded: true },
 };

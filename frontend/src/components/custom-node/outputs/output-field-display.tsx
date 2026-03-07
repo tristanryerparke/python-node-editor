@@ -58,25 +58,42 @@ export default function OutputDisplay({ fieldData, path }: OutputDisplayProps) {
     const expandedComponent = registryEntry.expanded;
     const isExpanded = fieldData._expanded ?? false;
 
-    if (!expandedComponent || !isExpanded) {
+    if (!isExpanded) {
       return null;
     }
 
-    const ExpandedComponent = expandedComponent;
+    if (expandedComponent) {
+      const ExpandedComponent = expandedComponent;
+      return (
+        <div
+          className={
+            registryEntry.hideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"
+          }
+        >
+          <ExpandedComponent
+            outputData={{ ...fieldData, type: actualType }}
+            path={path}
+            readOnly={true}
+          />
+        </div>
+      );
+    }
 
-    return (
-      <div
-        className={
-          registryEntry.hideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"
-        }
-      >
-        <ExpandedComponent
-          outputData={{ ...fieldData, type: actualType }}
-          path={path}
-          readOnly={true}
-        />
-      </div>
-    );
+    // No separate expanded component: fall back to main component when expanded
+    // (main receives outputData._expanded=true and handles both states itself)
+    if (registryEntry.hideMainWhenExpanded) {
+      const MainComponent = registryEntry.main;
+      return (
+        <div className="flex-1">
+          <MainComponent
+            outputData={{ ...fieldData, type: actualType }}
+            path={path}
+          />
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (

@@ -188,6 +188,8 @@
   },
   "active": "44c30497e910c16d",
   "lastOpenFiles": [
+    "frontend/src/common/leaf-inputs/image-preview.tsx",
+    "frontend/src/common/leaf-inputs/string-area.tsx",
     "tiny_image.jpg",
     "tests/type_analysis_testing/__pycache__ 2/test_types_only.cpython-312-pytest-9.0.0 2.pyc",
     "examples/__pycache__ 2/basic_nested_model.cpython-312.pyc",
@@ -198,7 +200,6 @@
     "examples/__pycache__ 2/user_model.cpython-312 2.pyc",
     "examples/__pycache__ 2/union_args.cpython-312.pyc",
     "examples/__pycache__ 2/union_args.cpython-312 2.pyc",
-    "examples/__pycache__ 2/string_union_problem.cpython-312.pyc",
     "dataflow-canvas.canvas"
   ]
 }

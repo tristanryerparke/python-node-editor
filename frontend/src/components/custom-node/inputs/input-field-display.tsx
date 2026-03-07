@@ -119,7 +119,7 @@ export default memo(function InputFieldDisplay({
       const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
       if (registryEntry && typeof registryEntry === "object") {
         // Check if expanded component exists and is enabled
-        const expandedComponent = registryEntry.expanded;
+        const expandedComponent = "expanded" in registryEntry ? registryEntry.expanded : undefined;
 
         if (expandedComponent && isExpanded) {
           const ExpandedComponent = expandedComponent;
@@ -131,6 +131,20 @@ export default memo(function InputFieldDisplay({
               }
             >
               <ExpandedComponent
+                inputData={{ ...fieldData, type: actualType }}
+                path={path}
+              />
+            </div>
+          );
+        }
+
+        // No separate expanded component: fall back to main component when expanded
+        // (main receives inputData._expanded=true and handles both states itself)
+        if (!expandedComponent && isExpanded && "main" in registryEntry && registryEntry.hideMainWhenExpanded) {
+          const MainComponent = registryEntry.main;
+          return (
+            <div className="flex-1">
+              <MainComponent
                 inputData={{ ...fieldData, type: actualType }}
                 path={path}
               />

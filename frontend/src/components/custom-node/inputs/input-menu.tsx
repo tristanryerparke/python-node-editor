@@ -60,7 +60,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   const hasRegistryExpandable = Boolean(
     registryEntry &&
       typeof registryEntry === "object" &&
-      registryEntry.expanded !== undefined,
+      (registryEntry.expanded !== undefined || registryEntry.hideMainWhenExpanded),
   );
   const isUserModelType =
     typeof effectiveType === "string" &&

@@ -3,6 +3,14 @@ import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
 import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
 import { ErrorDialog } from "./leaf-utils/error-dialog";
+import useFlowStore, { useNodeData } from "../../stores/flowStore";
+import ImagePreview from "./image-preview";
+import {
+  getCacheKeyFromValue,
+  isCachedValueReference,
+} from "@/utils/large-data-utils";
+
+const DEFAULT_PREVIEW_HEIGHT = 60;
 
 export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
   const { setValue, disabled } = useInputField(inputData, path);
@@ -10,6 +18,7 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
   const [uploading, setUploading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const updateNodeData = useFlowStore((state) => state.updateNodeData);
 
   const imageValue =
     typeof inputData.value === "object" &&
@@ -25,7 +34,6 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
   useEffect(() => {
     if (!cacheKey) return;
 
-    // Verify the cache key still exists in the backend
     fetch(`http://localhost:8000/data/cache_exists/${cacheKey}`)
       .then((response) => response.json())
       .then((data) => {
@@ -38,15 +46,30 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
       });
   }, []); // Only run on mount
 
-  // Check if there's image data
   const hasImage = !!cacheKey;
+  const imageForPreview = isCachedValueReference(inputData.value)
+    ? inputData.value
+    : undefined;
+  const preview =
+    typeof imageForPreview?.preview === "string"
+      ? imageForPreview.preview
+      : undefined;
+
+  const displayName =
+    typeof imageValue?.displayName === "string"
+      ? imageValue.displayName
+      : "Generated Image";
+
+  const uploadText = uploading
+    ? "Uploading..."
+    : cacheKey
+      ? displayName
+      : "Upload Image";
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
-
     try {
       await setValue(file, 0);
     } catch (error) {
@@ -60,12 +83,17 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
     }
   };
 
-  const displayName =
-    typeof imageValue?.displayName === "string"
-      ? imageValue.displayName
-      : "Generated Image";
+  // Stored preview height (shared with ImagePreview)
+  const storedHeight = useNodeData([...path, "_expandedHeight"]) as
+    | number
+    | undefined;
+  const previewHeight = storedHeight ?? DEFAULT_PREVIEW_HEIGHT;
+  const setPreviewHeight = (h: number) =>
+    void updateNodeData([...path, "_expandedHeight"], h);
 
-  // When connected, show as read-only display (like output)
+  const isExpanded = inputData._expanded ?? false;
+
+  // When connected, show a read-only display in the inline slot
   if (disabled) {
     return (
       <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
@@ -84,43 +112,55 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
     );
   }
 
-  // When not connected, show file picker
-  const uploadText = uploading
-    ? "Uploading..."
-    : cacheKey
-      ? displayName
-      : "Upload Image";
+  // File picker button (used in both compact and expanded modes)
+  const filePicker = (
+    <>
+      <Input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        disabled={uploading}
+        className="min-w-20"
+        placeholder=""
+        hidden
+      />
+      <div
+        className={cn(
+          "flex flex-1 w-0 text-sm",
+          "h-8 rounded-md border dark:bg-input/30 px-2 py-1 shadow-xs border-input items-center",
+          uploading && "opacity-50",
+          "cursor-pointer",
+        )}
+        onClick={() => {
+          if (!uploading && fileInputRef.current) {
+            fileInputRef.current.click();
+          }
+        }}
+      >
+        <span className="truncate min-w-0 flex-1">{uploadText}</span>
+      </div>
+    </>
+  );
+
+  if (isExpanded) {
+    return (
+      <div className="flex flex-col flex-1 gap-1.5 nodrag nopan nowheel">
+        <div className="flex flex-1 min-w-35">{filePicker}</div>
+        <ImagePreview
+          preview={preview}
+          height={previewHeight}
+          setHeight={setPreviewHeight}
+        />
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
-        <Input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          disabled={uploading}
-          className="min-w-20"
-          placeholder=""
-          hidden
-        />
-        <div
-          className={cn(
-            "flex flex-1 w-0 text-sm",
-            "h-8 rounded-md border dark:bg-input/30 px-2 py-1 shadow-xs border-input items-center",
-            uploading && "opacity-50",
-            "cursor-pointer",
-          )}
-          onClick={() => {
-            if (!uploading && fileInputRef.current) {
-              fileInputRef.current.click();
-            }
-          }}
-        >
-          <span className="truncate min-w-0 flex-1">{uploadText}</span>
-        </div>
+        {filePicker}
       </div>
-
       <ErrorDialog
         open={showErrorDialog}
         onOpenChange={setShowErrorDialog}

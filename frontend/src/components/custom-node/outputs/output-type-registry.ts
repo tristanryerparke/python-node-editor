@@ -1,8 +1,6 @@
 // eslint-disable react-refresh/only-export-components
 import ImageOutput from "../../../common/leaf-inputs/image-output";
-import ImageExpanded from "../../../common/leaf-inputs/expanded/image-expanded";
 import StringOutput from "../../../common/leaf-inputs/string-output";
-import StringExpanded from "../../../common/leaf-inputs/expanded/string-expanded";
 
 export interface OutputRendererProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,12 +23,11 @@ export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<
   OutputComponentRegistryEntry
 > = {
   Image: {
-    main: ImageOutput,
-    expanded: ImageExpanded,
+    main: ImageOutput as React.ComponentType<OutputRendererProps>,
+    hideMainWhenExpanded: true,
   },
   str: {
-    main: StringOutput,
-    expanded: StringExpanded,
+    main: StringOutput as React.ComponentType<OutputRendererProps>,
     hideMainWhenExpanded: true,
   },
 };
