@@ -15,9 +15,9 @@
               "state": {
                 "file": "dataflow-canvas.canvas",
                 "viewState": {
-                  "x": 1324.508328410841,
-                  "y": -34.463625621386115,
-                  "zoom": -0.9366666666666659
+                  "x": -737.0283481663627,
+                  "y": 385.60959307829256,
+                  "zoom": -0.3264526367187502
                 }
               },
               "icon": "lucide-layout-dashboard",
@@ -188,6 +188,7 @@
   },
   "active": "44c30497e910c16d",
   "lastOpenFiles": [
+    "tiny_image.jpg",
     "tests/type_analysis_testing/__pycache__ 2/test_types_only.cpython-312-pytest-9.0.0 2.pyc",
     "examples/__pycache__ 2/basic_nested_model.cpython-312.pyc",
     "examples/__pycache__ 2/basic_dynamic_inputs.cpython-312.pyc",
@@ -198,7 +199,6 @@
     "examples/__pycache__ 2/union_args.cpython-312.pyc",
     "examples/__pycache__ 2/union_args.cpython-312 2.pyc",
     "examples/__pycache__ 2/string_union_problem.cpython-312.pyc",
-    "examples/__pycache__ 2/string_union_problem.cpython-312 2.pyc",
     "dataflow-canvas.canvas"
   ]
 }

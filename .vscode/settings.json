@@ -1,3 +1,20 @@
 {
+  "python.terminal.activateEnvironment": true,
+  "terminal.integrated.profiles.osx": {
+    "zsh-login": {
+      "path": "/bin/zsh",
+      "args": ["-l"]
+    }
+  },
+  "terminal.integrated.defaultProfile.osx": "zsh-login",
+  "terminal.integrated.env.osx": {
+    "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
+  },
+  "chat.tools.terminal.terminalProfile.osx": {
+    "path": "/bin/zsh",
+    "args": ["-l"]
+  }
+}
+{
     "ty.inlayHints.callArgumentNames": false
 }

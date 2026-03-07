@@ -194,10 +194,13 @@ def analyze():
 
     if args.json is not None:
         serialized_function_schemas = [
-            schema.model_dump(mode="json", exclude_defaults=True)
+            schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
             for schema in function_schemas
         ]
-        serialized_types = {k: v.model_dump(mode="json") for k, v in types.items()}
+        serialized_types = {
+            k: v.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
+            for k, v in types.items()
+        }
         json_output = json.dumps(
             {
                 "FUNCTION_SCHEMAS": serialized_function_schemas,
@@ -222,6 +225,14 @@ def analyze():
 
     if args.verbose:
         print("\nFUNCTION_SCHEMAS:")
-        d(function_schemas)
+        serialized_function_schemas = [
+            schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
+            for schema in function_schemas
+        ]
+        d(serialized_function_schemas)
         print("\nTYPES:")
-        d(types)
+        serialized_types = {
+            k: v.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
+            for k, v in types.items()
+        }
+        d(serialized_types)
