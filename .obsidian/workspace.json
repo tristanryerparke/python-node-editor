@@ -186,8 +186,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "44c30497e910c16d",
+  "active": "83a944d0868a0818",
   "lastOpenFiles": [
+    "dataflow-canvas.canvas",
     "frontend/src/hooks/useNodeSchemas.ts",
     "frontend/bun.lock",
     "frontend/bun 2.lock",
@@ -199,9 +200,7 @@
     "frontend/src/lib/fetcher.ts",
     "frontend/node_modules/dequal/lite/index.mjs",
     "frontend/node_modules/dequal/dist/index.min.js",
-    "frontend/node_modules/dequal/dist/index.js",
     "frontend/node_modules/dequal/readme.md",
-    "frontend/node_modules/swr/README.md",
-    "dataflow-canvas.canvas"
+    "frontend/node_modules/swr/README.md"
   ]
 }
