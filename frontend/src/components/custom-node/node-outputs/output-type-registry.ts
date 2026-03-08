@@ -9,10 +9,28 @@ export interface OutputRendererProps {
   readOnly?: boolean;
 }
 
+export interface OutputRegistryEntry {
+  main: React.ComponentType<OutputRendererProps>;
+  expanded?: boolean;
+  expandable?: boolean;
+}
+
+// Type that supports both direct component and object pattern
+export type OutputRegistryValueType =
+  | React.ComponentType<OutputRendererProps>
+  | OutputRegistryEntry;
+
+// Determine if a value is an object with properties (new pattern)
+export function isObjectRegistryEntry(
+  value: OutputRegistryValueType
+): value is OutputRegistryEntry {
+  return typeof value === "object" && "main" in value;
+}
+
 // Add more output types here
 export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<
   string,
-  React.ComponentType<OutputRendererProps>
+  OutputRegistryValueType
 > = {
   Image: ImageOutput,
   str: StringOutput,

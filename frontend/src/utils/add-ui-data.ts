@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/node-inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/node-outputs/output-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry as isInputObjectRegistryEntry } from "../components/custom-node/node-inputs/input-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry as isOutputObjectRegistryEntry } from "../components/custom-node/node-outputs/output-type-registry";
 
 /**
  * Initializes UI-specific data for arguments and outputs:
@@ -42,7 +42,7 @@ export function initializeUIData(nodeData: any): void {
       const actualType = arg._selectedType || arg.type;
       if (typeof actualType === "string") {
         const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-        if (registryEntry && typeof registryEntry === "object") {
+        if (registryEntry && isInputObjectRegistryEntry(registryEntry)) {
           // Initialize _expanded for types with expandable areas
           if (registryEntry.expanded) {
             if (arg._expanded === undefined) {
@@ -66,7 +66,7 @@ export function initializeUIData(nodeData: any): void {
         const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[outputType];
         if (
           registryEntry &&
-          typeof registryEntry === "object" &&
+          isOutputObjectRegistryEntry(registryEntry) &&
           registryEntry.expanded
         ) {
           if (output._expanded === undefined) {

@@ -1,8 +1,7 @@
 import { memo } from "react";
 import SingleLineTextDisplay from "../../../common/utility-components/single-line-text-display";
 import useTypesStore from "@/stores/typesStore";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
-import type { OutputRendererProps } from "./output-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY, type OutputRendererProps, isObjectRegistryEntry } from "./output-type-registry";
 import type { StructDescr } from "@/types/backend-schema";
 
 function isStructDescr(type: unknown): type is StructDescr {
@@ -25,7 +24,7 @@ export default memo(function OutputRenderer({
     const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[outputData.type];
     if (registryEntry) {
       // Handle new pattern with main/expanded
-      if (typeof registryEntry === "object" && "main" in registryEntry) {
+      if (isObjectRegistryEntry(registryEntry)) {
         const Component = registryEntry.main;
         return <Component outputData={outputData} path={path} />;
       } else {

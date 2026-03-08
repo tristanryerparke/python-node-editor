@@ -4,7 +4,7 @@ import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
 import useTypesStore from "@/stores/typesStore";
 import UserModelDisplay from "../../../common/inputs/user-model-display";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./input-type-registry";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
@@ -64,10 +64,13 @@ export default memo(function InputFieldDisplay({
     if (typeof actualType === "string") {
       const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
       if (registryEntry) {
-        if (isExpanded && (registryEntry as { expandable?: true }).expandable) {
+        if (isExpanded && isObjectRegistryEntry(registryEntry) && registryEntry.expandable) {
           return <div className="flex flex-1 min-h-8" />;
         }
-        const Component = registryEntry;
+        // Extract component from registry entry (handle both direct component and object pattern)
+        const Component = isObjectRegistryEntry(registryEntry)
+          ? registryEntry.main
+          : registryEntry;
         return (
           <Component
             inputData={{ ...fieldData, type: actualType }}
@@ -104,8 +107,8 @@ export default memo(function InputFieldDisplay({
   const renderExpandedContent = () => {
     if (typeof actualType === "string") {
       const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if ((registryEntry as { expandable?: true } | undefined)?.expandable && isExpanded) {
-        const Component = registryEntry;
+      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
+        const Component = registryEntry.main;
         return (
           <div className="flex-1">
             <Component

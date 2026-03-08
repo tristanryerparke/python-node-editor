@@ -1,6 +1,6 @@
 import OutputRenderer from "./output-renderer";
 import OutputMenu from "./output-menu";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./output-type-registry";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 
 interface OutputDisplayProps {
@@ -26,7 +26,7 @@ export default function OutputDisplay({ fieldData, path }: OutputDisplayProps) {
     if (typeof actualType === "string") {
       const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
       const isExpanded = fieldData._expanded ?? false;
-      if ((registryEntry as { expandable?: true } | undefined)?.expandable && isExpanded) {
+      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
         return <div className="flex flex-1 min-h-8" />;
       }
     }
@@ -40,9 +40,9 @@ export default function OutputDisplay({ fieldData, path }: OutputDisplayProps) {
 
     const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
     const isExpanded = fieldData._expanded ?? false;
-    if (!(registryEntry as { expandable?: true } | undefined)?.expandable || !isExpanded) return null;
+    if (!isObjectRegistryEntry(registryEntry) || !registryEntry.expandable || !isExpanded) return null;
 
-    const Component = registryEntry;
+    const Component = registryEntry.main;
     return (
       <div className="flex-1">
         <Component
