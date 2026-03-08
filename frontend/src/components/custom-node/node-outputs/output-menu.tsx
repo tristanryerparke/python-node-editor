@@ -36,10 +36,7 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
     typeof effectiveType === "string"
       ? OUTPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
       : undefined;
-  const hasExpandable =
-    registryEntry &&
-    typeof registryEntry === "object" &&
-    (registryEntry.expanded !== undefined || registryEntry.hideMainWhenExpanded);
+  const hasExpandable = (registryEntry as { expandable?: true } | undefined)?.expandable;
   const isExpanded = fieldData._expanded ?? false;
 
   // Only show menu if there's something expandable

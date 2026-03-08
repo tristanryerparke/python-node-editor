@@ -1,7 +1,6 @@
-import { memo } from "react";
-import useFlowStore, { useNodeData } from "../../stores/flowStore";
-import SingleLineTextDisplay from "./single-line-text-display";
-import ImagePreview from "./image-preview";
+import { memo, type NamedExoticComponent } from "react";
+import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import ImagePreview from "../utility-components/image-preview";
 import {
   getCacheKeyFromValue,
   isCachedValueReference,
@@ -15,18 +14,14 @@ interface ImageOutputProps {
   path: (string | number)[];
 }
 
+type ImageOutput = NamedExoticComponent<ImageOutputProps> & {
+  expandable: true;
+};
+
 const ExpandedImageOutput = memo(function ExpandedImageOutput({
   outputData,
   path,
 }: ImageOutputProps) {
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
-  const storedHeight = useNodeData([...path, "_expandedHeight"]) as
-    | number
-    | undefined;
-  const height = storedHeight ?? DEFAULT_PREVIEW_HEIGHT;
-  const setHeight = (h: number) =>
-    void updateNodeData([...path, "_expandedHeight"], h);
-
   const imageValue = isCachedValueReference(outputData?.value)
     ? outputData.value
     : undefined;
@@ -46,14 +41,14 @@ const ExpandedImageOutput = memo(function ExpandedImageOutput({
       />
       <ImagePreview
         preview={preview}
-        height={height}
-        setHeight={setHeight}
+        path={path}
+        defaultHeight={DEFAULT_PREVIEW_HEIGHT}
       />
     </div>
   );
 });
 
-export default memo(function ImageOutput({ outputData, path }: ImageOutputProps) {
+const ImageOutputMain = memo(function ImageOutput({ outputData, path }: ImageOutputProps) {
   const isExpanded = outputData?._expanded ?? false;
 
   if (isExpanded) {
@@ -75,4 +70,8 @@ export default memo(function ImageOutput({ outputData, path }: ImageOutputProps)
       : undefined) ?? "Generated Image";
 
   return <SingleLineTextDisplay content={displayName} dimmed={false} />;
-});
+}) as ImageOutput;
+
+ImageOutputMain.expandable = true;
+
+export default ImageOutputMain as ImageOutput;

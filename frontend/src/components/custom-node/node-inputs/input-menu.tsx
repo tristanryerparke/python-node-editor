@@ -57,11 +57,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
       ? INPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
       : undefined;
 
-  const hasRegistryExpandable = Boolean(
-    registryEntry &&
-      typeof registryEntry === "object" &&
-      (registryEntry.expanded !== undefined || registryEntry.hideMainWhenExpanded),
-  );
+  const hasRegistryExpandable = Boolean((registryEntry as { expandable?: true } | undefined)?.expandable);
   const isUserModelType =
     typeof effectiveType === "string" &&
     Boolean(types[effectiveType] && types[effectiveType].kind === "user_model");

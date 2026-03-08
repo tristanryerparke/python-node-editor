@@ -1,24 +1,23 @@
-import { memo, useRef, useState, useEffect } from "react";
+import { memo, useRef, useState, useEffect, type NamedExoticComponent } from "react";
 import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
 import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
-import { ErrorDialog } from "./leaf-utils/error-dialog";
-import useFlowStore, { useNodeData } from "../../stores/flowStore";
-import ImagePreview from "./image-preview";
-import {
-  getCacheKeyFromValue,
-  isCachedValueReference,
-} from "@/utils/large-data-utils";
+import { ErrorDialog } from "../utility-components/error-dialog";
+import ImagePreview from "../utility-components/image-preview";
+import { isCachedValueReference } from "@/utils/large-data-utils";
 
 const DEFAULT_PREVIEW_HEIGHT = 60;
 
-export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
+type ImageInputComponent = NamedExoticComponent<CustomInputProps> & {
+  expandable: true;
+};
+
+const ImageInput = memo(function ImageInput({ inputData, path }: CustomInputProps) {
   const { setValue, disabled } = useInputField(inputData, path);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
 
   const imageValue =
     typeof inputData.value === "object" &&
@@ -83,14 +82,6 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
     }
   };
 
-  // Stored preview height (shared with ImagePreview)
-  const storedHeight = useNodeData([...path, "_expandedHeight"]) as
-    | number
-    | undefined;
-  const previewHeight = storedHeight ?? DEFAULT_PREVIEW_HEIGHT;
-  const setPreviewHeight = (h: number) =>
-    void updateNodeData([...path, "_expandedHeight"], h);
-
   const isExpanded = inputData._expanded ?? false;
 
   // When connected, show a read-only display in the inline slot
@@ -149,8 +140,8 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
         <div className="flex flex-1 min-w-35">{filePicker}</div>
         <ImagePreview
           preview={preview}
-          height={previewHeight}
-          setHeight={setPreviewHeight}
+          path={path}
+          defaultHeight={DEFAULT_PREVIEW_HEIGHT}
         />
       </div>
     );
@@ -169,4 +160,8 @@ export default memo(function ImageInput({ inputData, path }: CustomInputProps) {
       />
     </>
   );
-});
+}) as ImageInputComponent;
+
+ImageInput.expandable = true;
+
+export default ImageInput;

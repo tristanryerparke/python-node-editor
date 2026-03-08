@@ -3,10 +3,11 @@ import { Grip } from "lucide-react";
 import {
   ResizableHeight,
   ResizableHeightHandle,
-} from "../utility-components/resizable-height";
-import { SyncedWidthHandle } from "../utility-components/synced-width-resizable";
+} from "./resizable-height";
+import { SyncedWidthHandle } from "./synced-width-resizable";
 import { Textarea } from "../../components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
 
 const DEFAULT_MIN_HEIGHT = 30;
 const DEFAULT_MAX_HEIGHT = 200;
@@ -16,8 +17,8 @@ export interface StringAreaProps {
   /** Called on every keystroke when editable=true. Omit for read-only. */
   onChange?: (value: string) => void;
   editable: boolean;
-  height: number;
-  setHeight: (h: number) => void;
+  path: (string | number)[];
+  defaultHeight?: number;
   minHeight?: number;
   maxHeight?: number;
   /** Draws a destructive border – only relevant when editable=true */
@@ -30,13 +31,14 @@ export default memo(function StringArea({
   value,
   onChange,
   editable,
-  height,
-  setHeight,
+  path,
+  defaultHeight = DEFAULT_MIN_HEIGHT,
   minHeight = DEFAULT_MIN_HEIGHT,
   maxHeight = DEFAULT_MAX_HEIGHT,
   isInvalid = false,
   isConnected = false,
 }: StringAreaProps) {
+  const { height, setHeight } = useResizableHeight(path, defaultHeight);
   return (
     <ResizableHeight
       height={height}

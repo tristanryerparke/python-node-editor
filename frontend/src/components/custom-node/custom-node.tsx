@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 import NodeHeader from "./node-header";
-import Inputs from "./inputs/inputs";
-import Outputs from "./outputs/outputs";
+import Inputs from "./node-inputs/inputs";
+import Outputs from "./node-outputs/outputs";
 import NodeDrawer from "./node-drawer";
 import { Separator } from "../ui/separator";
 import type { FrontendNodeData } from "../../types/types";

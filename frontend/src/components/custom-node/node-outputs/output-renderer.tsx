@@ -1,5 +1,5 @@
 import { memo } from "react";
-import SingleLineTextDisplay from "../../../common/leaf-inputs/single-line-text-display";
+import SingleLineTextDisplay from "../../../common/utility-components/single-line-text-display";
 import useTypesStore from "@/stores/typesStore";
 import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
 import type { OutputRendererProps } from "./output-type-registry";

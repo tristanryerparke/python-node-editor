@@ -1,8 +1,8 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, type NamedExoticComponent } from "react";
 import { useNodeConnections } from "@xyflow/react";
-import useFlowStore, { useNodeData } from "../../stores/flowStore";
+import useFlowStore from "../../stores/flowStore";
 import GenericSchemaInput from "./generic-schema-input";
-import StringArea from "./string-area";
+import StringArea from "../utility-components/string-area";
 import { useControlledDebounce } from "@/hooks/useControlledDebounce";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 import type { CustomInputProps } from "@/hooks/useInputField";
@@ -44,28 +44,25 @@ const InputStringArea = memo(function InputStringArea({
   const isConnected =
     connections.length > 0 && connections[0].targetHandle === handleId;
 
-  const storedHeight = useNodeData([...path, "_expandedHeight"]) as
-    | number
-    | undefined;
-  const height = storedHeight ?? DEFAULT_HEIGHT;
-  const setHeight = (h: number) =>
-    void updateNodeData([...path, "_expandedHeight"], h);
-
   return (
     <StringArea
       value={value}
       onChange={setValue}
       editable={true}
-      height={height}
-      setHeight={setHeight}
+      path={path}
+      defaultHeight={DEFAULT_HEIGHT}
       isInvalid={isInvalid}
       isConnected={isConnected}
     />
   );
 });
 
+type StringInputComponent = NamedExoticComponent<CustomInputProps> & {
+  expandable: true;
+};
+
 // Editable input – compact when collapsed, textarea when expanded
-export default memo(function StringInput({ inputData, path }: CustomInputProps) {
+const StringInput = memo(function StringInput({ inputData, path }: CustomInputProps) {
   if (inputData._expanded) {
     return <InputStringArea inputData={inputData} path={path} />;
   }
@@ -79,4 +76,8 @@ export default memo(function StringInput({ inputData, path }: CustomInputProps) 
       valueToDisplay={valueToPlainText}
     />
   );
-});
+}) as StringInputComponent;
+
+StringInput.expandable = true;
+
+export default StringInput;

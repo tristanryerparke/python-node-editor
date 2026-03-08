@@ -1,7 +1,6 @@
-import { memo } from "react";
-import useFlowStore, { useNodeData } from "../../stores/flowStore";
-import SingleLineTextDisplay from "./single-line-text-display";
-import StringArea from "./string-area";
+import { memo, type NamedExoticComponent } from "react";
+import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import StringArea from "../utility-components/string-area";
 
 const DEFAULT_HEIGHT = 30;
 
@@ -11,18 +10,14 @@ interface StringOutputProps {
   path: (string | number)[];
 }
 
+type StringOutput = NamedExoticComponent<StringOutputProps> & {
+  expandable: true;
+};
+
 const ExpandedStringOutput = memo(function ExpandedStringOutput({
   outputData,
   path,
 }: StringOutputProps) {
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
-  const storedHeight = useNodeData([...path, "_expandedHeight"]) as
-    | number
-    | undefined;
-  const height = storedHeight ?? DEFAULT_HEIGHT;
-  const setHeight = (h: number) =>
-    void updateNodeData([...path, "_expandedHeight"], h);
-
   const value =
     typeof outputData?.value === "string" ? outputData.value : "";
 
@@ -30,13 +25,13 @@ const ExpandedStringOutput = memo(function ExpandedStringOutput({
     <StringArea
       value={value}
       editable={false}
-      height={height}
-      setHeight={setHeight}
+      path={path}
+      defaultHeight={DEFAULT_HEIGHT}
     />
   );
 });
 
-export default memo(function StringOutput({
+const StringOutputMain = memo(function StringOutput({
   outputData,
   path,
 }: StringOutputProps) {
@@ -52,4 +47,8 @@ export default memo(function StringOutput({
       dimmed={!outputData?.value}
     />
   );
-});
+}) as StringOutput;
+
+StringOutputMain.expandable = true;
+
+export default StringOutputMain as StringOutput;

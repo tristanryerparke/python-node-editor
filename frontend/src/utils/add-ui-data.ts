@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/outputs/output-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/node-inputs/input-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/node-outputs/output-type-registry";
 
 /**
  * Initializes UI-specific data for arguments and outputs:

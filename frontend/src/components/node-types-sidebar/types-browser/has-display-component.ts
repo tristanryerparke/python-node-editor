@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "../../custom-node/inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../../custom-node/outputs/output-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "../../custom-node/node-inputs/input-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../../custom-node/node-outputs/output-type-registry";
 import type { TypeInfo, PropertyType } from "@/stores/typesStore";
 
 function getPropertyTypeName(propType: PropertyType): string | null {

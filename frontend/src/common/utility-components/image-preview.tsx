@@ -3,8 +3,9 @@ import { Grip } from "lucide-react";
 import {
   ResizableHeight,
   ResizableHeightHandle,
-} from "../utility-components/resizable-height";
-import { SyncedWidthHandle } from "../utility-components/synced-width-resizable";
+} from "./resizable-height";
+import { SyncedWidthHandle } from "./synced-width-resizable";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
 
 const DEFAULT_MIN_HEIGHT = 60;
 const DEFAULT_MAX_HEIGHT = 200;
@@ -12,19 +13,20 @@ const DEFAULT_MAX_HEIGHT = 200;
 export interface ImagePreviewProps {
   /** base64-encoded webp thumbnail string */
   preview?: string;
-  height: number;
-  setHeight: (h: number) => void;
+  path: (string | number)[];
+  defaultHeight?: number;
   minHeight?: number;
   maxHeight?: number;
 }
 
 export default memo(function ImagePreview({
   preview,
-  height,
-  setHeight,
+  path,
+  defaultHeight = DEFAULT_MIN_HEIGHT,
   minHeight = DEFAULT_MIN_HEIGHT,
   maxHeight = DEFAULT_MAX_HEIGHT,
 }: ImagePreviewProps) {
+  const { height, setHeight } = useResizableHeight(path, defaultHeight);
   return (
     <ResizableHeight
       height={height}
