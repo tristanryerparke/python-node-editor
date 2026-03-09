@@ -1,6 +1,6 @@
 import OutputRenderer from "./output-renderer";
 import OutputMenu from "./output-menu";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./output-type-registry";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 
 interface OutputDisplayProps {
@@ -23,21 +23,12 @@ export default function OutputDisplay({ fieldData, path }: OutputDisplayProps) {
 
   // Function to render the main output component
   const renderMainOutput = () => {
-    if (typeof actualType !== "string") {
-      return <OutputRenderer outputData={fieldData} path={path} />;
-    }
-
-    const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
-    if (!registryEntry || typeof registryEntry !== "object") {
-      return <OutputRenderer outputData={fieldData} path={path} />;
-    }
-
-    // Check if we should hide the main component when expanded
-    const isExpanded = fieldData._expanded ?? false;
-    const shouldHide = isExpanded && registryEntry.hideMainWhenExpanded;
-
-    if (shouldHide) {
-      return <div className="flex flex-1 min-h-8" />;
+    if (typeof actualType === "string") {
+      const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
+      const isExpanded = fieldData._expanded ?? false;
+      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
+        return <div className="flex flex-1 min-h-8" />;
+      }
     }
 
     return <OutputRenderer outputData={fieldData} path={path} />;
@@ -45,35 +36,18 @@ export default function OutputDisplay({ fieldData, path }: OutputDisplayProps) {
 
   // Function to render the expanded component if it exists and is enabled
   const renderExpandedContent = () => {
-    if (typeof actualType !== "string") {
-      return null;
-    }
+    if (typeof actualType !== "string") return null;
 
     const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
-    if (!registryEntry || typeof registryEntry !== "object") {
-      return null;
-    }
-
-    // Check if expanded component exists and is enabled
-    const expandedComponent = registryEntry.expanded;
     const isExpanded = fieldData._expanded ?? false;
+    if (!isObjectRegistryEntry(registryEntry) || !registryEntry.expandable || !isExpanded) return null;
 
-    if (!expandedComponent || !isExpanded) {
-      return null;
-    }
-
-    const ExpandedComponent = expandedComponent;
-
+    const Component = registryEntry.main;
     return (
-      <div
-        className={
-          registryEntry.hideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"
-        }
-      >
-        <ExpandedComponent
+      <div className="flex-1">
+        <Component
           outputData={{ ...fieldData, type: actualType }}
           path={path}
-          readOnly={true}
         />
       </div>
     );

@@ -3,6 +3,7 @@ import { stripGraphForExecute, type Graph } from "../utils/strip-graph";
 import { preserveUIData } from "../utils/preserve-ui-data";
 import useFlowStore from "../stores/flowStore";
 import type { NodeUpdate } from "../types/types";
+import { BACKEND_URL } from "@/lib/fetcher";
 
 const POLLING_INTERVAL_MS = 250;
 
@@ -24,7 +25,7 @@ export function useExecuteFlowAsync() {
     async (executionId: string) => {
       try {
         const response = await fetch(
-          `http://localhost:8000/execution_update/${executionId}`,
+          `${BACKEND_URL}/execution_update/${executionId}`,
         );
 
         if (!response.ok) {
@@ -105,7 +106,7 @@ export function useExecuteFlowAsync() {
       lastSeenIndexRef.current = -1;
 
       console.log("Submitting graph for async execution:", executeMessage);
-      const response = await fetch("http://localhost:8000/execution_submit", {
+      const response = await fetch(`${BACKEND_URL}/execution_submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,7 +8,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from python_node_editor.analysis.utils import analyze_file_structure
+from python_node_editor.analysis.utils import (
+    analyze_file_structure,
+    split_search_path_and_function,
+)
 from python_node_editor.execution.exec_async import router as execute_async_router
 from python_node_editor.execution.exec_sync import router as execute_sync_router
 from python_node_editor.large_data.large_files_endpoint import (
@@ -52,8 +55,10 @@ async def lifespan(app: FastAPI):
     search_paths = [p.strip() for p in search_paths_input.split(",")]
 
     for search_path in search_paths:
-        if not os.path.exists(search_path):
-            print(f"The path {search_path} does not exist")
+        # Allow function selectors like path:func by splitting before existence check
+        path_part, _ = split_search_path_and_function(search_path)
+        if not os.path.exists(path_part):
+            print(f"The path {path_part} does not exist")
             sys.exit(1)
 
     function_schemas, callables, types = analyze_file_structure(

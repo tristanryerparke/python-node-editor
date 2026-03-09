@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { stripGraphForExecute, type Graph } from "../utils/strip-graph";
 import { preserveUIData } from "../utils/preserve-ui-data";
 import useFlowStore from "../stores/flowStore";
+import { BACKEND_URL } from "@/lib/fetcher";
 
 export function useExecuteFlowSync() {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
@@ -12,7 +13,7 @@ export function useExecuteFlowSync() {
       const executeMessage = stripGraphForExecute(graph);
 
       console.log("Executing graph (sync):", executeMessage);
-      const response = await fetch("http://localhost:8000/graph_execute", {
+      const response = await fetch(`${BACKEND_URL}/graph_execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,10 +3,9 @@ import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
 import useTypesStore from "@/stores/typesStore";
-import UserModelDisplay from "../../../common/leaf-inputs/user-model-display";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
-import GenericSchemaInput from "@/common/leaf-inputs/generic-schema-input";
-import GenericSchemaExpanded from "@/common/leaf-inputs/expanded/generic-schema-expanded";
+import UserModelDisplay from "../../../common/inputs/user-model-display";
+import { INPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./input-type-registry";
+import GenericSchemaInput from "@/common/inputs/generic-schema-input";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
 
@@ -59,28 +58,19 @@ export default memo(function InputFieldDisplay({
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
 
   const usesGenericRenderer = !hasRegistryComponent && !isUserModel;
-  const genericHideMainWhenExpanded = true;
 
   // Function to render the main input component
   const renderMainInput = () => {
-    // Check if we have a specific component for this type
-    if (typeof actualType !== "string") {
-      // actualType is StructDescr or UnionDescr, handle below
-    } else {
+    if (typeof actualType === "string") {
       const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (
-        registryEntry &&
-        typeof registryEntry === "object" &&
-        "main" in registryEntry
-      ) {
-        // Check if we should hide the main component when expanded
-        const shouldHide = isExpanded && registryEntry.hideMainWhenExpanded;
-
-        if (shouldHide) {
+      if (registryEntry) {
+        if (isExpanded && isObjectRegistryEntry(registryEntry) && registryEntry.expandable) {
           return <div className="flex flex-1 min-h-8" />;
         }
-
-        const Component = registryEntry.main;
+        // Extract component from registry entry (handle both direct component and object pattern)
+        const Component = isObjectRegistryEntry(registryEntry)
+          ? registryEntry.main
+          : registryEntry;
         return (
           <Component
             inputData={{ ...fieldData, type: actualType }}
@@ -101,7 +91,7 @@ export default memo(function InputFieldDisplay({
       );
     }
 
-    if (usesGenericRenderer && isExpanded && genericHideMainWhenExpanded) {
+    if (usesGenericRenderer && isExpanded) {
       return <div className="flex flex-1 min-h-8" />;
     }
 
@@ -117,26 +107,16 @@ export default memo(function InputFieldDisplay({
   const renderExpandedContent = () => {
     if (typeof actualType === "string") {
       const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (registryEntry && typeof registryEntry === "object") {
-        // Check if expanded component exists and is enabled
-        const expandedComponent = registryEntry.expanded;
-
-        if (expandedComponent && isExpanded) {
-          const ExpandedComponent = expandedComponent;
-
-          return (
-            <div
-              className={
-                registryEntry.hideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"
-              }
-            >
-              <ExpandedComponent
-                inputData={{ ...fieldData, type: actualType }}
-                path={path}
-              />
-            </div>
-          );
-        }
+      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
+        const Component = registryEntry.main;
+        return (
+          <div className="flex-1">
+            <Component
+              inputData={{ ...fieldData, type: actualType }}
+              path={path}
+            />
+          </div>
+        );
       }
     }
 
@@ -145,8 +125,8 @@ export default memo(function InputFieldDisplay({
     }
 
     return (
-      <div className={genericHideMainWhenExpanded ? "flex-1" : "flex-1 mt-1.5"}>
-        <GenericSchemaExpanded
+      <div className="flex-1">
+        <GenericSchemaInput
           inputData={{ ...fieldData, type: actualType }}
           path={path}
         />
