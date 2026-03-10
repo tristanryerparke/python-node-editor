@@ -24,6 +24,10 @@ type SavedFlowFile = {
   inspector?: SavedInspectorState;
 };
 
+type SavedInspectorEntry = Omit<InspectorEntryState, "customName"> & {
+  customName?: unknown;
+};
+
 function isInspectorPath(path: unknown): path is InspectorPathSegment[] {
   return Array.isArray(path) &&
     path.every((segment) => typeof segment === "string" || typeof segment === "number");
@@ -38,7 +42,7 @@ function isInspectorTarget(target: unknown): target is InspectorTarget {
     isInspectorPath(target.path);
 }
 
-function isInspectorEntryState(entry: unknown): entry is InspectorEntryState {
+function isInspectorEntryState(entry: unknown): entry is SavedInspectorEntry {
   return !!entry &&
     typeof entry === "object" &&
     "id" in entry &&
@@ -46,6 +50,9 @@ function isInspectorEntryState(entry: unknown): entry is InspectorEntryState {
     "selectedTarget" in entry &&
     typeof entry.id === "string" &&
     typeof entry.isExpanded === "boolean" &&
+    (!("customName" in entry) ||
+      entry.customName === null ||
+      typeof entry.customName === "string") &&
     (entry.selectedTarget === null || isInspectorTarget(entry.selectedTarget));
 }
 
@@ -58,6 +65,8 @@ function normalizeInspectorState(
         .filter(isInspectorEntryState)
         .map((entry) => ({
           ...entry,
+          customName:
+            typeof entry.customName === "string" ? entry.customName : null,
           selectedTarget:
             entry.selectedTarget &&
             nodeIds.has(entry.selectedTarget.nodeId)
@@ -69,8 +78,6 @@ function normalizeInspectorState(
   return {
     entries,
     activeSelectingEntryId: null,
-    deleteDialogEntryId: null,
-    copiedPathEntryId: null,
     showBorders:
       typeof inspector?.showBorders === "boolean" ? inspector.showBorders : true,
   };

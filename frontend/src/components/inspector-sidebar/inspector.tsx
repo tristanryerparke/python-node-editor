@@ -16,7 +16,15 @@ export default function Inspector() {
     setShowBorders,
     clearMissingTargets,
     setActiveSelectingEntryId,
-  } = useInspectorStore();
+  } = useInspectorStore((state) => ({
+    entries: state.entries,
+    activeSelectingEntryId: state.activeSelectingEntryId,
+    addEntry: state.addEntry,
+    showBorders: state.showBorders,
+    setShowBorders: state.setShowBorders,
+    clearMissingTargets: state.clearMissingTargets,
+    setActiveSelectingEntryId: state.setActiveSelectingEntryId,
+  }));
 
   useEffect(() => {
     clearMissingTargets(nodes.map((node) => node.id));

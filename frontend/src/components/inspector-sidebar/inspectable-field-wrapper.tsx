@@ -20,7 +20,7 @@ export default function InspectableFieldWrapper({
     amISelectedByActiveEntry,
     showSelectedBorder,
     selectTargetForActiveEntry,
-    setEntrySelectedTarget,
+    updateInspectorData,
   } = useInspectorStore((state) => {
     const activeEntry =
       state.entries.find((entry) => entry.id === state.activeSelectingEntryId) ??
@@ -40,7 +40,7 @@ export default function InspectableFieldWrapper({
       amISelectedByActiveEntry,
       showSelectedBorder: state.showBorders && selectedByAnyEntry,
       selectTargetForActiveEntry: state.selectTargetForActiveEntry,
-      setEntrySelectedTarget: state.setEntrySelectedTarget,
+      updateInspectorData: state.updateInspectorData,
     };
   });
 
@@ -53,7 +53,7 @@ export default function InspectableFieldWrapper({
     e.preventDefault();
 
     if (e.shiftKey && amISelectedByActiveEntry) {
-      setEntrySelectedTarget(activeSelectingEntryId, null);
+      updateInspectorData([activeSelectingEntryId, "selectedTarget"], null);
       return;
     }
 

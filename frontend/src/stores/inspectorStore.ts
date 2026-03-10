@@ -1,6 +1,12 @@
+import { produce } from "immer";
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/vanilla/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
+import {
+  findItemIndexById,
+  getDataAtPath,
+  setDataAtPath,
+} from "../utils/store-utils";
 
 export type InspectorPathSegment = string | number;
 
@@ -12,33 +18,30 @@ export interface InspectorTarget {
 export interface InspectorEntryState {
   id: string;
   isExpanded: boolean;
+  customName?: string | null;
   selectedTarget: InspectorTarget | null;
 }
 
 type InspectorStoreState = {
   entries: InspectorEntryState[];
   activeSelectingEntryId: string | null;
-  deleteDialogEntryId: string | null;
-  copiedPathEntryId: string | null;
   showBorders: boolean;
 };
 
 type InspectorStoreActions = {
   addEntry: () => void;
-  removeEntry: (entryId: string) => void;
   setActiveSelectingEntryId: (entryId: string | null) => void;
-  setEntryExpanded: (entryId: string, isExpanded: boolean) => void;
-  setEntrySelectedTarget: (
-    entryId: string,
-    target: InspectorTarget | null,
+  getInspectorData: (path: InspectorPathSegment[]) => unknown;
+  updateInspectorData: (
+    path: InspectorPathSegment[],
+    newData: unknown,
   ) => void;
+  deleteInspectorData: (entryId: InspectorPathSegment) => void;
   selectTargetForActiveEntry: (
     nodeId: string,
     path: InspectorPathSegment[],
   ) => void;
   clearMissingTargets: (nodeIds: string[]) => void;
-  setDeleteDialogEntryId: (entryId: string | null) => void;
-  setCopiedPathEntryId: (entryId: string | null) => void;
   setShowBorders: (show: boolean) => void;
 };
 
@@ -56,8 +59,31 @@ const createInspectorEntry = (
 ): InspectorEntryState => ({
   id: createEntryId(),
   isExpanded: true,
+  customName: null,
   selectedTarget,
 });
+
+function findInspectorEntryIndexById(
+  entries: InspectorEntryState[],
+  entryId: InspectorPathSegment,
+) {
+  return findItemIndexById(entries, entryId);
+}
+
+function getInspectorDataFromState(
+  state: Pick<InspectorState, keyof InspectorStoreState>,
+  path: InspectorPathSegment[],
+) {
+  const entryIndex = findInspectorEntryIndexById(state.entries, path[0]);
+
+  if (entryIndex === -1) {
+    return undefined;
+  }
+
+  return path.length === 1
+    ? state.entries[entryIndex]
+    : getDataAtPath(state.entries[entryIndex], path.slice(1));
+}
 
 const useInspectorStore = createWithEqualityFn<
   InspectorState,
@@ -67,8 +93,6 @@ const useInspectorStore = createWithEqualityFn<
     (set, get) => ({
       entries: [],
       activeSelectingEntryId: null,
-      deleteDialogEntryId: null,
-      copiedPathEntryId: null,
       showBorders: true,
 
       addEntry: () =>
@@ -76,26 +100,11 @@ const useInspectorStore = createWithEqualityFn<
           entries: [...state.entries, createInspectorEntry()],
         })),
 
-      removeEntry: (entryId) =>
-        set((state) => ({
-          entries: state.entries.filter((entry) => entry.id !== entryId),
-          activeSelectingEntryId:
-            state.activeSelectingEntryId === entryId
-              ? null
-              : state.activeSelectingEntryId,
-          deleteDialogEntryId:
-            state.deleteDialogEntryId === entryId
-              ? null
-              : state.deleteDialogEntryId,
-          copiedPathEntryId:
-            state.copiedPathEntryId === entryId ? null : state.copiedPathEntryId,
-        })),
-
       setActiveSelectingEntryId: (entryId) =>
         set((state) => {
           if (
             entryId !== null &&
-            !state.entries.some((entry) => entry.id === entryId)
+            findInspectorEntryIndexById(state.entries, entryId) === -1
           ) {
             return state;
           }
@@ -103,21 +112,52 @@ const useInspectorStore = createWithEqualityFn<
           return { activeSelectingEntryId: entryId };
         }),
 
-      setEntryExpanded: (entryId, isExpanded) =>
-        set((state) => ({
-          entries: state.entries.map((entry) =>
-            entry.id === entryId ? { ...entry, isExpanded } : entry,
-          ),
-        })),
+      getInspectorData: (path) => getInspectorDataFromState(get(), path),
 
-      setEntrySelectedTarget: (entryId, target) =>
-        set((state) => ({
-          entries: state.entries.map((entry) =>
-            entry.id === entryId ? { ...entry, selectedTarget: target } : entry,
-          ),
-          copiedPathEntryId:
-            state.copiedPathEntryId === entryId ? null : state.copiedPathEntryId,
-        })),
+      updateInspectorData: (path, newData) =>
+        set(
+          produce((state: InspectorState) => {
+            const entryIndex = findInspectorEntryIndexById(
+              state.entries,
+              path[0],
+            );
+
+            if (entryIndex === -1) {
+              return;
+            }
+
+            if (path.length === 1) {
+              state.entries[entryIndex] = newData as InspectorEntryState;
+              return;
+            }
+
+            setDataAtPath(
+              state.entries[entryIndex] as unknown as Record<
+                string | number,
+                unknown
+              >,
+              path.slice(1),
+              newData,
+            );
+          }),
+        ),
+
+      deleteInspectorData: (entryId) =>
+        set(
+          produce((state: InspectorState) => {
+            const entryIndex = findInspectorEntryIndexById(state.entries, entryId);
+
+            if (entryIndex === -1) {
+              return;
+            }
+
+            state.entries.splice(entryIndex, 1);
+            state.activeSelectingEntryId =
+              state.activeSelectingEntryId === entryId
+                ? null
+                : state.activeSelectingEntryId;
+          }),
+        ),
 
       selectTargetForActiveEntry: (nodeId, path) => {
         const activeSelectingEntryId = get().activeSelectingEntryId;
@@ -137,16 +177,11 @@ const useInspectorStore = createWithEqualityFn<
               : entry,
           ),
           activeSelectingEntryId: null,
-          copiedPathEntryId:
-            state.copiedPathEntryId === activeSelectingEntryId
-              ? null
-              : state.copiedPathEntryId,
         }));
       },
 
       clearMissingTargets: (nodeIds) =>
         set((state) => {
-          let copiedPathEntryId = state.copiedPathEntryId;
           let didChange = false;
 
           const entries = state.entries.map((entry) => {
@@ -155,9 +190,6 @@ const useInspectorStore = createWithEqualityFn<
               !nodeIds.includes(entry.selectedTarget.nodeId)
             ) {
               didChange = true;
-              if (copiedPathEntryId === entry.id) {
-                copiedPathEntryId = null;
-              }
               return { ...entry, selectedTarget: null };
             }
 
@@ -168,34 +200,7 @@ const useInspectorStore = createWithEqualityFn<
             return state;
           }
 
-          return {
-            entries,
-            copiedPathEntryId,
-          };
-        }),
-
-      setDeleteDialogEntryId: (entryId) =>
-        set((state) => {
-          if (
-            entryId !== null &&
-            !state.entries.some((entry) => entry.id === entryId)
-          ) {
-            return state;
-          }
-
-          return { deleteDialogEntryId: entryId };
-        }),
-
-      setCopiedPathEntryId: (entryId) =>
-        set((state) => {
-          if (
-            entryId !== null &&
-            !state.entries.some((entry) => entry.id === entryId)
-          ) {
-            return state;
-          }
-
-          return { copiedPathEntryId: entryId };
+          return { entries };
         }),
 
       setShowBorders: (show) => set({ showBorders: show }),
@@ -212,8 +217,6 @@ const useInspectorStore = createWithEqualityFn<
           return {
             entries: selectedTarget ? [createInspectorEntry(selectedTarget)] : [],
             activeSelectingEntryId: null,
-            deleteDialogEntryId: null,
-            copiedPathEntryId: null,
             showBorders: legacyState.showBorders ?? true,
           };
         }
@@ -228,5 +231,19 @@ const useInspectorStore = createWithEqualityFn<
   ),
   shallow,
 );
+
+export const getInspectorData = (path: InspectorPathSegment[]) =>
+  useInspectorStore.getState().getInspectorData(path);
+
+export const updateInspectorData = (
+  path: InspectorPathSegment[],
+  newData: unknown,
+) => useInspectorStore.getState().updateInspectorData(path, newData);
+
+export const deleteInspectorData = (entryId: InspectorPathSegment) =>
+  useInspectorStore.getState().deleteInspectorData(entryId);
+
+export const setActiveSelectingEntryId = (entryId: string | null) =>
+  useInspectorStore.getState().setActiveSelectingEntryId(entryId);
 
 export default useInspectorStore;
