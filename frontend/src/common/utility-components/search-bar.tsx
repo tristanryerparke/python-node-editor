@@ -5,7 +5,7 @@ import { RefreshCw, Search } from "lucide-react";
 interface SearchBarProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<unknown>;
   placeholder?: string;
   refreshTitle?: string;
   ariaLabel?: string;
@@ -34,7 +34,9 @@ export function SearchBar({
       <Button
         size="icon"
         variant="outline"
-        onClick={onRefresh}
+        onClick={() => {
+          void onRefresh();
+        }}
         title={refreshTitle}
         aria-label={refreshTitle}
       >

@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactElement } from "react";
 import useInspectorStore from "@/stores/inspectorStore";
 import { cn } from "@/lib/utils";
 
@@ -11,42 +11,58 @@ export default function InspectableFieldWrapper({
   children,
   path,
 }: InspectableFieldWrapperProps) {
-  const {
-    isSelecting,
-    selectTarget,
-    selectedTarget,
-    showBorders,
-    clearSelectedTarget,
-  } = useInspectorStore();
-
   const nodeId = path[0] as string;
+  const pathString = JSON.stringify(path);
 
-  // Check if this field is currently selected in the inspector
-  const amISelected =
-    selectedTarget?.nodeId === nodeId &&
-    JSON.stringify(selectedTarget?.path) === JSON.stringify(path);
+  const {
+    activeSelectingEntryId,
+    isSelecting,
+    amISelectedByActiveEntry,
+    showSelectedBorder,
+    selectTargetForActiveEntry,
+    setEntrySelectedTarget,
+  } = useInspectorStore((state) => {
+    const activeEntry =
+      state.entries.find((entry) => entry.id === state.activeSelectingEntryId) ??
+      null;
+    const amISelectedByActiveEntry =
+      activeEntry?.selectedTarget?.nodeId === nodeId &&
+      JSON.stringify(activeEntry.selectedTarget.path) === pathString;
+    const selectedByAnyEntry = state.entries.some(
+      (entry) =>
+        entry.selectedTarget?.nodeId === nodeId &&
+        JSON.stringify(entry.selectedTarget.path) === pathString,
+    );
 
-  // Show light blue dashed outline when borders are enabled and this field is selected
-  const showSelectedBorder = showBorders && amISelected;
+    return {
+      activeSelectingEntryId: state.activeSelectingEntryId,
+      isSelecting: state.activeSelectingEntryId !== null,
+      amISelectedByActiveEntry,
+      showSelectedBorder: state.showBorders && selectedByAnyEntry,
+      selectTargetForActiveEntry: state.selectTargetForActiveEntry,
+      setEntrySelectedTarget: state.setEntrySelectedTarget,
+    };
+  });
 
-  const handleFieldClick = (e: React.MouseEvent) => {
-    if (isSelecting) {
-      // Only stop propagation/prevent default if we're actually in selector mode
-      // This prevents interfering with tooltip hover events
-      e.stopPropagation();
-      e.preventDefault();
-
-      // Shift+click to deselect (keeps selector mode active)
-      if (e.shiftKey && amISelected) {
-        clearSelectedTarget();
-      } else {
-        selectTarget(nodeId, path);
-      }
+  const handleFieldClick = (e: ReactMouseEvent) => {
+    if (!isSelecting || !activeSelectingEntryId) {
+      return;
     }
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (e.shiftKey && amISelectedByActiveEntry) {
+      setEntrySelectedTarget(activeSelectingEntryId, null);
+      return;
+    }
+
+    selectTargetForActiveEntry(nodeId, path);
   };
 
   return (
     <div
+      data-inspectable-field-wrapper
       className={cn(
         "transition-all relative",
         isSelecting
