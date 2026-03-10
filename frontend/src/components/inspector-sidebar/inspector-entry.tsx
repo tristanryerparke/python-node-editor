@@ -1,4 +1,12 @@
-import { Copy, Check, PanelTopClose, PanelTopOpen, SquareMousePointer, Trash } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Maximize2,
+  Minimize2,
+  MoreVertical,
+  SquareMousePointer,
+  Trash2,
+} from "lucide-react";
 import { useNodeData } from "../../stores/flowStore";
 import useInspectorStore from "../../stores/inspectorStore";
 import useSettingsStore from "../../stores/settingsStore";
@@ -6,6 +14,13 @@ import { cn } from "../../lib/utils";
 import { Toggle } from "../../components/ui/toggle";
 import { Button } from "../../components/ui/button";
 import { JsonViewer } from "../ui/json-tree-viewer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -126,20 +141,40 @@ export default function InspectorEntry({
             {entrySummary}
           </div>
         </div>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          onClick={() => setDeleteDialogEntryId(entryId)}
-        >
-          <Trash />
-        </Button>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          onClick={() => setEntryExpanded(entryId, !entry.isExpanded)}
-        >
-          {entry.isExpanded ? <PanelTopOpen /> : <PanelTopClose />}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="icon-sm" variant="ghost">
+              <MoreVertical />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
+            <DropdownMenuItem
+              onClick={() => setEntryExpanded(entryId, !entry.isExpanded)}
+              className="cursor-pointer"
+            >
+              {entry.isExpanded ? (
+                <>
+                  <Minimize2 className="h-4 w-4" />
+                  Minimize
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-4 w-4" />
+                  Maximize
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => setDeleteDialogEntryId(entryId)}
+              className="cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       {entry.isExpanded ? (
         <div className="flex flex-col gap-2 px-2 overflow-hidden pb-1">
@@ -183,15 +218,7 @@ export default function InspectorEntry({
                 <JsonViewer data={selectedData} textSize="text-xs" />
               </div>
             </div>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <p className="text-neutral-500 text-sm text-center px-2 pt-1">
-                {isSelecting
-                  ? "Click a field to inspect..."
-                  : "Click the selector to begin"}
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       ) : null}
       <Dialog

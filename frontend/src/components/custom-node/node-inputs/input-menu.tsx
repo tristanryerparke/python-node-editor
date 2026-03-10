@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MoreVertical, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
@@ -22,6 +23,7 @@ interface InputMenuProps {
 }
 
 export default function InputMenu({ path, fieldData }: InputMenuProps) {
+  const [open, setOpen] = useState(false);
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const getNodeData = useFlowStore((state) => state.getNodeData);
@@ -110,6 +112,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
     if (path) {
       void updateNodeData([...path, "_selectedType"], newType);
     }
+    setOpen(false);
   };
 
   const handleToggleExpanded = () => {
@@ -117,6 +120,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
 
     const newExpandedState = !isExpanded;
     void updateNodeData([...path, "_expanded"], newExpandedState);
+    setOpen(false);
 
     // If minimizing, clear the stored height
     if (!newExpandedState) {
@@ -158,16 +162,23 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
       // For dict inputs and other cases, simple deletion
       deleteNodeData(path);
     }
+
+    setOpen(false);
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon-xs" className="shrink-0">
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="right" sideOffset={5}>
+      <DropdownMenuContent
+        align="center"
+        side="right"
+        sideOffset={5}
+        onInteractOutside={() => setOpen(false)}
+      >
         {hasExpandable && (
           <>
             <DropdownMenuItem

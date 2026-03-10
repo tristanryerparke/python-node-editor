@@ -15,7 +15,6 @@ import useFlowStore from "../stores/flowStore";
 import { useTheme } from "./theme-provider";
 import { initializeUIData } from "../utils/add-ui-data";
 import type { FrontendNodeData, FunctionNode } from "../types/types";
-import GraphToolbar from "./graph-toolbar/graph-toolbar";
 import { useCopyPaste } from "../hooks/useCopyPaste";
 
 const nodeTypes: NodeTypes = {
@@ -160,7 +159,6 @@ function NodeGraph() {
       style={{ width: "100%", height: "100%" }}
       className="relative flex items-center justify-center"
     >
-      <GraphToolbar />
       <ReactFlow
         proOptions={{ hideAttribution: true }}
         nodes={nodes}
