@@ -68,6 +68,9 @@ function NodeGraph() {
       const key = event.key.toLowerCase();
       const isEditingText =
         isTextEditable(event.target) || isTextEditable(document.activeElement);
+      const hasSelectedNodes = storeApi
+        .getState()
+        .nodes.some((node) => node.selected);
 
       if (cmdOrCtrl && key === "a") {
         if (isEditingText) return;
@@ -81,6 +84,7 @@ function NodeGraph() {
           return currentNodes.map((node) => ({ ...node, selected: true }));
         });
       } else if (cmdOrCtrl && key === "c") {
+        if (!hasSelectedNodes) return;
         event.preventDefault();
         copy();
       } else if (cmdOrCtrl && key === "x") {

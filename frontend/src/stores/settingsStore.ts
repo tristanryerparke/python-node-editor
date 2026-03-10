@@ -9,12 +9,14 @@ type SettingsStoreState = {
   theme: Theme;
   openInEditorName: string | null;
   executionMode: ExecutionMode;
+  showInspectorPaths: boolean;
 };
 
 type SettingsStoreActions = {
   setTheme: (theme: Theme) => void;
   setOpenInEditorName: (editorName: string | null) => void;
   setExecutionMode: (mode: ExecutionMode) => void;
+  setShowInspectorPaths: (show: boolean) => void;
 };
 
 export type SettingsState = SettingsStoreState & SettingsStoreActions;
@@ -28,6 +30,7 @@ const useSettingsStore = createWithEqualityFn<
       theme: "system",
       openInEditorName: "vscode",
       executionMode: "async",
+      showInspectorPaths: false,
 
       setTheme: (theme) => set({ theme }),
 
@@ -35,6 +38,8 @@ const useSettingsStore = createWithEqualityFn<
         set({ openInEditorName: editorName }),
 
       setExecutionMode: (mode) => set({ executionMode: mode }),
+
+      setShowInspectorPaths: (show) => set({ showInspectorPaths: show }),
     }),
     {
       name: "settings-storage",
@@ -43,6 +48,7 @@ const useSettingsStore = createWithEqualityFn<
         theme: state.theme,
         openInEditorName: state.openInEditorName,
         executionMode: state.executionMode,
+        showInspectorPaths: state.showInspectorPaths,
       }),
     },
   ),

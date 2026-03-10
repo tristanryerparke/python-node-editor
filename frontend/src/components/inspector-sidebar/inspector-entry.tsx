@@ -1,10 +1,11 @@
 import { Copy, Check, PanelTopClose, PanelTopOpen, SquareMousePointer, Trash } from "lucide-react";
 import { useNodeData } from "../../stores/flowStore";
 import useInspectorStore from "../../stores/inspectorStore";
+import useSettingsStore from "../../stores/settingsStore";
+import { cn } from "../../lib/utils";
 import { Toggle } from "../../components/ui/toggle";
 import { Button } from "../../components/ui/button";
-import JsonViewer from "../custom-node/json-viewer";
-import { JsonViewer as JsonTreeViewer } from "../ui/json-tree-viewer";
+import { JsonViewer } from "../ui/json-tree-viewer";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,9 @@ export default function InspectorEntry({
     setCopiedPathEntryId: state.setCopiedPathEntryId,
     removeEntry: state.removeEntry,
   }));
+  const showInspectorPaths = useSettingsStore(
+    (state) => state.showInspectorPaths,
+  );
 
   const selectedPath = entry?.selectedTarget?.path ?? [];
   const selectedData = useNodeData(selectedPath);
@@ -140,35 +144,41 @@ export default function InspectorEntry({
       {entry.isExpanded ? (
         <div className="flex flex-col gap-2 px-2 overflow-hidden pb-1">
           {entry.selectedTarget ? (
-            <div className="flex flex-col gap-1">
-              <div className="text-xs text-muted-foreground">Path:</div>
-              <div className="relative w-full p-2 rounded border border-input bg-muted/50 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleCopyPath}
-                  className="absolute right-2 top-2 z-10 hover:bg-muted p-1 rounded"
-                  title="Copy path"
-                >
-                  {isPathCopied ? (
-                    <Check className="h-3.5 w-3.5 text-green-500" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
-                </button>
-                <style>{`
-                  .inspector-path-tree button[title="Copy to clipboard"] {
-                    display: none !important;
-                  }
-                `}</style>
-                <JsonTreeViewer
-                  className="inspector-path-tree w-full h-full pr-6"
-                  data={entry.selectedTarget.path}
-                  rootName="path"
-                  defaultExpanded={true}
-                  textSize="text-xs"
-                />
-              </div>
-              <div className="text-xs text-muted-foreground">Data:</div>
+            <div
+              className={cn(
+                "flex flex-col gap-1",
+                !showInspectorPaths && "pt-1",
+              )}
+            >
+              {showInspectorPaths ? (
+                <>
+                  <div className="text-xs text-muted-foreground">Path:</div>
+                  <div className="relative w-full p-2 rounded border border-input bg-muted/50 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCopyPath}
+                      className="absolute right-2 top-2 z-10 hover:bg-muted p-1 rounded"
+                      title="Copy path"
+                    >
+                      {isPathCopied ? (
+                        <Check className="h-3.5 w-3.5 text-green-500" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </button>
+                    <JsonViewer
+                      className="w-full h-full"
+                      containerPadding={false}
+                      data={entry.selectedTarget.path}
+                      rootName="path"
+                      defaultExpanded={true}
+                      textSize="text-xs"
+                      showRootCopyButton={false}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">Data:</div>
+                </>
+              ) : null}
               <div className="rounded border border-input bg-muted/50 overflow-auto min-h-0">
                 <JsonViewer data={selectedData} textSize="text-xs" />
               </div>

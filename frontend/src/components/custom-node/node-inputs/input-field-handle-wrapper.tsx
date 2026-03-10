@@ -29,7 +29,7 @@ export default function InputFieldHandleWrapper({
       <div className="relative items-center justify-center">
         <Handle
           // TODO: Why don't height and width work?
-          className="p-1 rounded-full bg-primary"
+          className="p-1 `rounded-full bg-primary"
           type="target"
           position={Position.Left}
           id={handleId}
