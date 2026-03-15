@@ -30,6 +30,67 @@ def geometry_payload_from_payload(payload):
     return geometry_payload
 
 
+def validate_rgb_style(value):
+    if not isinstance(value, (list, tuple)) or len(value) != 3:
+        raise ValueError("style.rgb must be an array of three channel values")
+
+    channels = []
+    for channel in value:
+        if not isinstance(channel, (int, float)):
+            raise ValueError("style.rgb channel values must be numeric")
+        channel_value = int(channel)
+        if channel_value < 0 or channel_value > 255:
+            raise ValueError("style.rgb channel values must be between 0 and 255")
+        channels.append(channel_value)
+
+    return channels
+
+
+def validate_opacity_style(value):
+    if not isinstance(value, (int, float)):
+        raise ValueError("style.opacity must be numeric")
+
+    opacity = float(value)
+    if opacity < 0.0 or opacity > 1.0:
+        raise ValueError("style.opacity must be between 0.0 and 1.0")
+    return opacity
+
+
+def validate_thickness_style(value):
+    if not isinstance(value, (int, float)):
+        raise ValueError("style.thickness must be numeric")
+
+    thickness = int(value)
+    if thickness < 1:
+        raise ValueError("style.thickness must be at least 1")
+    return thickness
+
+
+def style_from_payload(payload):
+    style = payload.get("style")
+    if style is None:
+        return None
+    if not isinstance(style, dict):
+        raise ValueError("style must be a JSON object")
+
+    supported_keys = {"opacity", "rgb", "thickness"}
+    unknown_keys = sorted(set(style.keys()) - supported_keys)
+    if unknown_keys:
+        raise ValueError(
+            f"style supports only: {', '.join(sorted(supported_keys))}"
+        )
+
+    validated_style = {}
+    if "rgb" in style:
+        validated_style["rgb"] = validate_rgb_style(style["rgb"])
+    if "opacity" in style:
+        validated_style["opacity"] = validate_opacity_style(style["opacity"])
+    if "thickness" in style:
+        validated_style["thickness"] = validate_thickness_style(style["thickness"])
+
+    return validated_style
+
+
 def looks_like_point_payload(geometry_payload):
     return all(key in geometry_payload for key in ("X", "Y", "Z"))
 
@@ -140,9 +201,11 @@ def validated_geometry_update(payload):
     geometry_payload = geometry_payload_from_payload(payload)
     geometry_type = geometry_type_from_payload(payload, geometry_payload)
     geometry_payload = validate_geometry_payload(geometry_type, geometry_payload)
+    style = style_from_payload(payload)
 
     return {
         "object_id": object_id_from_payload(payload),
         "geometry_type": geometry_type,
         "geometry_payload": geometry_payload,
+        "style": style,
     }

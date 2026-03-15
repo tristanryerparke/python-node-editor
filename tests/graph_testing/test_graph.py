@@ -6,21 +6,39 @@ from fastapi.testclient import TestClient
 
 import python_node_editor.server as server_module
 from python_node_editor.analysis.functions_analysis import analyze_function
+from python_node_editor.display import add_node_options
 from python_node_editor.execution.exec_sync import router as graph_router
 from python_node_editor.schema import Edge, Graph
 from tests.assets.functions import add, multiply
 from tests.assets.graph_utils import node_from_schema
 
+
+POST_HOOK_RESULTS = []
+
+
+def store_post_hook_result(result, node_id=None):
+    POST_HOOK_RESULTS.append((result, node_id))
+
+
+@add_node_options(post_hook=store_post_hook_result)
+def add_with_post_hook(a: int, b: int) -> int:
+    return a + b
+
+
 # Analyze the test functions and register them
 _, schema_add, _, types_add = analyze_function(add)
 _, schema_multiply, _, types_multiply = analyze_function(multiply)
+_, schema_post_hook, _, types_post_hook = analyze_function(add_with_post_hook)
 
 server_module.CALLABLES[schema_add.callable_id] = add
 server_module.CALLABLES[schema_multiply.callable_id] = multiply
+server_module.CALLABLES[schema_post_hook.callable_id] = add_with_post_hook
 server_module.FUNCTION_SCHEMAS.append(schema_add)
 server_module.FUNCTION_SCHEMAS.append(schema_multiply)
+server_module.FUNCTION_SCHEMAS.append(schema_post_hook)
 server_module.TYPES.update(types_add)
 server_module.TYPES.update(types_multiply)
+server_module.TYPES.update(types_post_hook)
 
 
 @asynccontextmanager
@@ -137,3 +155,21 @@ def test_two_connected_nodes_execute():
     node2_update = result["updates"][2]
     assert node2_update["nodeId"] == "node2"
     assert node2_update["outputs"]["return"]["value"] == 16
+
+
+def test_post_hook_runs_during_sync_execution():
+    POST_HOOK_RESULTS.clear()
+
+    node1 = node_from_schema("node1", schema_post_hook)
+    node1.data.arguments["a"].value = 5
+    node1.data.arguments["b"].value = 3
+
+    graph = Graph(nodes=[node1], edges=[])
+
+    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    assert response.status_code == 200
+
+    result = response.json()
+    assert result["status"] == "success"
+    assert result["updates"][0]["outputs"]["return"]["value"] == 8
+    assert POST_HOOK_RESULTS == [(8, "node1")]

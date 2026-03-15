@@ -64,6 +64,9 @@ def create_construct_node(
 
     # Create the callable constructor function
     constructor_func = make_constructor(python_class, type_name)
+    construct_post_hook = getattr(python_class, "_construct_post_hook", None)
+    if construct_post_hook is not None:
+        constructor_func.post_hook = construct_post_hook  # type: ignore[attr-defined]
 
     # d(const_model)
 

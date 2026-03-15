@@ -1,5 +1,6 @@
 import uuid
 import io
+import inspect
 import sys
 import traceback
 from typing import Any
@@ -73,8 +74,34 @@ def infer_concrete_type(value, type_descriptor, TYPES):
     raise ValueError(f"Unknown type descriptor: {type_descriptor}")
 
 
+def invoke_post_hook(post_hook, result, node_id: str | None = None):
+    """Invoke a post hook, passing node_id when the hook supports it."""
+    if node_id is None:
+        post_hook(result)
+        return
+
+    try:
+        signature = inspect.signature(post_hook)
+    except (TypeError, ValueError):
+        post_hook(result)
+        return
+
+    if "node_id" in signature.parameters:
+        post_hook(result, node_id=node_id)
+        return
+
+    for parameter in signature.parameters.values():
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            post_hook(result, node_id=node_id)
+            return
+
+    post_hook(result)
+
+
 def execute_node(
-    node: NodeDataFromFrontend, context_dict: dict[str, Any] | None = None
+    node: NodeDataFromFrontend,
+    context_dict: dict[str, Any] | None = None,
+    node_id: str | None = None,
 ) -> tuple[bool, Any, str]:
     """Finds a node's callable and executes it with the arguments from the frontend
     Return signature is:
@@ -131,6 +158,10 @@ def execute_node(
                 args[k] = v.value
 
             result = callable(**args)
+
+        post_hook = getattr(callable, "post_hook", None)
+        if post_hook is not None:
+            invoke_post_hook(post_hook, result, node_id=node_id)
 
         sys.stdout = old_stdout
         sys.stderr = old_stderr

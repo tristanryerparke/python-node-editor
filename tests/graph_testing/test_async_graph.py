@@ -16,6 +16,7 @@ from httpx import ASGITransport
 
 import python_node_editor.server as server_module
 from python_node_editor.analysis.functions_analysis import analyze_function
+from python_node_editor.display import add_node_options
 from python_node_editor.execution.exec_async import router as async_router
 from python_node_editor.schema import Edge, Graph
 from tests.assets.functions_with_delays import (
@@ -26,11 +27,25 @@ from tests.assets.functions_with_delays import (
 )
 from tests.assets.graph_utils import node_from_schema
 
+
+POST_HOOK_RESULTS = []
+
+
+def store_post_hook_result(result, node_id=None):
+    POST_HOOK_RESULTS.append((result, node_id))
+
+
+@add_node_options(post_hook=store_post_hook_result)
+def quick_add_with_post_hook(a: int, b: int) -> int:
+    return a + b
+
+
 # Register test functions
 _, schema_add, _, types_add = analyze_function(quick_add)
 _, schema_multiply, _, types_multiply = analyze_function(quick_multiply)
 _, schema_divide, _, types_divide = analyze_function(quick_divide)
 _, schema_power, _, types_power = analyze_function(quick_power)
+_, schema_post_hook, _, types_post_hook = analyze_function(quick_add_with_post_hook)
 
 server_module.CALLABLES[schema_add.callable_id] = quick_add
 server_module.FUNCTION_SCHEMAS.append(schema_add)
@@ -44,11 +59,15 @@ server_module.FUNCTION_SCHEMAS.append(schema_divide)
 server_module.CALLABLES[schema_power.callable_id] = quick_power
 server_module.FUNCTION_SCHEMAS.append(schema_power)
 
+server_module.CALLABLES[schema_post_hook.callable_id] = quick_add_with_post_hook
+server_module.FUNCTION_SCHEMAS.append(schema_post_hook)
+
 # Merge types
 server_module.TYPES.update(types_add)
 server_module.TYPES.update(types_multiply)
 server_module.TYPES.update(types_divide)
 server_module.TYPES.update(types_power)
+server_module.TYPES.update(types_post_hook)
 
 
 @asynccontextmanager
@@ -297,6 +316,36 @@ async def test_async_execution_with_error():
         assert node1_error["status"] == "error"
         assert "terminalOutput" in node1_error
         assert "Cannot divide by zero" in node1_error["terminalOutput"]
+
+
+@pytest.mark.asyncio
+async def test_post_hook_runs_during_async_execution():
+    POST_HOOK_RESULTS.clear()
+
+    node1 = node_from_schema("node1", schema_post_hook)
+    node1.data.arguments["a"].value = 10
+    node1.data.arguments["b"].value = 5
+
+    graph = Graph(nodes=[node1], edges=[])
+
+    async with httpx.AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/execution_submit", json=graph.model_dump(by_alias=True)
+        )
+        assert response.status_code == 200
+        result = response.json()
+        execution_id = result["execution_id"]
+
+        snapshots = await poll_execution_until_complete(client, execution_id)
+
+        final_snapshot = snapshots[-1]
+        assert final_snapshot["status"] == "complete"
+        final_node_update = final_snapshot["nodeUpdates"]["node1"]
+        assert final_node_update["status"] == "executed"
+        assert final_node_update["outputs"]["return"]["value"] == 15
+        assert POST_HOOK_RESULTS == [(15, "node1")]
 
 
 if __name__ == "__main__":

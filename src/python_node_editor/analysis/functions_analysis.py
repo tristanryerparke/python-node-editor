@@ -4,7 +4,12 @@ import os
 import typing
 from typing import Any, Callable, Dict, Tuple
 
-from python_node_editor.schema import DataWrapper, FunctionSchema, StructDescr
+from python_node_editor.schema import (
+    DataWrapper,
+    FunctionSchema,
+    MultipleOutputs,
+    StructDescr,
+)
 
 from .types_analysis import analyze_type, get_type_repr, merge_types_dict
 
@@ -111,17 +116,13 @@ def analyze_function(
     if ret_ann is inspect.Signature.empty:
         raise Exception(f"Function {func_obj.__name__} has no return annotation")
 
-    # Detect output fields from BaseModel subclasses with multiple outputs
-    # Having the output_style flag lets a user potentially have an output (of multiple)
-    # named "return" without breaking the app
-    # Skip cached types - they should be treated as single outputs
+    # Only MultipleOutputs subclasses should become multi-port nodes.
+    # UserModel/Pydantic return values still flow through the graph as a single object.
     outputs = {}
     if (
         inspect.isclass(ret_ann)
-        and hasattr(ret_ann, "model_fields")
-        and not hasattr(ret_ann, "_is_cached_type")
+        and issubclass(ret_ann, MultipleOutputs)
     ):
-        # Get the model fields using Pydantic's model_fields
         output_style = "multiple"
         for field_name, field_info in ret_ann.model_fields.items():
             if field_info.annotation is not None:

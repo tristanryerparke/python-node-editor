@@ -1,4 +1,4 @@
-from typing import ClassVar, Literal, TypeAlias
+from typing import Any, Callable, ClassVar, Literal, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from pydantic.alias_generators import to_camel
@@ -9,6 +9,8 @@ class UserModel(BaseModel):
 
     _deconstruct_node: ClassVar[bool] = True
     _construct_node: ClassVar[bool] = True
+    _construct_post_hook: ClassVar[Callable[..., Any] | None] = None
+    _deconstruct_post_hook: ClassVar[Callable[..., Any] | None] = None
 
 
 # Base types that don't depend on anything

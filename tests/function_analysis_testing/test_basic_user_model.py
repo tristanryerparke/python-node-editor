@@ -7,6 +7,10 @@ from tests.assets.user_model import Point2D, two_point_distance
 from tests.assets.user_model_not_used_in_function import add
 
 
+def translate_up(point: Point2D, distance: float) -> Point2D:
+    return Point2D(x=point.x, y=point.y + distance)
+
+
 def test_user_model_detection():
     """Analyzes the two_point_distance function and verifies the correct parsing of
     its arguments, the Point2D user model"""
@@ -40,6 +44,26 @@ def test_user_model_detection():
     assert found_types["Point2D"].properties == {"x": "float", "y": "float"}
 
 
+def test_user_model_return_stays_single_output():
+    result = translate_up(Point2D(x=2.0, y=3.0), 5.0)
+    assert result == Point2D(x=2.0, y=8.0)
+
+    _, schema, _, found_types = analyze_function(translate_up)
+    d(schema)
+
+    assert schema.arguments == {
+        "point": DataWrapper(type="Point2D"),
+        "distance": DataWrapper(type="float"),
+    }
+    assert schema.output_style == "single"
+    assert schema.outputs == {"return": DataWrapper(type="Point2D")}
+
+    d(found_types)
+    assert "Point2D" in found_types
+    assert found_types["Point2D"].kind == "user_model"
+    assert found_types["Point2D"]._class is Point2D
+
+
 def test_user_model_not_used_in_function():
     """Tests that the Point2D model is not discovered even though it is defined
     in the same file as a function that is analyzed"""
@@ -62,4 +86,5 @@ def test_user_model_not_used_in_function():
 
 if __name__ == "__main__":
     test_user_model_detection()
+    test_user_model_return_stays_single_output()
     test_user_model_not_used_in_function()

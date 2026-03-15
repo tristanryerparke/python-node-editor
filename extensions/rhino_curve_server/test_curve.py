@@ -22,12 +22,14 @@ def post_json(path, payload):
         return json.loads(response.read().decode("utf-8"))
 
 
-def send_geometry(object_id, geometry, geometry_type):
+def send_geometry(object_id, geometry, geometry_type, style=None):
     payload = {
         "object_id": object_id,
         "geometry_type": geometry_type,
         "geometry": geometry.Encode(),
     }
+    if style is not None:
+        payload["style"] = style
     response = post_json("/geometry", payload)
     print(response)
     return response
@@ -39,20 +41,20 @@ def point3d(coords):
     return rhino3dm.Point3d(*coords)
 
 
-def send_point(point_id, point):
-    return send_geometry(point_id, point3d(point), "point")
+def send_point(point_id, point, style=None):
+    return send_geometry(point_id, point3d(point), "point", style)
 
 
-def send_curve(curve_id, curve):
-    return send_geometry(curve_id, curve, "curve")
+def send_curve(curve_id, curve, style=None):
+    return send_geometry(curve_id, curve, "curve", style)
 
 
-def send_polyline_curve(curve_id, curve):
-    return send_geometry(curve_id, curve, "polyline_curve")
+def send_polyline_curve(curve_id, curve, style=None):
+    return send_geometry(curve_id, curve, "polyline_curve", style)
 
 
-def send_brep(brep_id, brep):
-    return send_geometry(brep_id, brep, "brep")
+def send_brep(brep_id, brep, style=None):
+    return send_geometry(brep_id, brep, "brep", style)
 
 
 def nurbs_curve(points, degree=3):
@@ -83,7 +85,7 @@ def main():
     point_a2 = rhino3dm.Point3d(20, -6, 0)
     point_a3 = rhino3dm.Point3d(30, 8, 0)
 
-    send_point("point_a", point_a0)
+    send_point("point_a", point_a0, style={"rgb": [255, 96, 96]})
     time.sleep(0.25)
 
     send_curve(
@@ -96,10 +98,11 @@ def main():
                 (36, 4, 0),
             ]
         ),
+        style={"rgb": [255, 140, 0], "thickness": 5},
     )
     time.sleep(0.25)
 
-    send_point("point_a", (6, 18, 4))
+    send_point("point_a", (6, 18, 4), style={"rgb": [255, 180, 80]})
     time.sleep(0.25)
 
     send_curve(
@@ -112,10 +115,11 @@ def main():
                 (30, 12, 0),
             ]
         ),
+        style={"rgb": [64, 170, 255], "thickness": 2},
     )
     time.sleep(0.25)
 
-    send_point("point_b", (22, 6, 10))
+    send_point("point_b", (22, 6, 10), style={"rgb": [110, 255, 140]})
     time.sleep(0.25)
 
     send_curve(
@@ -129,6 +133,7 @@ def main():
                 (34, 4, -4),
             ]
         ),
+        style={"rgb": [140, 80, 255], "thickness": 7},
     )
     time.sleep(0.25)
 
@@ -143,6 +148,7 @@ def main():
                 (18, 12, 0),
             ]
         ),
+        style={"rgb": [40, 220, 220], "thickness": 4},
     )
     time.sleep(0.25)
 
@@ -152,6 +158,7 @@ def main():
             (4, -8, -2),
             (12, 0, 6),
         ),
+        style={"rgb": [70, 180, 255], "opacity": 0.55, "thickness": 3},
     )
 
 

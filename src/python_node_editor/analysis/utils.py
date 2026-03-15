@@ -7,7 +7,7 @@ from types import ModuleType
 from typing import Any
 
 from .functions_analysis import analyze_function
-from .types_analysis import merge_types_dict
+from .types_analysis import analyze_type, merge_types_dict
 from .user_model_functions import create_const_deconst_models
 
 
@@ -128,6 +128,18 @@ def analyze_file(file_path: str, function_names: set[str] | None = None):
             )
         funcs = {name: obj for name, obj in funcs.items() if name in function_names}
 
+    user_models = {}
+    if function_names is None:
+        from python_node_editor.schema_base import UserModel
+
+        user_models = {
+            name: obj
+            for name, obj in inspect.getmembers(module, inspect.isclass)
+            if (obj.__module__ == module_name or obj.__module__ == module.__name__)
+            and issubclass(obj, UserModel)
+            and obj is not UserModel
+        }
+
     functions_schemas_list = []
     callables_dict = {}
     types_dict = {}
@@ -144,6 +156,10 @@ def analyze_file(file_path: str, function_names: set[str] | None = None):
 
         # Merge the types found in this function into the file's types_dict
         merge_types_dict(types_dict, func_types)
+
+    for model_obj in user_models.values():
+        model_types = analyze_type(model_obj, file_path, vars(module))
+        merge_types_dict(types_dict, model_types)
 
     return functions_schemas_list, callables_dict, types_dict
 

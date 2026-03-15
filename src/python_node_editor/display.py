@@ -5,6 +5,7 @@ from typing import Any, Callable, TypeVar, cast
 from python_node_editor.execution.context import progress_context
 
 F = TypeVar("F", bound=Callable[..., Any])
+M = TypeVar("M", bound=type)
 
 
 def _handlers_to_dict(handlers):
@@ -20,6 +21,7 @@ def add_node_options(
     return_value_name: str | None = None,
     list_inputs: bool = False,
     dict_inputs: bool = False,
+    post_hook: Callable[..., Any] | None = None,
     cached_types: list | None = None,
     cached_handlers: list | dict | None = None,
 ):
@@ -37,6 +39,8 @@ def add_node_options(
             wrapper.list_inputs = list_inputs  # type: ignore
         if dict_inputs:
             wrapper.dict_inputs = dict_inputs  # type: ignore
+        if post_hook is not None:
+            wrapper.post_hook = post_hook  # type: ignore
         if cached_types is not None:
             wrapper._type_datamodel_mappings = cached_types  # type: ignore
         if cached_handlers is not None:
@@ -45,6 +49,26 @@ def add_node_options(
             wrapper._large_data_handlers = merged  # type: ignore
 
         return cast(F, wrapper)
+
+    return decorator
+
+
+def add_model_options(
+    construct_post_hook: Callable[..., Any] | None = None,
+    deconstruct_post_hook: Callable[..., Any] | None = None,
+):
+    def decorator(model_class: M) -> M:
+        from python_node_editor.schema_base import UserModel
+
+        if not isinstance(model_class, type) or not issubclass(model_class, UserModel):
+            raise TypeError("add_model_options can only decorate UserModel subclasses")
+
+        if construct_post_hook is not None:
+            model_class._construct_post_hook = construct_post_hook  # type: ignore[attr-defined]
+        if deconstruct_post_hook is not None:
+            model_class._deconstruct_post_hook = deconstruct_post_hook  # type: ignore[attr-defined]
+
+        return model_class
 
     return decorator
 

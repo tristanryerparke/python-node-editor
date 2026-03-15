@@ -73,6 +73,9 @@ def create_deconstruct_node(
 
     # Create the callable deconstructor function
     deconstructor_func = make_deconstructor(python_class, type_name, field_names)
+    deconstruct_post_hook = getattr(python_class, "_deconstruct_post_hook", None)
+    if deconstruct_post_hook is not None:
+        deconstructor_func.post_hook = deconstruct_post_hook  # type: ignore[attr-defined]
 
     # d(deconst_model)
 
