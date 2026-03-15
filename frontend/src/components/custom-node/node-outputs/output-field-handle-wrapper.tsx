@@ -1,6 +1,7 @@
 import { Handle, Position } from "@xyflow/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip";
-import OutputDisplay from "./output-field-display";
+import OutputFieldDisplay from "@/common/outputs/output-field-display";
+import OutputMenu from "./output-menu";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import InspectableFieldWrapper from "../../inspector-sidebar/inspectable-field-wrapper";
@@ -38,7 +39,11 @@ export default function OutputFieldHandleWrapper({
           <TooltipTrigger asChild>
             {/*The padding happens here*/}
             <div className="px-2 py-2">
-              <OutputDisplay fieldData={fieldData} path={path} />
+              <OutputFieldDisplay
+                fieldData={fieldData}
+                path={path}
+                menu={<OutputMenu path={path} fieldData={fieldData} />}
+              />
             </div>
           </TooltipTrigger>
           <TooltipContent side="right" sideOffset={2}>

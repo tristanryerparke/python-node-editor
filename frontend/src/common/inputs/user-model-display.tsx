@@ -16,6 +16,7 @@ export default function UserModelDisplay({
   // Use the xyflow hook to check if input is connected
   const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
   const connections = useNodeConnections({
+    id: String(path[0]),
     handleType: "target",
     handleId: handleId,
   });

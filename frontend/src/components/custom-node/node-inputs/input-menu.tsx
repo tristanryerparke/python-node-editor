@@ -5,15 +5,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
-import useTypesStore from "@/stores/typesStore";
+import { useInputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
+import UnionTypeMenuItems from "@/common/field-menu-items/union-type-menu-items";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
 
@@ -27,7 +24,6 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const getNodeData = useFlowStore((state) => state.getNodeData);
-  const types = useTypesStore((state) => state.types);
 
   const nodeId = path ? path[0] : undefined;
 
@@ -42,36 +38,14 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   // Handle union types - detect from fieldData
   const isUnionType =
     typeof fieldData.type === "object" && "anyOf" in fieldData.type;
-  const unionTypes =
+  const hasUnionTypes =
     isUnionType &&
     typeof fieldData.type === "object" &&
-    "anyOf" in fieldData.type
-      ? fieldData.type.anyOf
-      : undefined;
-  const selectedType =
-    fieldData._selectedType || (unionTypes ? unionTypes[0] : undefined);
-  const hasUnionTypes = unionTypes && unionTypes.length > 1;
+    "anyOf" in fieldData.type &&
+    fieldData.type.anyOf.length > 1;
 
   // Check if this type has an expandable area
-  const effectiveType = selectedType || fieldData.type;
-  const registryEntry =
-    typeof effectiveType === "string"
-      ? INPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
-      : undefined;
-
-  const hasRegistryExpandable = Boolean((registryEntry as { expandable?: true } | undefined)?.expandable);
-  const isUserModelType =
-    typeof effectiveType === "string" &&
-    Boolean(types[effectiveType] && types[effectiveType].kind === "user_model");
-  const hasGenericExpandable =
-    (typeof effectiveType === "object" &&
-      "structureType" in effectiveType &&
-      (effectiveType.structureType === "list" ||
-        effectiveType.structureType === "dict")) ||
-    (typeof effectiveType === "string" &&
-      !registryEntry &&
-      !isUserModelType);
-  const hasExpandable = hasRegistryExpandable || hasGenericExpandable;
+  const hasExpandable = useInputFieldExpandable(fieldData);
   const isExpanded = fieldData._expanded ?? false;
 
   // Detect if this is a dynamic list input
@@ -107,13 +81,6 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   if (!shouldShowMenu) {
     return null;
   }
-
-  const handleTypeChange = (newType: string) => {
-    if (path) {
-      void updateNodeData([...path, "_selectedType"], newType);
-    }
-    setOpen(false);
-  };
 
   const handleToggleExpanded = () => {
     if (!path) return;
@@ -200,20 +167,13 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
             {(hasUnionTypes || showDeleteButton) && <DropdownMenuSeparator />}
           </>
         )}
-        {hasUnionTypes && (
+        {hasUnionTypes && path && (
           <>
-            <DropdownMenuLabel>Input Type</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={selectedType}
-              onValueChange={handleTypeChange}
-            >
-              {unionTypes.map((type: string) => (
-                <DropdownMenuRadioItem key={type} value={type}>
-                  {type}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+            <UnionTypeMenuItems
+              fieldData={fieldData}
+              path={path}
+              onSelect={() => setOpen(false)}
+            />
             {showDeleteButton && <DropdownMenuSeparator />}
           </>
         )}

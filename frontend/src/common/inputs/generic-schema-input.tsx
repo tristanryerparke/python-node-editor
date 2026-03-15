@@ -10,8 +10,9 @@ import {
 import { SyncedWidthHandle } from "@/common/utility-components/synced-width-resizable";
 import { useInputField } from "@/hooks/useInputField";
 import { useControlledDebounce } from "@/hooks/useControlledDebounce";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
 import { cn } from "@/lib/utils";
-import useFlowStore, { useNodeData } from "@/stores/flowStore";
+import useFlowStore from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "@/types/types";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
@@ -126,16 +127,11 @@ const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView({
   const resolvedPlaceholder = placeholder ?? formatTypeForDisplay(inputData.type);
 
   const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({ handleType: "target", handleId });
+  const connections = useNodeConnections({ id: String(path[0]), handleType: "target", handleId });
   const isConnected =
     connections.length > 0 && connections[0].targetHandle === handleId;
 
-  const storedHeight = useNodeData([...path, "_expandedHeight"]) as
-    | number
-    | undefined;
-  const height = storedHeight ?? DEFAULT_AND_MIN_HEIGHT;
-  const setHeight = (newHeight: number) =>
-    void updateNodeData([...path, "_expandedHeight"], newHeight);
+  const { height, setHeight } = useResizableHeight(path, DEFAULT_AND_MIN_HEIGHT);
 
   return (
     <div className="flex flex-col nodrag nopan nowheel">

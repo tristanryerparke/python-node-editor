@@ -40,7 +40,7 @@ const InputStringArea = memo(function InputStringArea({
   }, [value, inputData.type]);
 
   const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({ handleType: "target", handleId });
+  const connections = useNodeConnections({ id: String(path[0]), handleType: "target", handleId });
   const isConnected =
     connections.length > 0 && connections[0].targetHandle === handleId;
 

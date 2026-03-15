@@ -1,8 +1,12 @@
 import { Handle, Position } from "@xyflow/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip";
-import InputFieldDisplay from "./input-field-display";
+import InputFieldDisplay from "@/common/inputs/input-field-display";
+import InputMenu from "./input-menu";
+import EditableKey from "./dynamic/editable-key";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
+import { useNodeData } from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
+import type { StructDescr } from "@/types/backend-schema";
 import InspectableFieldWrapper from "../../inspector-sidebar/inspectable-field-wrapper";
 
 interface NodeInputFieldProps {
@@ -15,6 +19,14 @@ export default function InputFieldHandleWrapper({
   path,
 }: NodeInputFieldProps) {
   // A Wrapper component for rendering an input field on a node with a handle and type tooltip
+  const nodeId = path[0];
+  const dynamicInputType = useNodeData([nodeId, "dynamicInputType"]) as
+    | StructDescr
+    | null
+    | undefined;
+  const isDynamicDictInput =
+    fieldData?._dynamicInputType === "dict" &&
+    dynamicInputType?.structureType === "dict";
 
   const handleId = `${path.join(":")}:handle`;
 
@@ -38,7 +50,16 @@ export default function InputFieldHandleWrapper({
           <TooltipTrigger asChild>
             {/*The padding happens here*/}
             <div className="px-2 py-2">
-              <InputFieldDisplay fieldData={fieldData} path={path} />
+              <InputFieldDisplay
+                fieldData={fieldData}
+                path={path}
+                menu={<InputMenu path={path} fieldData={fieldData} />}
+                renderFieldName={
+                  isDynamicDictInput
+                    ? (name) => <EditableKey fieldName={name} path={path} />
+                    : undefined
+                }
+              />
             </div>
           </TooltipTrigger>
           <TooltipContent side="left" sideOffset={2}>

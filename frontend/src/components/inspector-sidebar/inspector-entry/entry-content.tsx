@@ -52,7 +52,7 @@ export default function EntryContent({ entry }: EntryContentProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 px-2 overflow-hidden pb-1">
+    <div className="flex flex-col gap-2 px-2 overflow-hidden">
       <div
         className={cn("flex flex-col gap-1", !showInspectorPaths && "pt-1")}
       >

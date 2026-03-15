@@ -1,4 +1,16 @@
-import type { InspectorEntryState } from "@/stores/inspectorStore";
+import type { InspectorEntryState, InspectorTarget } from "@/stores/inspectorStore";
+
+export function isFieldTarget(target: InspectorTarget | null): boolean {
+  if (!target) return false;
+  return (
+    target.path.length === 3 &&
+    (target.path[1] === "arguments" || target.path[1] === "outputs")
+  );
+}
+
+export function isInputFieldTarget(target: InspectorTarget): boolean {
+  return target.path[1] === "arguments";
+}
 
 export function formatInspectorTargetSummary(
   nodeId: string,

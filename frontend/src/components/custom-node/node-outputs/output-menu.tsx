@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import useFlowStore from "../../../stores/flowStore";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { useOutputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 
 interface OutputMenuProps {
@@ -21,31 +21,11 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
 
-  // Handle union types - detect from fieldData
-  const isUnionType =
-    typeof fieldData.type === "object" && "anyOf" in fieldData.type;
-  const selectedType =
-    fieldData._selectedType ||
-    (isUnionType &&
-    typeof fieldData.type === "object" &&
-    "anyOf" in fieldData.type
-      ? fieldData.type.anyOf[0]
-      : undefined);
-
-  // Check if this type has an expandable area
-  const effectiveType = selectedType || fieldData.type;
-  const registryEntry =
-    typeof effectiveType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
-      : undefined;
-  const hasExpandable = (registryEntry as { expandable?: true } | undefined)?.expandable;
+  const hasExpandable = useOutputFieldExpandable(fieldData);
   const isExpanded = fieldData._expanded ?? false;
 
   // Only show menu if there's something expandable
-  const shouldShowMenu = hasExpandable;
-
-  // Return null if there's nothing to show in the menu
-  if (!shouldShowMenu) {
+  if (!hasExpandable) {
     return null;
   }
 

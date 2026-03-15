@@ -57,6 +57,7 @@ export function useInputField<T = unknown>(
 
   const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
   const connections = useNodeConnections({
+    id: String(path[0]),
     handleType: "target",
     handleId,
   });

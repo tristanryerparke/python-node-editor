@@ -6,6 +6,7 @@ import DeleteEntryDialog from "./delete-entry-dialog";
 import EntryContent from "./entry-content";
 import EntryHeader from "./entry-header";
 import RenameEntryDialog from "./rename-entry-dialog";
+import { isFieldTarget } from "./shared";
 
 interface InspectorEntryProps {
   entryId: string;
@@ -29,18 +30,26 @@ export default function InspectorEntry({
 
   const entryPath: InspectorPathSegment[] = [entryId];
   const isSelecting = activeSelectingEntryId === entryId;
+  const isRichField =
+    entry.viewMode === "rich" && isFieldTarget(entry.selectedTarget);
 
   return (
-    <div className="w-full border-b border-input overflow-hidden shrink-0 pb-1">
-      <EntryHeader
-        entry={entry}
-        entryPath={entryPath}
-        index={index}
-        isSelecting={isSelecting}
-        onOpenRenameDialog={() => setIsRenameDialogOpen(true)}
-        onOpenDeleteDialog={() => setIsDeleteDialogOpen(true)}
-      />
-      {entry.isExpanded ? <EntryContent entry={entry} /> : null}
+    <div className="w-full border-b border-input overflow-hidden shrink-0">
+      <div
+        className={`flex flex-row gap-1 px-2 py-2 ${
+          isRichField ? "items-start" : "items-center"
+        }`}
+      >
+        <EntryHeader
+          entry={entry}
+          entryPath={entryPath}
+          index={index}
+          isSelecting={isSelecting}
+          onOpenRenameDialog={() => setIsRenameDialogOpen(true)}
+          onOpenDeleteDialog={() => setIsDeleteDialogOpen(true)}
+        />
+      </div>
+      {entry.isExpanded && !isRichField ? <EntryContent entry={entry} /> : null}
       <RenameEntryDialog
         entry={entry}
         entryPath={entryPath}

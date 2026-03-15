@@ -7,6 +7,7 @@ import {
   useMemo,
 } from "react";
 import useFlowStore from "@/stores/flowStore";
+import { useFieldRenderContext } from "@/common/field-render-context";
 
 // Tailwind spacing scale: 1 unit = 0.25rem = 4px
 const TAILWIND_UNIT = 4;
@@ -46,6 +47,7 @@ export function ResizableHeight({
   const startHeightRef = useRef(0);
   const currentDragHeightRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fieldCtx = useFieldRenderContext();
   const viewportZoom = useFlowStore((state) => state.viewport.zoom);
 
   // Determine if component is controlled
@@ -65,9 +67,12 @@ export function ResizableHeight({
     if (dragMultiplier !== undefined) {
       return dragMultiplier;
     }
+    if (fieldCtx?.mode === "inspector") {
+      return 1;
+    }
     const safeZoom = viewportZoom || 1;
     return safeZoom === 0 ? 1 : 1 / safeZoom;
-  }, [dragMultiplier, viewportZoom]);
+  }, [dragMultiplier, fieldCtx?.mode, viewportZoom]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

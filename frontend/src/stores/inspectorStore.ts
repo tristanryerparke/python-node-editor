@@ -20,6 +20,7 @@ export interface InspectorEntryState {
   isExpanded: boolean;
   customName?: string | null;
   selectedTarget: InspectorTarget | null;
+  viewMode: "json" | "rich";
 }
 
 type InspectorStoreState = {
@@ -61,6 +62,7 @@ const createInspectorEntry = (
   isExpanded: true,
   customName: null,
   selectedTarget,
+  viewMode: "json",
 });
 
 function findInspectorEntryIndexById(
@@ -207,7 +209,7 @@ const useInspectorStore = createWithEqualityFn<
     }),
     {
       name: "inspector-storage",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       migrate: (persistedState, version) => {
         if (version < 2) {
@@ -218,6 +220,17 @@ const useInspectorStore = createWithEqualityFn<
             entries: selectedTarget ? [createInspectorEntry(selectedTarget)] : [],
             activeSelectingEntryId: null,
             showBorders: legacyState.showBorders ?? true,
+          };
+        }
+
+        if (version < 3) {
+          const state = persistedState as { entries?: InspectorEntryState[] };
+          return {
+            ...state,
+            entries: (state.entries ?? []).map((entry) => ({
+              ...entry,
+              viewMode: entry.viewMode ?? "json",
+            })),
           };
         }
 
