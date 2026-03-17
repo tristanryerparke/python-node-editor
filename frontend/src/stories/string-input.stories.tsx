@@ -23,11 +23,11 @@ function StringInputStory({
   height = 30,
   onWidthChange,
   onHeightChange,
-  onValueCommit,
+  onValueChange,
 }: StringInputStoryArgs & {
   onWidthChange: (width: number) => void;
   onHeightChange: (height: number) => void;
-  onValueCommit: (value: string) => void;
+  onValueChange: (value: string) => void;
 }) {
   const [localValue, setLocalValue] = useState(value);
 
@@ -45,8 +45,11 @@ function StringInputStory({
         <div>
           <StringInput
             value={localValue}
-            onChange={setLocalValue}
-            onCommit={onValueCommit}
+            onChange={(nextValue) => {
+              const nextStringValue = nextValue as string;
+              setLocalValue(nextStringValue);
+              onValueChange(nextStringValue);
+            }}
             disabled={disabled}
             valid={valid}
             expanded={expanded}
@@ -113,7 +116,7 @@ export const Playground: Story = {
         height={args.height}
         onWidthChange={(width) => updateArgs({ width })}
         onHeightChange={(height) => updateArgs({ height })}
-        onValueCommit={(value) => updateArgs({ value })}
+        onValueChange={(value) => updateArgs({ value })}
       />
     );
   }
@@ -146,7 +149,7 @@ export const TextOverflow: Story = {
         onHeightChange={height => updateArgs({
           height
         })}
-        onValueCommit={value => updateArgs({
+        onValueChange={value => updateArgs({
           value
         })} />
     );

@@ -1,35 +1,16 @@
-import { memo, type NamedExoticComponent } from "react";
+import { memo } from "react";
 import { StringArea } from "../utility-components/string-area";
+import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
 import { Input } from "@/components/ui/input";
-import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
 import { cn } from "@/lib/utils";
 
-export interface StringInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  onCommit?: (value: string) => void;
-  disabled: boolean;
-  valid?: boolean;
-  expanded?: boolean;
+export interface StringInputProps extends ControlledInputProps {
   placeholder?: string;
 }
 
-type CombinedStringInputProps = StringInputProps | CustomInputProps;
-
-type StringInputComponent = NamedExoticComponent<CombinedStringInputProps> & {
-  expandable: true;
-};
-
-function isCustomInputProps(
-  props: CombinedStringInputProps,
-): props is CustomInputProps {
-  return "inputData" in props;
-}
-
-const ControlledStringInput = memo(function ControlledStringInput({
+const StringInput = memo(function StringInput({
   value,
   onChange,
-  onCommit,
   disabled,
   valid = true,
   expanded = false,
@@ -38,9 +19,8 @@ const ControlledStringInput = memo(function ControlledStringInput({
   if (expanded) {
     return (
       <StringArea
-        value={value}
+        value={value as string}
         onChange={onChange}
-        onCommit={onCommit}
         editable={true}
         placeholder={placeholder}
         isInvalid={!valid}
@@ -53,9 +33,8 @@ const ControlledStringInput = memo(function ControlledStringInput({
     <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
       <Input
         type="text"
-        value={value}
+        value={value as string}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onCommit ? (e) => onCommit(e.target.value) : undefined}
         disabled={disabled}
         className={cn(
           "nodrag nopan nowheel",
@@ -66,34 +45,5 @@ const ControlledStringInput = memo(function ControlledStringInput({
     </div>
   );
 });
-
-const StoreBackedStringInput = memo(function StoreBackedStringInput({
-  inputData,
-  path,
-  disabled,
-}: CustomInputProps) {
-  const { value, setValue } = useInputField<string>(inputData, path);
-
-  return (
-    <ControlledStringInput
-      value={typeof value === "string" ? value : ""}
-      onChange={(nextValue) => {
-        void setValue(nextValue);
-      }}
-      disabled={disabled}
-      expanded={inputData._expanded ?? false}
-    />
-  );
-});
-
-const StringInput = memo(function StringInput(props: CombinedStringInputProps) {
-  if (isCustomInputProps(props)) {
-    return <StoreBackedStringInput {...props} />;
-  }
-
-  return <ControlledStringInput {...props} />;
-}) as StringInputComponent;
-
-StringInput.expandable = true;
 
 export default StringInput;

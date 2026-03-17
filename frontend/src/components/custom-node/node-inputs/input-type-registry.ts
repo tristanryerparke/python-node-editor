@@ -3,12 +3,12 @@ import FloatInput from "../../../common/inputs/float-input";
 import IntInput from "../../../common/inputs/int-input";
 import StringInput from "../../../common/inputs/string-input";
 import ImageInput from "../../../common/inputs/image-input";
-import type { CustomInputProps } from "@/hooks/useInputField";
+import type { ControlledInputProps } from "./input-field-display";
 
 export const INPUT_TYPE_COMPONENT_REGISTRY: Record<
   string,
   {
-    component: ComponentType<CustomInputProps>;
+    component: ComponentType<ControlledInputProps>;
     expandable: boolean;
   }
 > = {

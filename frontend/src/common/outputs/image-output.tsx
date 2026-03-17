@@ -5,6 +5,8 @@ import {
   getCacheKeyFromValue,
   isCachedValueReference,
 } from "../../utils/large-data-utils";
+import { ResizableHeightProvider } from "../utility-components/resizable-height";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
 
 const DEFAULT_PREVIEW_HEIGHT = 60;
 
@@ -22,6 +24,7 @@ const ExpandedImageOutput = memo(function ExpandedImageOutput({
   outputData,
   path,
 }: ImageOutputProps) {
+  const { height, setHeight } = useResizableHeight(path, DEFAULT_PREVIEW_HEIGHT);
   const imageValue = isCachedValueReference(outputData?.value)
     ? outputData.value
     : undefined;
@@ -39,11 +42,9 @@ const ExpandedImageOutput = memo(function ExpandedImageOutput({
         content={cacheKey ? displayName : "No image"}
         dimmed={!cacheKey}
       />
-      <ImagePreview
-        preview={preview}
-        path={path}
-        defaultHeight={DEFAULT_PREVIEW_HEIGHT}
-      />
+      <ResizableHeightProvider height={height} setHeight={setHeight}>
+        <ImagePreview preview={preview} />
+      </ResizableHeightProvider>
     </div>
   );
 });

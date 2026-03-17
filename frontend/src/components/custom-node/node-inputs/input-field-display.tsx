@@ -1,4 +1,4 @@
-import { memo, type ComponentType } from "react";
+import { memo } from "react";
 import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
@@ -7,10 +7,11 @@ import UserModelDisplay from "../../../common/inputs/user-model-display";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";
-import type { CustomInputProps } from "@/hooks/useInputField";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
+import { useInputField } from "@/hooks/useInputField";
+import { formatTypeForDisplay } from "@/utils/type-formatting";
 
 const DEFAULT_INPUT_HEIGHT = 30;
 
@@ -20,11 +21,20 @@ interface InputFieldDisplayProps {
   disabled: boolean;
 }
 
+export interface ControlledInputProps {
+  value: unknown;
+  onChange: (value: unknown, debounce?: number) => Promise<void> | void;
+  disabled: boolean;
+  expanded?: boolean;
+  valid?: boolean;
+}
+
 export default memo(function InputFieldDisplay({
   fieldData,
   path,
   disabled,
 }: InputFieldDisplayProps) {
+  const { value, setValue } = useInputField(fieldData, path);
   const types = useTypesStore((state) => state.types);
   const { height, setHeight } = useResizableHeight(path, DEFAULT_INPUT_HEIGHT);
   const nodeId = path[0];
@@ -58,53 +68,65 @@ export default memo(function InputFieldDisplay({
   const typeInfo =
     typeof actualType === "string" ? types[actualType] : undefined;
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
-  const resolvedFieldData = { ...fieldData, type: actualType };
-  const componentEntry = isUserModel
-    ? undefined
-    : registryEntry ?? {
-        component: GenericSchemaInput as ComponentType<CustomInputProps>,
-        expandable: true,
-      };
+  const typeName = formatTypeForDisplay(actualType);
+
+  const controlledProps: ControlledInputProps = {
+    value,
+    onChange: setValue,
+    disabled,
+    expanded: isExpanded,
+  };
 
   const renderMainInput = () => {
-    if (componentEntry) {
-      if (isExpanded && componentEntry.expandable) {
+    if (isUserModel) {
+      return (
+        <UserModelDisplay
+          value={value}
+          disabled={disabled}
+          typeName={typeName}
+        />
+      );
+    }
+
+    if (registryEntry) {
+      if (isExpanded && registryEntry.expandable) {
         return <div className="flex flex-1 min-h-8" />;
       }
 
-      const Component = componentEntry.component;
-      return (
-        <Component
-          inputData={resolvedFieldData}
-          path={path}
-          disabled={disabled}
-        />
-      );
+      const Component = registryEntry.component;
+      return <Component {...controlledProps} />;
     }
 
-    if (isUserModel && typeInfo) {
-      return (
-        <UserModelDisplay
-          inputData={resolvedFieldData}
-          path={path}
-          disabled={disabled}
-          typeInfo={typeInfo}
-        />
-      );
+    if (isExpanded) {
+      return <div className="flex flex-1 min-h-8" />;
     }
 
-    return null;
+    return (
+      <GenericSchemaInput
+        {...controlledProps}
+        schema={actualType}
+        placeholder={typeName}
+      />
+    );
   };
 
   const renderExpandedContent = () => {
-    if (componentEntry?.expandable && isExpanded) {
-      const Component = componentEntry.component;
+    if (registryEntry?.expandable && isExpanded) {
+      const Component = registryEntry.component;
       return (
         <div className="flex-1">
-          <Component
-            inputData={resolvedFieldData}
-            path={path}
-            disabled={disabled}
+          <Component {...controlledProps} />
+        </div>
+      );
+    }
+
+    if (!registryEntry && !isUserModel && isExpanded) {
+      return (
+        <div className="flex-1">
+          <GenericSchemaInput
+            {...controlledProps}
+            schema={actualType}
+            placeholder={typeName}
           />
         </div>
       );

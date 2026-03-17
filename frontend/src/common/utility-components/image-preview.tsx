@@ -5,7 +5,6 @@ import {
   ResizableHeightHandle,
 } from "./resizable-height";
 import { SyncedWidthHandle } from "./synced-width-resizable";
-import { useResizableHeight } from "@/hooks/useResizableHeight";
 
 const DEFAULT_MIN_HEIGHT = 60;
 const DEFAULT_MAX_HEIGHT = 200;
@@ -13,24 +12,17 @@ const DEFAULT_MAX_HEIGHT = 200;
 export interface ImagePreviewProps {
   /** base64-encoded webp thumbnail string */
   preview?: string;
-  path: (string | number)[];
-  defaultHeight?: number;
   minHeight?: number;
   maxHeight?: number;
 }
 
 export default memo(function ImagePreview({
   preview,
-  path,
-  defaultHeight = DEFAULT_MIN_HEIGHT,
   minHeight = DEFAULT_MIN_HEIGHT,
   maxHeight = DEFAULT_MAX_HEIGHT,
 }: ImagePreviewProps) {
-  const { height, setHeight } = useResizableHeight(path, defaultHeight);
   return (
     <ResizableHeight
-      height={height}
-      setHeight={setHeight}
       minHeight={minHeight}
       maxHeight={maxHeight}
       useTailwindScale={true}

@@ -1,39 +1,18 @@
-import { memo, useEffect, useRef, useState, type NamedExoticComponent } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
-import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
 import { ErrorDialog } from "../utility-components/error-dialog";
 import ImagePreview from "../utility-components/image-preview";
 import { isCachedValueReference } from "@/utils/large-data-utils";
+import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
 
-const DEFAULT_PREVIEW_HEIGHT = 60;
+export interface ImageInputProps extends ControlledInputProps {}
 
-export interface ImageInputProps {
-  value: unknown;
-  onChange: (value: File | null) => Promise<void> | void;
-  disabled: boolean;
-  expanded?: boolean;
-  path?: (string | number)[];
-}
-
-type CombinedImageInputProps = ImageInputProps | CustomInputProps;
-
-type ImageInputComponent = NamedExoticComponent<CombinedImageInputProps> & {
-  expandable: true;
-};
-
-function isCustomInputProps(
-  props: CombinedImageInputProps,
-): props is CustomInputProps {
-  return "inputData" in props;
-}
-
-const ControlledImageInput = memo(function ControlledImageInput({
+const ImageInput = memo(function ImageInput({
   value,
   onChange,
   disabled,
   expanded = false,
-  path,
 }: ImageInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -55,13 +34,13 @@ const ControlledImageInput = memo(function ControlledImageInput({
       .then((response) => response.json())
       .then((data) => {
         if (!data.exists) {
-          void Promise.resolve(onChange(null));
+          void Promise.resolve(onChange(null, 0));
         }
       })
       .catch((error) => {
         console.error("Error checking cache key:", error);
       });
-  }, []); // Only run on mount
+  }, [cacheKey, onChange]);
 
   const hasImage = !!cacheKey;
   const imageForPreview = isCachedValueReference(value) ? value : undefined;
@@ -86,7 +65,7 @@ const ControlledImageInput = memo(function ControlledImageInput({
     if (!file) return;
     setUploading(true);
     try {
-      await onChange(file);
+      await onChange(file, 0);
     } catch (error) {
       console.error("Error uploading image:", error);
       setErrorMessage(
@@ -151,13 +130,7 @@ const ControlledImageInput = memo(function ControlledImageInput({
       {expanded ? (
         <div className="flex flex-col flex-1 gap-1.5 nodrag nopan nowheel">
           <div className="flex flex-1 min-w-35">{filePicker}</div>
-          {path ? (
-            <ImagePreview
-              preview={preview}
-              path={path}
-              defaultHeight={DEFAULT_PREVIEW_HEIGHT}
-            />
-          ) : null}
+          <ImagePreview preview={preview} />
         </div>
       ) : (
         <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
@@ -173,33 +146,5 @@ const ControlledImageInput = memo(function ControlledImageInput({
     </>
   );
 });
-
-const StoreBackedImageInput = memo(function StoreBackedImageInput({
-  inputData,
-  path,
-  disabled,
-}: CustomInputProps) {
-  const { value, setValue } = useInputField(inputData, path);
-
-  return (
-    <ControlledImageInput
-      value={value}
-      onChange={(nextValue) => setValue(nextValue, 0)}
-      disabled={disabled}
-      expanded={inputData._expanded ?? false}
-      path={path}
-    />
-  );
-});
-
-const ImageInput = memo(function ImageInput(props: CombinedImageInputProps) {
-  if (isCustomInputProps(props)) {
-    return <StoreBackedImageInput {...props} />;
-  }
-
-  return <ControlledImageInput {...props} />;
-}) as ImageInputComponent;
-
-ImageInput.expandable = true;
 
 export default ImageInput;
