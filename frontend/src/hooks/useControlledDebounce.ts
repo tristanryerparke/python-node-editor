@@ -9,13 +9,14 @@ import { useDebounceCallback } from "usehooks-ts";
  * @param externalValue - The value from an external source (props, store, etc)
  * @param onDebouncedChange - Callback when user input is debounced
  * @param delay - Debounce delay in milliseconds
- * @returns [currentValue, setValue] - Current display value and setter for user input
+ * @returns [currentValue, setValue, commitValue] - Current display value, debounced setter,
+ * and immediate setter for commit events such as blur.
  */
 export function useControlledDebounce<T>(
   externalValue: T,
   onDebouncedChange: (value: T) => void,
   delay: number = 200,
-): [T, (value: T) => void] {
+): [T, (value: T) => void, (value: T) => void] {
   // Track the local value for user typing
   const [localValue, setLocalValue] = useState<T>(externalValue);
 
@@ -57,5 +58,16 @@ export function useControlledDebounce<T>(
     [debouncedCallback],
   );
 
-  return [localValue, setValue];
+  const commitValue = useCallback(
+    (value: T) => {
+      debouncedCallback.cancel();
+      setLocalValue(value);
+      lastCallbackValue.current = value;
+      isUserTyping.current = false;
+      onDebouncedChange(value);
+    },
+    [debouncedCallback, onDebouncedChange],
+  );
+
+  return [localValue, setValue, commitValue];
 }
