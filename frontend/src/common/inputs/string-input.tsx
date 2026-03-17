@@ -1,17 +1,8 @@
-import { memo, useMemo, type NamedExoticComponent } from "react";
-import useFlowStore from "../../stores/flowStore";
-import { GenericSchemaCompactView } from "./generic-schema-input";
-import { StringAreaView } from "../utility-components/string-area";
-import { useControlledDebounce } from "@/hooks/useControlledDebounce";
+import { memo, type NamedExoticComponent } from "react";
+import { StringArea } from "../utility-components/string-area";
+import { Input } from "@/components/ui/input";
 import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
-import { useResizableHeight } from "@/hooks/useResizableHeight";
-import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
-
-const encodeAsJsonString = (value: string) => JSON.stringify(value);
-const valueToPlainText = (value: unknown): string =>
-  typeof value === "string" ? value : "";
-
-const DEFAULT_HEIGHT = 30;
+import { cn } from "@/lib/utils";
 
 export interface StringInputProps {
   value: string;
@@ -20,18 +11,16 @@ export interface StringInputProps {
   disabled: boolean;
   valid?: boolean;
   expanded?: boolean;
-  height: number;
-  setHeight: (height: number) => void;
+  placeholder?: string;
 }
-
-type StringInputComponent = NamedExoticComponent<StringInputProps> &
-  NamedExoticComponent<CustomInputProps> & {
-    expandable: true;
-  };
 
 type CombinedStringInputProps = StringInputProps | CustomInputProps;
 
-function isNodeInputProps(
+type StringInputComponent = NamedExoticComponent<CombinedStringInputProps> & {
+  expandable: true;
+};
+
+function isCustomInputProps(
   props: CombinedStringInputProps,
 ): props is CustomInputProps {
   return "inputData" in props;
@@ -44,18 +33,16 @@ const ControlledStringInput = memo(function ControlledStringInput({
   disabled,
   valid = true,
   expanded = false,
-  height,
-  setHeight,
+  placeholder = "Enter string",
 }: StringInputProps) {
   if (expanded) {
     return (
-      <StringAreaView
+      <StringArea
         value={value}
         onChange={onChange}
         onCommit={onCommit}
         editable={true}
-        height={height}
-        setHeight={setHeight}
+        placeholder={placeholder}
         isInvalid={!valid}
         disabled={disabled}
       />
@@ -63,108 +50,45 @@ const ControlledStringInput = memo(function ControlledStringInput({
   }
 
   return (
-    <GenericSchemaCompactView
-      value={value}
-      onChange={onChange}
-      onCommit={onCommit}
-      disabled={disabled}
-      valid={valid}
-      placeholder="Enter text"
-    />
+    <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
+      <Input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onCommit ? (e) => onCommit(e.target.value) : undefined}
+        disabled={disabled}
+        className={cn(
+          "nodrag nopan nowheel",
+          !valid && "border-destructive focus-visible:border-destructive",
+        )}
+        placeholder={placeholder}
+      />
+    </div>
   );
 });
 
-const ExpandedStringInput = memo(function ExpandedStringInput({
+const StoreBackedStringInput = memo(function StoreBackedStringInput({
   inputData,
   path,
   disabled,
 }: CustomInputProps) {
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
-  const externalValue = valueToPlainText(inputData.value);
-  const { height, setHeight } = useResizableHeight(path, DEFAULT_HEIGHT);
-
-  const [value, setValue, commitValue] = useControlledDebounce(
-    externalValue,
-    (debouncedValue) => {
-      const rawInput = encodeAsJsonString(debouncedValue);
-      const validationResult = validateInputAgainstSchema(rawInput, inputData.type);
-      const valueToStore = validationResult.valid
-        ? validationResult.value
-        : debouncedValue;
-      void updateNodeData([...path, "value"], valueToStore, { fromUser: true });
-    },
-    200,
-  );
-
-  const isValid = useMemo(() => {
-    const rawInput = encodeAsJsonString(value);
-    return validateInputAgainstSchema(rawInput, inputData.type).valid;
-  }, [value, inputData.type]);
+  const { value, setValue } = useInputField<string>(inputData, path);
 
   return (
     <ControlledStringInput
-      value={value}
-      onChange={setValue}
-      onCommit={commitValue}
+      value={typeof value === "string" ? value : ""}
+      onChange={(nextValue) => {
+        void setValue(nextValue);
+      }}
       disabled={disabled}
-      valid={isValid}
-      expanded={true}
-      height={height}
-      setHeight={setHeight}
-    />
-  );
-});
-
-const CompactStringInput = memo(function CompactStringInput({
-  inputData,
-  path,
-  disabled,
-}: CustomInputProps) {
-  const { value, setValue } = useInputField(inputData, path);
-  const displayValue = valueToPlainText(value);
-  const isValid = useMemo(() => {
-    const rawInput = encodeAsJsonString(displayValue);
-    return validateInputAgainstSchema(rawInput, inputData.type).valid;
-  }, [displayValue, inputData.type]);
-
-  const handleChange = (nextValue: string) => {
-    const rawInput = encodeAsJsonString(nextValue);
-    const validationResult = validateInputAgainstSchema(rawInput, inputData.type);
-    const valueToStore = validationResult.valid
-      ? validationResult.value
-      : nextValue;
-    void setValue(valueToStore);
-  };
-
-  const handleCommit = (nextValue: string) => {
-    const rawInput = encodeAsJsonString(nextValue);
-    const validationResult = validateInputAgainstSchema(rawInput, inputData.type);
-    const valueToStore = validationResult.valid
-      ? validationResult.value
-      : nextValue;
-    void setValue(valueToStore, 0);
-  };
-
-  return (
-    <ControlledStringInput
-      value={displayValue}
-      onChange={handleChange}
-      onCommit={handleCommit}
-      disabled={disabled}
-      valid={isValid}
-      height={DEFAULT_HEIGHT}
-      setHeight={() => {}}
+      expanded={inputData._expanded ?? false}
     />
   );
 });
 
 const StringInput = memo(function StringInput(props: CombinedStringInputProps) {
-  if (isNodeInputProps(props)) {
-    if (props.inputData._expanded) {
-      return <ExpandedStringInput {...props} />;
-    }
-
-    return <CompactStringInput {...props} />;
+  if (isCustomInputProps(props)) {
+    return <StoreBackedStringInput {...props} />;
   }
 
   return <ControlledStringInput {...props} />;

@@ -7,12 +7,8 @@ import {
   ResizableHeightHandle,
 } from "@/common/utility-components/resizable-height";
 import { SyncedWidthHandle } from "@/common/utility-components/synced-width-resizable";
-import { useInputField } from "@/hooks/useInputField";
-import { useControlledDebounce } from "@/hooks/useControlledDebounce";
-import { useResizableHeight } from "@/hooks/useResizableHeight";
+import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
 import { cn } from "@/lib/utils";
-import useFlowStore from "@/stores/flowStore";
-import type { FrontendFieldDataWrapper } from "@/types/types";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 
@@ -22,25 +18,30 @@ export type ValueToDisplay = (value: unknown) => string;
 export interface ControlledTextInputProps {
   value: string;
   onChange: (value: string) => void;
-  onCommit?: (value: string) => void;
   disabled: boolean;
-  valid: boolean;
+  valid?: boolean;
   placeholder?: string;
 }
 
-export interface ControlledExpandedTextInputProps
+export interface ControlledGenericSchemaInputProps
   extends ControlledTextInputProps {
-  height: number;
-  setHeight: (height: number) => void;
+  expanded?: boolean;
 }
 
-interface GenericSchemaInputProps {
-  inputData: FrontendFieldDataWrapper;
-  path: (string | number)[];
-  disabled: boolean;
+interface StoreBackedGenericSchemaInputProps extends CustomInputProps {
   placeholder?: string;
   displayToRawInput?: DisplayToRawInput;
   valueToDisplay?: ValueToDisplay;
+}
+
+type CombinedGenericSchemaInputProps =
+  | ControlledGenericSchemaInputProps
+  | StoreBackedGenericSchemaInputProps;
+
+function isCustomInputProps(
+  props: CombinedGenericSchemaInputProps,
+): props is StoreBackedGenericSchemaInputProps {
+  return "inputData" in props;
 }
 
 export const defaultValueToDisplay: ValueToDisplay = (value) => {
@@ -67,9 +68,8 @@ const MAX_HEIGHT = 200;
 export const GenericSchemaCompactView = memo(function GenericSchemaCompactView({
   value,
   onChange,
-  onCommit,
   disabled,
-  valid,
+  valid = true,
   placeholder,
 }: ControlledTextInputProps) {
   return (
@@ -78,7 +78,6 @@ export const GenericSchemaCompactView = memo(function GenericSchemaCompactView({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onCommit ? (e) => onCommit(e.target.value) : undefined}
         disabled={disabled}
         className={cn(
           "nodrag nopan nowheel",
@@ -93,18 +92,13 @@ export const GenericSchemaCompactView = memo(function GenericSchemaCompactView({
 export const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView({
   value,
   onChange,
-  onCommit,
   disabled,
-  valid,
+  valid = true,
   placeholder,
-  height,
-  setHeight,
-}: ControlledExpandedTextInputProps) {
+}: ControlledTextInputProps) {
   return (
     <div className="flex flex-col nodrag nopan nowheel">
       <ResizableHeight
-        height={height}
-        setHeight={setHeight}
         minHeight={DEFAULT_AND_MIN_HEIGHT}
         maxHeight={MAX_HEIGHT}
         useTailwindScale={true}
@@ -118,7 +112,6 @@ export const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView
           <Textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            onBlur={onCommit ? (e) => onCommit(e.target.value) : undefined}
             disabled={disabled}
             className={cn(
               "nodrag nopan nowheel border-none px-2 py-1",
@@ -145,63 +138,45 @@ export const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView
   );
 });
 
-const ExpandedGenericSchemaInput = memo(function ExpandedGenericSchemaInput({
-  inputData,
-  path,
+const ControlledGenericSchemaInput = memo(function ControlledGenericSchemaInput({
+  value,
+  onChange,
   disabled,
+  valid = true,
+  expanded = false,
   placeholder,
-  displayToRawInput,
-  valueToDisplay,
-}: GenericSchemaInputProps) {
-  const resolvedPlaceholder = placeholder ?? formatTypeForDisplay(inputData.type);
-  const updateNodeData = useFlowStore((state) => state.updateNodeData);
-  const { height, setHeight } = useResizableHeight(path, DEFAULT_AND_MIN_HEIGHT);
-  const externalValue = valueToDisplay
-    ? valueToDisplay(inputData.value)
-    : defaultValueToDisplay(inputData.value);
-
-  const [value, setValue, commitValue] = useControlledDebounce(
-    externalValue,
-    (debouncedValue) => {
-      const rawInput = (displayToRawInput ?? defaultDisplayToRawInput)(
-        debouncedValue,
-      );
-      const validationResult = validateInputAgainstSchema(rawInput, inputData.type);
-      const valueToStore = validationResult.valid
-        ? validationResult.value
-        : debouncedValue;
-      void updateNodeData([...path, "value"], valueToStore, { fromUser: true });
-    },
-    200,
-  );
-
-  const validationResult = useMemo(() => {
-    const rawInput = (displayToRawInput ?? defaultDisplayToRawInput)(value);
-    return validateInputAgainstSchema(rawInput, inputData.type);
-  }, [displayToRawInput, inputData.type, value]);
+}: ControlledGenericSchemaInputProps) {
+  if (expanded) {
+    return (
+      <GenericSchemaExpandedView
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        valid={valid}
+        placeholder={placeholder}
+      />
+    );
+  }
 
   return (
-    <GenericSchemaExpandedView
+    <GenericSchemaCompactView
       value={value}
-      onChange={setValue}
-      onCommit={commitValue}
+      onChange={onChange}
       disabled={disabled}
-      valid={validationResult.valid}
-      placeholder={resolvedPlaceholder}
-      height={height}
-      setHeight={setHeight}
+      valid={valid}
+      placeholder={placeholder}
     />
   );
 });
 
-const CompactGenericSchemaInput = memo(function CompactGenericSchemaInput({
+const StoreBackedGenericSchemaInput = memo(function StoreBackedGenericSchemaInput({
   inputData,
   path,
   disabled,
   placeholder,
   displayToRawInput,
   valueToDisplay,
-}: GenericSchemaInputProps) {
+}: StoreBackedGenericSchemaInputProps) {
   const resolvedPlaceholder = placeholder ?? formatTypeForDisplay(inputData.type);
   const { value, setValue } = useInputField(inputData, path);
   const preprocess = useCallback(
@@ -219,26 +194,32 @@ const CompactGenericSchemaInput = memo(function CompactGenericSchemaInput({
     [value, valueToDisplay],
   );
   const validationResult = useMemo(() => {
-    const rawInput = (displayToRawInput ?? defaultDisplayToRawInput)(displayValue);
+    const rawInput = (displayToRawInput ?? defaultDisplayToRawInput)(
+      displayValue,
+    );
     return validateInputAgainstSchema(rawInput, inputData.type);
   }, [displayToRawInput, inputData.type, displayValue]);
 
   return (
-    <GenericSchemaCompactView
+    <ControlledGenericSchemaInput
       value={displayValue}
-      onChange={(text) => void setValue(preprocess(text))}
-      onCommit={(text) => void setValue(preprocess(text), 0)}
+      onChange={(text) => {
+        void setValue(preprocess(text));
+      }}
       disabled={disabled}
       valid={validationResult.valid}
+      expanded={inputData._expanded ?? false}
       placeholder={resolvedPlaceholder}
     />
   );
 });
 
-export default memo(function GenericSchemaInput(props: GenericSchemaInputProps) {
-  if (props.inputData._expanded) {
-    return <ExpandedGenericSchemaInput {...props} />;
+export default memo(function GenericSchemaInput(
+  props: CombinedGenericSchemaInputProps,
+) {
+  if (isCustomInputProps(props)) {
+    return <StoreBackedGenericSchemaInput {...props} />;
   }
 
-  return <CompactGenericSchemaInput {...props} />;
+  return <ControlledGenericSchemaInput {...props} />;
 });

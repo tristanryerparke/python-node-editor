@@ -1,13 +1,18 @@
-import { memo } from "react";
+import { memo, type ComponentType } from "react";
 import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
 import useTypesStore from "@/stores/typesStore";
 import UserModelDisplay from "../../../common/inputs/user-model-display";
-import { INPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./input-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";
+import type { CustomInputProps } from "@/hooks/useInputField";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
+
+const DEFAULT_INPUT_HEIGHT = 30;
 
 interface InputFieldDisplayProps {
   fieldData: FrontendFieldDataWrapper;
@@ -21,6 +26,7 @@ export default memo(function InputFieldDisplay({
   disabled,
 }: InputFieldDisplayProps) {
   const types = useTypesStore((state) => state.types);
+  const { height, setHeight } = useResizableHeight(path, DEFAULT_INPUT_HEIGHT);
   const nodeId = path[0];
   const fieldName = path[path.length - 1];
 
@@ -34,60 +40,52 @@ export default memo(function InputFieldDisplay({
     dynamicInputType?.structureType === "dict";
   const isEditableKey = isDynamicDictInput;
 
-  if (!fieldData) {
-    return <div>No data</div>;
-  }
-
   // Handle union types - check if type is an object with anyOf
   let actualType = fieldData.type;
   if (
     typeof fieldData.type === "object" &&
-    "anyOf" in fieldData.type &&
-    fieldData.type.anyOf
+    "anyOf" in fieldData.type
   ) {
     // For union types, use _selectedType if available, otherwise default to first type
     actualType = fieldData._selectedType || fieldData.type.anyOf[0];
   }
 
   const isExpanded = fieldData._expanded ?? false;
-
-  const hasRegistryComponent =
-    typeof actualType === "string" &&
-    Boolean(INPUT_TYPE_COMPONENT_REGISTRY[actualType]);
-
+  const registryEntry =
+    typeof actualType === "string"
+      ? INPUT_TYPE_COMPONENT_REGISTRY[actualType]
+      : undefined;
   const typeInfo =
     typeof actualType === "string" ? types[actualType] : undefined;
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
+  const resolvedFieldData = { ...fieldData, type: actualType };
+  const componentEntry = isUserModel
+    ? undefined
+    : registryEntry ?? {
+        component: GenericSchemaInput as ComponentType<CustomInputProps>,
+        expandable: true,
+      };
 
-  const usesGenericRenderer = !hasRegistryComponent && !isUserModel;
-
-  // Function to render the main input component
   const renderMainInput = () => {
-    if (typeof actualType === "string") {
-      const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (registryEntry) {
-        if (isExpanded && isObjectRegistryEntry(registryEntry) && registryEntry.expandable) {
-          return <div className="flex flex-1 min-h-8" />;
-        }
-        // Extract component from registry entry (handle both direct component and object pattern)
-        const Component = isObjectRegistryEntry(registryEntry)
-          ? registryEntry.main
-          : registryEntry;
-        return (
-          <Component
-            inputData={{ ...fieldData, type: actualType }}
-            path={path}
-            disabled={disabled}
-          />
-        );
+    if (componentEntry) {
+      if (isExpanded && componentEntry.expandable) {
+        return <div className="flex flex-1 min-h-8" />;
       }
+
+      const Component = componentEntry.component;
+      return (
+        <Component
+          inputData={resolvedFieldData}
+          path={path}
+          disabled={disabled}
+        />
+      );
     }
 
-    // Check if this type exists in the store and is a user_model
-    if (typeof actualType === "string" && typeInfo && typeInfo.kind === "user_model") {
+    if (isUserModel && typeInfo) {
       return (
         <UserModelDisplay
-          inputData={{ ...fieldData, type: actualType }}
+          inputData={resolvedFieldData}
           path={path}
           disabled={disabled}
           typeInfo={typeInfo}
@@ -95,65 +93,41 @@ export default memo(function InputFieldDisplay({
       );
     }
 
-    if (usesGenericRenderer && isExpanded) {
-      return <div className="flex flex-1 min-h-8" />;
-    }
-
-    return (
-      <GenericSchemaInput
-        inputData={{ ...fieldData, type: actualType }}
-        path={path}
-        disabled={disabled}
-      />
-    );
+    return null;
   };
 
-  // Function to render the expanded component if it exists and is enabled
   const renderExpandedContent = () => {
-    if (typeof actualType === "string") {
-      const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
-        const Component = registryEntry.main;
-        return (
-          <div className="flex-1">
-            <Component
-              inputData={{ ...fieldData, type: actualType }}
-              path={path}
-              disabled={disabled}
-            />
-          </div>
-        );
-      }
+    if (componentEntry?.expandable && isExpanded) {
+      const Component = componentEntry.component;
+      return (
+        <div className="flex-1">
+          <Component
+            inputData={resolvedFieldData}
+            path={path}
+            disabled={disabled}
+          />
+        </div>
+      );
     }
 
-    if (!usesGenericRenderer || !isExpanded) {
-      return null;
-    }
-
-    return (
-      <div className="flex-1">
-        <GenericSchemaInput
-          inputData={{ ...fieldData, type: actualType }}
-          path={path}
-          disabled={disabled}
-        />
-      </div>
-    );
+    return null;
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="flex flex-1 items-center gap-1">
-        {isEditableKey ? (
-          <EditableKey fieldName={fieldName} path={path} />
-        ) : (
-          <span className="shrink-0">{fieldName}</span>
-        )}
-        <span className="shrink-0">:</span>
-        <div className="flex-1 min-w-0">{renderMainInput()}</div>
-        <InputMenu path={path} fieldData={fieldData} />
+    <ResizableHeightProvider height={height} setHeight={setHeight}>
+      <div className="flex flex-col flex-1">
+        <div className="flex flex-1 items-center gap-1">
+          {isEditableKey ? (
+            <EditableKey fieldName={fieldName} path={path} />
+          ) : (
+            <span className="shrink-0">{fieldName}</span>
+          )}
+          <span className="shrink-0">:</span>
+          <div className="flex-1 min-w-0">{renderMainInput()}</div>
+          <InputMenu path={path} fieldData={fieldData} />
+        </div>
+        {renderExpandedContent()}
       </div>
-      {renderExpandedContent()}
-    </div>
+    </ResizableHeightProvider>
   );
 });

@@ -1,4 +1,4 @@
-import { memo, useRef, useState, useEffect, type NamedExoticComponent } from "react";
+import { memo, useEffect, useRef, useState, type NamedExoticComponent } from "react";
 import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
 import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
@@ -8,32 +8,46 @@ import { isCachedValueReference } from "@/utils/large-data-utils";
 
 const DEFAULT_PREVIEW_HEIGHT = 60;
 
-type ImageInputComponent = NamedExoticComponent<CustomInputProps> & {
+export interface ImageInputProps {
+  value: unknown;
+  onChange: (value: File | null) => Promise<void> | void;
+  disabled: boolean;
+  expanded?: boolean;
+  path?: (string | number)[];
+}
+
+type CombinedImageInputProps = ImageInputProps | CustomInputProps;
+
+type ImageInputComponent = NamedExoticComponent<CombinedImageInputProps> & {
   expandable: true;
 };
 
-const ImageInput = memo(function ImageInput({
-  inputData,
-  path,
+function isCustomInputProps(
+  props: CombinedImageInputProps,
+): props is CustomInputProps {
+  return "inputData" in props;
+}
+
+const ControlledImageInput = memo(function ControlledImageInput({
+  value,
+  onChange,
   disabled,
-}: CustomInputProps) {
-  const { setValue } = useInputField(inputData, path);
+  expanded = false,
+  path,
+}: ImageInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const imageValue =
-    typeof inputData.value === "object" &&
-    inputData.value !== null &&
-    !Array.isArray(inputData.value)
-      ? (inputData.value as Record<string, unknown>)
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
       : undefined;
 
   const cacheKey =
     typeof imageValue?.cacheKey === "string" ? imageValue.cacheKey : undefined;
 
-  // Check if cache key exists on mount (after page reload with persisted state)
   useEffect(() => {
     if (!cacheKey) return;
 
@@ -41,7 +55,7 @@ const ImageInput = memo(function ImageInput({
       .then((response) => response.json())
       .then((data) => {
         if (!data.exists) {
-          void setValue(null, 0);
+          void Promise.resolve(onChange(null));
         }
       })
       .catch((error) => {
@@ -50,9 +64,7 @@ const ImageInput = memo(function ImageInput({
   }, []); // Only run on mount
 
   const hasImage = !!cacheKey;
-  const imageForPreview = isCachedValueReference(inputData.value)
-    ? inputData.value
-    : undefined;
+  const imageForPreview = isCachedValueReference(value) ? value : undefined;
   const preview =
     typeof imageForPreview?.preview === "string"
       ? imageForPreview.preview
@@ -74,7 +86,7 @@ const ImageInput = memo(function ImageInput({
     if (!file) return;
     setUploading(true);
     try {
-      await setValue(file, 0);
+      await onChange(file);
     } catch (error) {
       console.error("Error uploading image:", error);
       setErrorMessage(
@@ -86,9 +98,6 @@ const ImageInput = memo(function ImageInput({
     }
   };
 
-  const isExpanded = inputData._expanded ?? false;
-
-  // When connected, show a read-only display in the inline slot
   if (disabled) {
     return (
       <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
@@ -107,7 +116,6 @@ const ImageInput = memo(function ImageInput({
     );
   }
 
-  // File picker button (used in both compact and expanded modes)
   const filePicker = (
     <>
       <Input
@@ -138,24 +146,24 @@ const ImageInput = memo(function ImageInput({
     </>
   );
 
-  if (isExpanded) {
-    return (
-      <div className="flex flex-col flex-1 gap-1.5 nodrag nopan nowheel">
-        <div className="flex flex-1 min-w-35">{filePicker}</div>
-        <ImagePreview
-          preview={preview}
-          path={path}
-          defaultHeight={DEFAULT_PREVIEW_HEIGHT}
-        />
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
-        {filePicker}
-      </div>
+      {expanded ? (
+        <div className="flex flex-col flex-1 gap-1.5 nodrag nopan nowheel">
+          <div className="flex flex-1 min-w-35">{filePicker}</div>
+          {path ? (
+            <ImagePreview
+              preview={preview}
+              path={path}
+              defaultHeight={DEFAULT_PREVIEW_HEIGHT}
+            />
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
+          {filePicker}
+        </div>
+      )}
       <ErrorDialog
         open={showErrorDialog}
         onOpenChange={setShowErrorDialog}
@@ -164,6 +172,32 @@ const ImageInput = memo(function ImageInput({
       />
     </>
   );
+});
+
+const StoreBackedImageInput = memo(function StoreBackedImageInput({
+  inputData,
+  path,
+  disabled,
+}: CustomInputProps) {
+  const { value, setValue } = useInputField(inputData, path);
+
+  return (
+    <ControlledImageInput
+      value={value}
+      onChange={(nextValue) => setValue(nextValue, 0)}
+      disabled={disabled}
+      expanded={inputData._expanded ?? false}
+      path={path}
+    />
+  );
+});
+
+const ImageInput = memo(function ImageInput(props: CombinedImageInputProps) {
+  if (isCustomInputProps(props)) {
+    return <StoreBackedImageInput {...props} />;
+  }
+
+  return <ControlledImageInput {...props} />;
 }) as ImageInputComponent;
 
 ImageInput.expandable = true;

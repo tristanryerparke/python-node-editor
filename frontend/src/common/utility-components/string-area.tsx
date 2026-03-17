@@ -13,7 +13,7 @@ import { useResizableHeight } from "@/hooks/useResizableHeight";
 const DEFAULT_MIN_HEIGHT = 30;
 const DEFAULT_MAX_HEIGHT = 200;
 
-export interface StringAreaViewProps {
+export interface StringAreaProps {
   value: string;
   /** Called on every keystroke when editable=true. Omit for read-only. */
   onChange?: (value: string) => void;
@@ -29,7 +29,7 @@ export interface StringAreaViewProps {
   disabled?: boolean;
 }
 
-export const StringAreaView = memo(function StringAreaView({
+export const StringArea = memo(function StringArea({
   value,
   onChange,
   onCommit,
@@ -39,7 +39,7 @@ export const StringAreaView = memo(function StringAreaView({
   maxHeight = DEFAULT_MAX_HEIGHT,
   isInvalid = false,
   disabled = false,
-}: StringAreaViewProps) {
+}: StringAreaProps) {
   const handleCommit = onCommit ?? onChange;
 
   return (
@@ -68,7 +68,7 @@ export const StringAreaView = memo(function StringAreaView({
           }
           disabled={!editable || disabled}
           className={cn(
-            "nopan nowheel border-none bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0 w-full h-full px-2 py-1",
+            "block nopan nowheel border-none bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0 w-full h-full px-2 py-1",
             editable ? "nodrag" : "cursor-default",
           )}
           placeholder={placeholder}
@@ -93,22 +93,22 @@ export const StringAreaView = memo(function StringAreaView({
   );
 });
 
-export interface StringAreaProps
-  extends StringAreaViewProps {
+export interface StoreBackedStringAreaProps
+  extends StringAreaProps {
   path: (string | number)[];
   defaultHeight?: number;
 }
 
-export default memo(function StringArea({
+export default memo(function StoreBackedStringArea({
   path,
   defaultHeight = DEFAULT_MIN_HEIGHT,
   ...props
-}: StringAreaProps) {
+}: StoreBackedStringAreaProps) {
   const { height, setHeight } = useResizableHeight(path, defaultHeight);
 
   return (
     <ResizableHeightProvider height={height} setHeight={setHeight}>
-      <StringAreaView {...props} />
+      <StringArea {...props} />
     </ResizableHeightProvider>
   );
 });

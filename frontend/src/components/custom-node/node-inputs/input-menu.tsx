@@ -52,9 +52,13 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
 
   // Check if this type has an expandable area
   const effectiveType = selectedType || fieldData.type;
+  const inputRegistry = INPUT_TYPE_COMPONENT_REGISTRY as Record<
+    string,
+    { expandable: boolean }
+  >;
   const registryEntry =
     typeof effectiveType === "string"
-      ? INPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
+      ? inputRegistry[effectiveType]
       : undefined;
 
   const hasRegistryExpandable = Boolean((registryEntry as { expandable?: true } | undefined)?.expandable);
