@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNodeConnections } from "@xyflow/react";
 import { useDebounceCallback } from "usehooks-ts";
 import useFlowStore from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "@/types/types";
@@ -7,6 +6,7 @@ import type { FrontendFieldDataWrapper } from "@/types/types";
 export interface CustomInputProps {
   inputData: FrontendFieldDataWrapper;
   path: (string | number)[];
+  disabled: boolean;
 }
 
 interface UseInputFieldOptions {
@@ -16,7 +16,6 @@ interface UseInputFieldOptions {
 interface UseInputFieldResult<T> {
   value: T;
   setValue: (value: T, debounce?: number) => Promise<void>;
-  disabled: boolean;
 }
 
 export function useInputField<T = unknown>(
@@ -55,14 +54,6 @@ export function useInputField<T = unknown>(
     }
   }, [externalValue]);
 
-  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({
-    handleType: "target",
-    handleId,
-  });
-  const disabled =
-    connections.length > 0 && connections[0].targetHandle === handleId;
-
   const setValue = useCallback(
     (newValue: T, debounce?: number): Promise<void> => {
       const effectiveDelay = debounce ?? defaultDelay;
@@ -78,5 +69,5 @@ export function useInputField<T = unknown>(
     [defaultDelay, writeToStore, debouncedWrite],
   );
 
-  return { value: localValue, setValue, disabled };
+  return { value: localValue, setValue };
 }

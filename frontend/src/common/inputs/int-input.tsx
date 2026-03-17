@@ -3,8 +3,12 @@ import { NumberInput } from "../../components/ui/number-input";
 import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
 import { validateValueAgainstSchema } from "@/utils/schema-input-validator";
 
-export default memo(function IntInput({ inputData, path }: CustomInputProps) {
-  const { value, setValue, disabled } = useInputField<number | undefined>(
+export default memo(function IntInput({
+  inputData,
+  path,
+  disabled,
+}: CustomInputProps) {
+  const { value, setValue } = useInputField<number | undefined>(
     inputData,
     path,
   );

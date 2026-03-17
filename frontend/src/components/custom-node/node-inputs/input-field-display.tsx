@@ -12,11 +12,13 @@ import type { StructDescr } from "@/types/backend-schema";
 interface InputFieldDisplayProps {
   fieldData: FrontendFieldDataWrapper;
   path: (string | number)[];
+  disabled: boolean;
 }
 
 export default memo(function InputFieldDisplay({
   fieldData,
   path,
+  disabled,
 }: InputFieldDisplayProps) {
   const types = useTypesStore((state) => state.types);
   const nodeId = path[0];
@@ -75,6 +77,7 @@ export default memo(function InputFieldDisplay({
           <Component
             inputData={{ ...fieldData, type: actualType }}
             path={path}
+            disabled={disabled}
           />
         );
       }
@@ -86,6 +89,7 @@ export default memo(function InputFieldDisplay({
         <UserModelDisplay
           inputData={{ ...fieldData, type: actualType }}
           path={path}
+          disabled={disabled}
           typeInfo={typeInfo}
         />
       );
@@ -99,6 +103,7 @@ export default memo(function InputFieldDisplay({
       <GenericSchemaInput
         inputData={{ ...fieldData, type: actualType }}
         path={path}
+        disabled={disabled}
       />
     );
   };
@@ -114,6 +119,7 @@ export default memo(function InputFieldDisplay({
             <Component
               inputData={{ ...fieldData, type: actualType }}
               path={path}
+              disabled={disabled}
             />
           </div>
         );
@@ -129,6 +135,7 @@ export default memo(function InputFieldDisplay({
         <GenericSchemaInput
           inputData={{ ...fieldData, type: actualType }}
           path={path}
+          disabled={disabled}
         />
       </div>
     );

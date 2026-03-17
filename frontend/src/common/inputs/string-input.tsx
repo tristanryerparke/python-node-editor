@@ -1,5 +1,4 @@
 import { memo, useMemo, type NamedExoticComponent } from "react";
-import { useNodeConnections } from "@xyflow/react";
 import useFlowStore from "../../stores/flowStore";
 import GenericSchemaInput from "./generic-schema-input";
 import StringArea from "../utility-components/string-area";
@@ -17,6 +16,7 @@ const DEFAULT_HEIGHT = 30;
 const InputStringArea = memo(function InputStringArea({
   inputData,
   path,
+  disabled,
 }: CustomInputProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const externalValue = valueToPlainText(inputData.value);
@@ -39,11 +39,6 @@ const InputStringArea = memo(function InputStringArea({
     return !validateInputAgainstSchema(rawInput, inputData.type).valid;
   }, [value, inputData.type]);
 
-  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({ handleType: "target", handleId });
-  const isConnected =
-    connections.length > 0 && connections[0].targetHandle === handleId;
-
   return (
     <StringArea
       value={value}
@@ -52,7 +47,7 @@ const InputStringArea = memo(function InputStringArea({
       path={path}
       defaultHeight={DEFAULT_HEIGHT}
       isInvalid={isInvalid}
-      isConnected={isConnected}
+      isConnected={disabled}
     />
   );
 });
@@ -62,15 +57,20 @@ type StringInputComponent = NamedExoticComponent<CustomInputProps> & {
 };
 
 // Editable input – compact when collapsed, textarea when expanded
-const StringInput = memo(function StringInput({ inputData, path }: CustomInputProps) {
+const StringInput = memo(function StringInput({
+  inputData,
+  path,
+  disabled,
+}: CustomInputProps) {
   if (inputData._expanded) {
-    return <InputStringArea inputData={inputData} path={path} />;
+    return <InputStringArea inputData={inputData} path={path} disabled={disabled} />;
   }
 
   return (
     <GenericSchemaInput
       inputData={inputData}
       path={path}
+      disabled={disabled}
       placeholder="Enter text"
       displayToRawInput={encodeAsJsonString}
       valueToDisplay={valueToPlainText}

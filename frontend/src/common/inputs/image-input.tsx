@@ -12,8 +12,12 @@ type ImageInputComponent = NamedExoticComponent<CustomInputProps> & {
   expandable: true;
 };
 
-const ImageInput = memo(function ImageInput({ inputData, path }: CustomInputProps) {
-  const { setValue, disabled } = useInputField(inputData, path);
+const ImageInput = memo(function ImageInput({
+  inputData,
+  path,
+  disabled,
+}: CustomInputProps) {
+  const { setValue } = useInputField(inputData, path);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);

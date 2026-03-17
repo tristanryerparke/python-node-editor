@@ -1,6 +1,5 @@
 import { memo, useCallback, useMemo } from "react";
 import { Grip } from "lucide-react";
-import { useNodeConnections } from "@xyflow/react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,6 +21,7 @@ export type ValueToDisplay = (value: unknown) => string;
 interface GenericSchemaInputProps {
   inputData: FrontendFieldDataWrapper;
   path: (string | number)[];
+  disabled: boolean;
   placeholder?: string;
   displayToRawInput?: DisplayToRawInput;
   valueToDisplay?: ValueToDisplay;
@@ -52,11 +52,12 @@ const MAX_HEIGHT = 200;
 const GenericSchemaCompact = memo(function GenericSchemaCompact({
   inputData,
   path,
+  disabled,
   placeholder,
   displayToRawInput = defaultDisplayToRawInput,
   valueToDisplay = defaultValueToDisplay,
 }: GenericSchemaInputProps) {
-  const { value, setValue, disabled } = useInputField(inputData, path);
+  const { value, setValue } = useInputField(inputData, path);
 
   const preprocess = useCallback(
     (text: string) => {
@@ -98,6 +99,7 @@ const GenericSchemaCompact = memo(function GenericSchemaCompact({
 const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView({
   inputData,
   path,
+  disabled,
   placeholder,
   displayToRawInput = defaultDisplayToRawInput,
   valueToDisplay = defaultValueToDisplay,
@@ -125,11 +127,6 @@ const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView({
 
   const resolvedPlaceholder = placeholder ?? formatTypeForDisplay(inputData.type);
 
-  const handleId = `${path[0]}:${path[1]}:${path[2]}:handle`;
-  const connections = useNodeConnections({ handleType: "target", handleId });
-  const isConnected =
-    connections.length > 0 && connections[0].targetHandle === handleId;
-
   const storedHeight = useNodeData([...path, "_expandedHeight"]) as
     | number
     | undefined;
@@ -156,7 +153,7 @@ const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onBlur={(e) => setValue(e.target.value)}
-            disabled={isConnected}
+            disabled={disabled}
             className={cn("nodrag nopan nowheel border-none", "w-full h-full")}
             placeholder={resolvedPlaceholder}
             style={{
@@ -182,6 +179,7 @@ const GenericSchemaExpandedView = memo(function GenericSchemaExpandedView({
 export default memo(function GenericSchemaInput({
   inputData,
   path,
+  disabled,
   placeholder,
   displayToRawInput,
   valueToDisplay,
@@ -191,6 +189,7 @@ export default memo(function GenericSchemaInput({
       <GenericSchemaExpandedView
         inputData={inputData}
         path={path}
+        disabled={disabled}
         placeholder={placeholder}
         displayToRawInput={displayToRawInput}
         valueToDisplay={valueToDisplay}
@@ -202,6 +201,7 @@ export default memo(function GenericSchemaInput({
     <GenericSchemaCompact
       inputData={inputData}
       path={path}
+      disabled={disabled}
       placeholder={placeholder}
       displayToRawInput={displayToRawInput}
       valueToDisplay={valueToDisplay}
