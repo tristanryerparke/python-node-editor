@@ -56,7 +56,7 @@ export function ResizableHeight({
   children,
   minHeight = 20,
   maxHeight = Infinity,
-  useTailwindScale = false,
+  useTailwindScale = true,
   dragMultiplier,
 }: ResizableHeightProps) {
   const isDraggingRef = useRef(false);

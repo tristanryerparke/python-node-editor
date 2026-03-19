@@ -37,7 +37,7 @@ export function SyncedWidthHandleProvider({
   children,
   className = "",
   maxWidth = Infinity,
-  useTailwindScale = false,
+  useTailwindScale = true,
   width: controlledWidth,
   setWidth: controlledSetWidth,
 }: SyncedWidthHandleProviderProps) {
@@ -100,8 +100,7 @@ export function SyncedWidthHandleProvider({
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useSyncedWidthHandleContext() {
+function useSyncedWidthHandleContext() {
   const context = useContext(SyncedWidthHandleContext);
   if (!context) {
     throw new Error(

@@ -19,31 +19,23 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
 
-  // Handle union types - detect from fieldData
-  const isUnionType =
-    typeof fieldData.type === "object" && "anyOf" in fieldData.type;
-  const selectedType =
-    fieldData._selectedType ||
-    (isUnionType &&
+  let actualType = fieldData.type;
+  if (
     typeof fieldData.type === "object" &&
-    "anyOf" in fieldData.type
-      ? fieldData.type.anyOf[0]
-      : undefined);
+    "anyOf" in fieldData.type &&
+    fieldData.type.anyOf
+  ) {
+    actualType = fieldData._selectedType || fieldData.type.anyOf[0];
+  }
 
-  // Check if this type has an expandable area
-  const effectiveType = selectedType || fieldData.type;
   const registryEntry =
-    typeof effectiveType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
+    typeof actualType === "string"
+      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
       : undefined;
-  const hasExpandable = (registryEntry as { expandable?: true } | undefined)?.expandable;
+  const hasExpandable = registryEntry?.expandable ?? false;
   const isExpanded = fieldData._expanded ?? false;
 
-  // Only show menu if there's something expandable
-  const shouldShowMenu = hasExpandable;
-
-  // Return null if there's nothing to show in the menu
-  if (!shouldShowMenu) {
+  if (!hasExpandable) {
     return null;
   }
 

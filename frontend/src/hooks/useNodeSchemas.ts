@@ -5,7 +5,7 @@ import useSchemasStore from "@/stores/schemasStore";
 
 export type { NodesResponse } from "@/stores/schemasStore";
 
-export function useNodeSchemas() {
+function useNodeSchemas() {
   const setNodeSchemas = useSchemasStore((s) => s.setNodeSchemas);
   const nodeSchemas = useSchemasStore((s) => s.nodeSchemas);
 

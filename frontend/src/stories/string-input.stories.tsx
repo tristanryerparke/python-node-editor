@@ -37,7 +37,6 @@ function StringInputStory({
 
   return (
     <SyncedWidthHandleProvider
-      useTailwindScale={true}
       width={width}
       setWidth={onWidthChange}
     >
@@ -96,30 +95,26 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const renderStringInput: Story["render"] = (args) => {
+  const [, updateArgs] = useArgs<StringInputStoryArgs>();
+
+  return (
+    <StringInputStory
+      {...args}
+      onWidthChange={(width) => updateArgs({ width })}
+      onHeightChange={(height) => updateArgs({ height })}
+      onValueChange={(value) => updateArgs({ value })}
+    />
+  );
+};
+
 export const Playground: Story = {
   args: {
     value: "",
     width: 80,
-    height: 40
+    height: 40,
   },
-
-  render: function Render(args: StringInputStoryArgs) {
-    const [, updateArgs] = useArgs<StringInputStoryArgs>();
-
-    return (
-      <StringInputStory
-        expanded={args.expanded}
-        disabled={args.disabled}
-        value={args.value}
-        valid={args.valid}
-        width={args.width}
-        height={args.height}
-        onWidthChange={(width) => updateArgs({ width })}
-        onHeightChange={(height) => updateArgs({ height })}
-        onValueChange={(value) => updateArgs({ value })}
-      />
-    );
-  }
+  render: renderStringInput,
 };
 
 export const TextOverflow: Story = {
@@ -129,29 +124,7 @@ export const TextOverflow: Story = {
     value: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     valid: true,
     width: 80,
-    height: 40
+    height: 40,
   },
-
-  render: function Render(args: StringInputStoryArgs) {
-    const [, updateArgs] = useArgs<StringInputStoryArgs>();
-
-    return (
-      <StringInputStory
-        expanded={args.expanded}
-        disabled={args.disabled}
-        value={args.value}
-        valid={args.valid}
-        width={args.width}
-        height={args.height}
-        onWidthChange={width => updateArgs({
-          width
-        })}
-        onHeightChange={height => updateArgs({
-          height
-        })}
-        onValueChange={value => updateArgs({
-          value
-        })} />
-    );
-  }
+  render: renderStringInput,
 };

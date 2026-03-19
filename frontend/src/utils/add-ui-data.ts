@@ -1,5 +1,5 @@
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/node-inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry as isOutputObjectRegistryEntry } from "../components/custom-node/node-outputs/output-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../components/custom-node/node-outputs/output-type-registry";
 
 /**
  * Initializes UI-specific data for arguments and outputs:
@@ -61,14 +61,15 @@ export function initializeUIData(nodeData: any): void {
       const output = nodeData.outputs[outputName];
 
       // Initialize _expanded for outputs with expandable areas
-      const outputType = output.type;
-      if (typeof outputType === "string") {
-        const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[outputType];
-        if (
-          registryEntry &&
-          isOutputObjectRegistryEntry(registryEntry) &&
-          registryEntry.expanded
-        ) {
+      const actualType =
+        output._selectedType ||
+        (typeof output.type === "object" && output.type?.anyOf
+          ? output.type.anyOf[0]
+          : output.type);
+
+      if (typeof actualType === "string") {
+        const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
+        if (registryEntry?.expandable) {
           if (output._expanded === undefined) {
             // Default to collapsed (false)
             output._expanded = false;

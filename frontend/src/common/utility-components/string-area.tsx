@@ -46,7 +46,6 @@ export const StringArea = memo(function StringArea({
     <ResizableHeight
       minHeight={minHeight}
       maxHeight={maxHeight}
-      useTailwindScale={true}
     >
       <div
         className={cn(

@@ -25,7 +25,6 @@ export default memo(function ImagePreview({
     <ResizableHeight
       minHeight={minHeight}
       maxHeight={maxHeight}
-      useTailwindScale={true}
     >
       <div className="w-full h-full flex items-center justify-center bg-muted/30 rounded-md border border-input overflow-hidden relative">
         {preview ? (
