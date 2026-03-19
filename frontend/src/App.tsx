@@ -13,6 +13,7 @@ import { ThemeProvider } from "./components/theme-provider";
 
 import Inspector from "./components/inspector-sidebar/inspector";
 import NodeGraph from "./components/node-graph";
+import GraphToolbar from "./components/graph-toolbar/graph-toolbar";
 import usePanelsStore from "./stores/panelsStore";
 import NodesTypesSidebar from "./components/node-types-sidebar/nodes-types-sidebar";
 import useEnvironment from "./hooks/useEnvironment";
@@ -26,18 +27,23 @@ function App() {
     <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <ReactFlowProvider>
-            <div className="min-h-full flex h-screen w-screen flex-row overflow-hidden bg-background text-foreground">
+            <div className="relative min-h-full flex h-screen w-screen flex-row overflow-hidden bg-background text-foreground isolate">
+              <GraphToolbar />
               {showNodePicker && (
-                <>
+                <div className="relative z-0 flex h-full shrink-0">
                   <NodesTypesSidebar />
                   <Separator orientation="vertical" />
-                </>
+                </div>
               )}
               <ResizablePanelGroup
                 direction="horizontal"
                 autoSaveId="panel-width-save"
               >
-                <ResizablePanel id="node-graph" order={1}>
+                <ResizablePanel
+                  id="node-graph"
+                  order={1}
+                  className="relative z-30 overflow-visible"
+                >
                   <NodeGraph />
                 </ResizablePanel>
                 {showInspector && (
@@ -49,7 +55,7 @@ function App() {
                       defaultSize={25}
                       minSize={15}
                       maxSize={75}
-                      className="min-w-60 max-w-[800px]"
+                      className="relative z-0 min-w-60 max-w-[800px]"
                     >
                       <Inspector />
                     </ResizablePanel>

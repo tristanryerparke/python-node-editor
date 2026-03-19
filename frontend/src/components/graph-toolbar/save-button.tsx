@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import useFlowStore from "../../stores/flowStore";
+import useInspectorStore from "../../stores/inspectorStore";
 
 export default function SaveButton() {
   const { rfInstance, functionSchemas, types } = useFlowStore();

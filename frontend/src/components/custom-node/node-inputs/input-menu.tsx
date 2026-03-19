@@ -1,12 +1,10 @@
+import { useState } from "react";
 import { MoreVertical, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
@@ -21,6 +19,7 @@ interface InputMenuProps {
 }
 
 export default function InputMenu({ path, fieldData }: InputMenuProps) {
+  const [open, setOpen] = useState(false);
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const getNodeData = useFlowStore((state) => state.getNodeData);
@@ -39,15 +38,11 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   // Handle union types - detect from fieldData
   const isUnionType =
     typeof fieldData.type === "object" && "anyOf" in fieldData.type;
-  const unionTypes =
+  const hasUnionTypes =
     isUnionType &&
     typeof fieldData.type === "object" &&
-    "anyOf" in fieldData.type
-      ? fieldData.type.anyOf
-      : undefined;
-  const selectedType =
-    fieldData._selectedType || (unionTypes ? unionTypes[0] : undefined);
-  const hasUnionTypes = unionTypes && unionTypes.length > 1;
+    "anyOf" in fieldData.type &&
+    fieldData.type.anyOf.length > 1;
 
   // Check if this type has an expandable area
   const effectiveType = selectedType || fieldData.type;
@@ -108,17 +103,12 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
     return null;
   }
 
-  const handleTypeChange = (newType: string) => {
-    if (path) {
-      void updateNodeData([...path, "_selectedType"], newType);
-    }
-  };
-
   const handleToggleExpanded = () => {
     if (!path) return;
 
     const newExpandedState = !isExpanded;
     void updateNodeData([...path, "_expanded"], newExpandedState);
+    setOpen(false);
 
     // If minimizing, clear the stored height
     if (!newExpandedState) {
@@ -160,16 +150,23 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
       // For dict inputs and other cases, simple deletion
       deleteNodeData(path);
     }
+
+    setOpen(false);
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon-xs" className="shrink-0">
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="right" sideOffset={5}>
+      <DropdownMenuContent
+        align="center"
+        side="right"
+        sideOffset={5}
+        onInteractOutside={() => setOpen(false)}
+      >
         {hasExpandable && (
           <>
             <DropdownMenuItem
@@ -191,20 +188,13 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
             {(hasUnionTypes || showDeleteButton) && <DropdownMenuSeparator />}
           </>
         )}
-        {hasUnionTypes && (
+        {hasUnionTypes && path && (
           <>
-            <DropdownMenuLabel>Input Type</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={selectedType}
-              onValueChange={handleTypeChange}
-            >
-              {unionTypes.map((type: string) => (
-                <DropdownMenuRadioItem key={type} value={type}>
-                  {type}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+            <UnionTypeMenuItems
+              fieldData={fieldData}
+              path={path}
+              onSelect={() => setOpen(false)}
+            />
             {showDeleteButton && <DropdownMenuSeparator />}
           </>
         )}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MoreVertical, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
@@ -7,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import useFlowStore from "../../../stores/flowStore";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { useOutputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 
 interface OutputMenuProps {
@@ -16,6 +17,7 @@ interface OutputMenuProps {
 }
 
 export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
+  const [open, setOpen] = useState(false);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
 
@@ -42,6 +44,7 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
   const handleToggleExpanded = () => {
     const newExpandedState = !isExpanded;
     void updateNodeData([...path, "_expanded"], newExpandedState);
+    setOpen(false);
 
     // If minimizing, clear the stored height
     if (!newExpandedState) {
@@ -50,13 +53,18 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon-xs" className="shrink-0">
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="right" sideOffset={5}>
+      <DropdownMenuContent
+        align="center"
+        side="right"
+        sideOffset={5}
+        onInteractOutside={() => setOpen(false)}
+      >
         {hasExpandable && (
           <DropdownMenuItem
             onClick={handleToggleExpanded}

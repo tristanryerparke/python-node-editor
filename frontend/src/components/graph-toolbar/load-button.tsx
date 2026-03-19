@@ -1,10 +1,90 @@
 import { Button } from "@/components/ui/button";
 import useFlowStore from "../../stores/flowStore";
+import useInspectorStore, {
+  type InspectorEntryState,
+  type InspectorPathSegment,
+  type InspectorTarget,
+} from "../../stores/inspectorStore";
 import { useReactFlow } from "@xyflow/react";
 import { useRef } from "react";
 import type { FunctionSchemas, TypeInfo } from "@/types/environment";
 import { buildEnvironmentMismatchWarning } from "@/utils/environment-mismatch";
 import useSettingsStore from "@/stores/settingsStore";
+
+type SavedInspectorState = {
+  entries?: unknown;
+  showBorders?: unknown;
+};
+
+type SavedFlowFile = {
+  nodes?: unknown;
+  edges?: unknown;
+  viewport?: {
+    x?: unknown;
+    y?: unknown;
+    zoom?: unknown;
+  };
+  inspector?: SavedInspectorState;
+};
+
+type SavedInspectorEntry = Omit<InspectorEntryState, "customName"> & {
+  customName?: unknown;
+};
+
+function isInspectorPath(path: unknown): path is InspectorPathSegment[] {
+  return Array.isArray(path) &&
+    path.every((segment) => typeof segment === "string" || typeof segment === "number");
+}
+
+function isInspectorTarget(target: unknown): target is InspectorTarget {
+  return !!target &&
+    typeof target === "object" &&
+    "nodeId" in target &&
+    "path" in target &&
+    typeof target.nodeId === "string" &&
+    isInspectorPath(target.path);
+}
+
+function isInspectorEntryState(entry: unknown): entry is SavedInspectorEntry {
+  return !!entry &&
+    typeof entry === "object" &&
+    "id" in entry &&
+    "isExpanded" in entry &&
+    "selectedTarget" in entry &&
+    typeof entry.id === "string" &&
+    typeof entry.isExpanded === "boolean" &&
+    (!("customName" in entry) ||
+      entry.customName === null ||
+      typeof entry.customName === "string") &&
+    (entry.selectedTarget === null || isInspectorTarget(entry.selectedTarget));
+}
+
+function normalizeInspectorState(
+  inspector: SavedInspectorState | undefined,
+  nodeIds: Set<string>,
+) {
+  const entries = Array.isArray(inspector?.entries)
+    ? inspector.entries
+        .filter(isInspectorEntryState)
+        .map((entry) => ({
+          ...entry,
+          customName:
+            typeof entry.customName === "string" ? entry.customName : null,
+          selectedTarget:
+            entry.selectedTarget &&
+            nodeIds.has(entry.selectedTarget.nodeId)
+              ? entry.selectedTarget
+              : null,
+        }))
+    : [];
+
+  return {
+    entries,
+    activeSelectingEntryId: null,
+    showBorders:
+      typeof inspector?.showBorders === "boolean" ? inspector.showBorders : true,
+  };
+}
 
 export const LoadButton = () => {
   const {
@@ -33,7 +113,7 @@ export const LoadButton = () => {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
-        const flow = JSON.parse(content);
+        const flow = JSON.parse(content) as SavedFlowFile;
 
         if (flow) {
           const incomingFunctionSchemas = (flow.functionSchemas ??
@@ -59,6 +139,7 @@ export const LoadButton = () => {
           setEdges(flow.edges || []);
           setStoreViewport(viewport);
           setViewport(viewport);
+          useInspectorStore.setState(normalizeInspectorState(flow.inspector, nodeIds));
         }
       } catch (error) {
         console.error("Error loading flow:", error);

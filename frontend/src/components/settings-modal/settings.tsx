@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -62,6 +63,24 @@ export function SettingsModal() {
                 <TabsTrigger value="async">Async</TabsTrigger>
               </TabsList>
             </Tabs>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <label
+                htmlFor="show-inspector-paths"
+                className="text-sm font-medium"
+              >
+                Show Inspector Paths
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Show the selected path above inspector data.
+              </p>
+            </div>
+            <Checkbox
+              id="show-inspector-paths"
+              checked={showInspectorPaths}
+              onCheckedChange={(checked) => setShowInspectorPaths(checked === true)}
+            />
           </div>
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
