@@ -17,10 +17,9 @@ export function formatInspectorTargetSummary(
   path: (string | number)[],
 ) {
   const remainingPath = path.slice(1).map(String).join(":");
-  const compactNodeId =
-    nodeId.length > 12 ? `${nodeId.slice(0, 8)}-...-${nodeId.slice(-4)}` : nodeId;
+  const compactNodeId = nodeId.slice(0, 8);
 
-  return remainingPath ? `${compactNodeId}:${remainingPath}` : nodeId;
+  return remainingPath ? `${compactNodeId}:${remainingPath}` : compactNodeId;
 }
 
 export function getDefaultEntryTitle(
@@ -29,9 +28,9 @@ export function getDefaultEntryTitle(
 ) {
   return entry.selectedTarget
     ? entry.selectedTarget.path.length === 1
-      ? "Selected Node"
-      : "Selected Field"
-    : `Inspector Entry ${index + 1}`;
+      ? `Node ${index + 1}`
+      : `Field ${index + 1}`
+    : `Entry ${index + 1}`;
 }
 
 export function getEntryTitle(entry: InspectorEntryState, index: number) {

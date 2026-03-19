@@ -1,9 +1,13 @@
 import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import { ResizableHeightProvider } from "../utility-components/resizable-height";
 import useFlowStore from "@/stores/flowStore";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
 import type { StructDescr, TypeSchema } from "@/types/backend-schema";
 import type { TypeInfo } from "@/types/environment";
 import type { FrontendFieldDataWrapper } from "@/types/types";
+
+const DEFAULT_OUTPUT_HEIGHT = 30;
 
 interface OutputFieldDisplayProps {
   fieldData: FrontendFieldDataWrapper;
@@ -114,6 +118,13 @@ export default function OutputFieldDisplay({
   }
 
   const isExpanded = isExpandedProp ?? (fieldData._expanded ?? false);
+  const registryEntry =
+    typeof actualType === "string"
+      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
+      : undefined;
+  const defaultExpandedHeight =
+    registryEntry?.defaultExpandedHeight ?? DEFAULT_OUTPUT_HEIGHT;
+  const { height, setHeight } = useResizableHeight(path, defaultExpandedHeight);
   const controlledProps = {
     value: fieldData.value,
     expanded: isExpanded,
@@ -122,16 +133,13 @@ export default function OutputFieldDisplay({
 
   // Function to render the main output component
   const renderMainOutput = () => {
-    if (typeof actualType === "string") {
-      const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (registryEntry?.expandable && isExpanded) {
-        return <div className="flex flex-1 min-h-8" />;
-      }
+    if (registryEntry?.expandable && isExpanded) {
+      return <div className="flex flex-1 min-h-8" />;
+    }
 
-      if (registryEntry) {
-        const Component = registryEntry.component;
-        return <Component {...controlledProps} />;
-      }
+    if (registryEntry) {
+      const Component = registryEntry.component;
+      return <Component {...controlledProps} />;
     }
 
     return (
@@ -143,9 +151,6 @@ export default function OutputFieldDisplay({
 
   // Function to render the expanded component if it exists and is enabled
   const renderExpandedContent = () => {
-    if (typeof actualType !== "string") return null;
-
-    const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
     if (!registryEntry?.expandable || !isExpanded) return null;
 
     const Component = registryEntry.component;
@@ -156,7 +161,7 @@ export default function OutputFieldDisplay({
     );
   };
 
-  return (
+  const content = (
     <div className="flex flex-col flex-1">
       <div className="flex flex-1 items-center gap-1">
         <span className="shrink-0">{fieldName}</span>
@@ -166,5 +171,15 @@ export default function OutputFieldDisplay({
       </div>
       {renderExpandedContent()}
     </div>
+  );
+
+  if (!registryEntry?.expandable) {
+    return content;
+  }
+
+  return (
+    <ResizableHeightProvider height={height} setHeight={setHeight}>
+      {content}
+    </ResizableHeightProvider>
   );
 }

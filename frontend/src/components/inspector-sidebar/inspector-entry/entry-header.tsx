@@ -10,7 +10,12 @@ import InputFieldDisplay from "@/common/inputs/input-field-display";
 import OutputFieldDisplay from "@/common/outputs/output-field-display";
 import { InspectorFieldRenderProvider } from "@/common/field-render-context";
 import EntryMenu from "./entry-menu";
-import { getEntrySummary, getEntryTitle, isFieldTarget, isInputFieldTarget } from "./shared";
+import {
+  getEntrySummary,
+  getEntryTitle,
+  isFieldTarget,
+  isInputFieldTarget,
+} from "./shared";
 import type { FrontendFieldDataWrapper } from "@/types/types";
 
 interface EntryHeaderProps {
@@ -41,6 +46,8 @@ export default function EntryHeader({
   const fieldData = useNodeData(selectedPath) as
     | FrontendFieldDataWrapper
     | undefined;
+  const entryTitle = getEntryTitle(entry, index);
+  const entrySummary = getEntrySummary(entry);
   const entryMenu = (
     <EntryMenu
       entry={entry}
@@ -48,6 +55,31 @@ export default function EntryHeader({
       onOpenRenameDialog={onOpenRenameDialog}
       onOpenDeleteDialog={onOpenDeleteDialog}
     />
+  );
+  const selectorToggle = (
+    <Toggle
+      data-inspector-entry-toggle={entry.id}
+      size="icon-xs"
+      className="shrink-0"
+      pressed={isSelecting}
+      onPressedChange={(pressed) =>
+        setActiveSelectingEntryId(pressed ? entry.id : null)
+      }
+    >
+      <SquareMousePointer
+        className={`h-3 w-3 ${isSelecting ? "text-red-500" : ""}`}
+      />
+    </Toggle>
+  );
+  const headerText = (
+    <div className="min-w-0 flex-1 flex flex-row items-center gap-1">
+      <span className="text-xs font-medium shrink-0 whitespace-nowrap">
+        {entryTitle}
+      </span>
+      <span className="text-[11px] text-muted-foreground min-w-0 flex-1 truncate">
+        {entrySummary}
+      </span>
+    </div>
   );
 
   const renderFieldDisplay = () => {
@@ -76,36 +108,23 @@ export default function EntryHeader({
 
   return (
     <>
-      <Toggle
-        data-inspector-entry-toggle={entry.id}
-        size="icon-xs"
-        className="shrink-0 self-center"
-        pressed={isSelecting}
-        onPressedChange={(pressed) =>
-          setActiveSelectingEntryId(pressed ? entry.id : null)
-        }
-      >
-        <SquareMousePointer
-          className={`h-3 w-3 ${isSelecting ? "text-red-500" : ""}`}
-        />
-      </Toggle>
       {isRichField ? (
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col gap-1">
+          <div className="flex flex-row gap-1 items-center">
+            {selectorToggle}
+            {headerText}
+          </div>
           <InspectorFieldRenderProvider entryId={entry.id}>
             {renderFieldDisplay()}
           </InspectorFieldRenderProvider>
         </div>
       ) : (
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium truncate">
-            {getEntryTitle(entry, index)}
-          </div>
-          <div className="text-xs text-muted-foreground truncate">
-            {getEntrySummary(entry)}
-          </div>
+        <div className="min-w-0 flex-1 flex flex-row gap-1 items-center">
+          {selectorToggle}
+          {headerText}
+          {entryMenu}
         </div>
       )}
-      {!isRichField ? entryMenu : null}
     </>
   );
 }
