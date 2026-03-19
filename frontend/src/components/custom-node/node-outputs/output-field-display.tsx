@@ -1,10 +1,13 @@
 import { memo } from "react";
+import SingleLineTextDisplay from "@/common/utility-components/single-line-text-display";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import { useOutputField } from "@/hooks/useOutputField";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
+import useTypesStore from "@/stores/typesStore";
+import type { StructDescr } from "@/types/backend-schema";
+import { formatUserModelValue } from "@/utils/user-model-formatting";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import OutputMenu from "./output-menu";
-import OutputRenderer from "./output-renderer";
 import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
 
 const DEFAULT_OUTPUT_HEIGHT = 30;
@@ -19,11 +22,89 @@ export interface ControlledOutputProps {
   expanded?: boolean;
 }
 
+function isStructDescr(type: unknown): type is StructDescr {
+  return (
+    typeof type === "object" &&
+    type !== null &&
+    "structureType" in type &&
+    "itemsType" in type
+  );
+}
+
+function formatStructuredValue(value: unknown, itemsType: string): string {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+
+    if (typeof value[0] === "object" && value[0] !== null) {
+      return `[${value.map(() => itemsType).join(", ")}]`;
+    }
+
+    return `[${value.map((item) => String(item)).join(", ")}]`;
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const entries = Object.entries(value)
+      .map(([key]) => `${key}: ${itemsType}`)
+      .join(", ");
+    return `{${entries}}`;
+  }
+
+  return String(value);
+}
+
+function formatOutputValue(
+  value: unknown,
+  type: FrontendFieldDataWrapper["type"],
+  types: ReturnType<typeof useTypesStore.getState>["types"],
+): string {
+  if (value === undefined) {
+    return "";
+  }
+
+  if (isStructDescr(type)) {
+    const { itemsType, structureType } = type;
+    const itemTypeName = typeof itemsType === "string" ? itemsType : "Any";
+
+    if (structureType === "list" || structureType === "dict") {
+      return formatStructuredValue(value, itemTypeName);
+    }
+  }
+
+  if (typeof type === "string") {
+    const typeInfo = types[type];
+
+    if (
+      typeInfo &&
+      typeInfo.kind === "user_model" &&
+      typeof value === "object" &&
+      value !== null
+    ) {
+      return formatUserModelValue(value, type);
+    }
+  }
+
+  if (typeof value === "object") {
+    if (!Array.isArray(value) && value !== null) {
+      const entries = Object.entries(value)
+        .map(([key, fieldValue]) => `${key}: ${fieldValue}`)
+        .join(", ");
+      return `{${entries}}`;
+    }
+    if (Array.isArray(value)) {
+      return `[${value.join(", ")}]`;
+    }
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
 export default memo(function OutputDisplay({
   fieldData,
   path,
 }: OutputDisplayProps) {
   const { value } = useOutputField(path);
+  const types = useTypesStore((state) => state.types);
   const fieldName = path[path.length - 1];
 
   let actualType = fieldData.type;
@@ -48,11 +129,6 @@ export default memo(function OutputDisplay({
     value,
     expanded: isExpanded,
   };
-  const resolvedFieldData: FrontendFieldDataWrapper = {
-    ...fieldData,
-    type: actualType,
-    value: value as FrontendFieldDataWrapper["value"],
-  };
 
   const renderMainOutput = () => {
     if (registryEntry) {
@@ -64,7 +140,11 @@ export default memo(function OutputDisplay({
       return <Component {...controlledProps} />;
     }
 
-    return <OutputRenderer outputData={resolvedFieldData} />;
+    return (
+      <SingleLineTextDisplay
+        content={formatOutputValue(value, actualType, types)}
+      />
+    );
   };
 
   const renderExpandedContent = () => {

@@ -1,6 +1,8 @@
 import "./index.css";
 import "@xyflow/react/dist/style.css";
 import { ReactFlowProvider } from "@xyflow/react";
+import { useEffect } from "react";
+import useSWR from "swr";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -15,9 +17,23 @@ import Inspector from "./components/inspector-sidebar/inspector";
 import NodeGraph from "./components/node-graph";
 import usePanelsStore from "./stores/panelsStore";
 import NodesTypesSidebar from "./components/node-types-sidebar/nodes-types-sidebar";
+import { fetcher } from "./lib/fetcher";
+import useNodeSchemas from "./hooks/useNodeSchemas";
+import useTypesStore, { type TypeInfo } from "./stores/typesStore";
 
 function App() {
   const { showInspector, showNodePicker } = usePanelsStore();
+  const setTypes = useTypesStore((state) => state.setTypes);
+  const { data: typesData } = useSWR("/types", fetcher);
+
+  useNodeSchemas();
+
+  useEffect(() => {
+    if (typesData) {
+      setTypes(typesData as Record<string, TypeInfo>);
+    }
+  }, [setTypes, typesData]);
+
   return (
     <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

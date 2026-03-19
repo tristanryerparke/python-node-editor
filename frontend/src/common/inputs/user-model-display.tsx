@@ -1,4 +1,5 @@
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import { formatUserModelValue } from "@/utils/user-model-formatting";
 
 interface UserModelDisplayProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12,21 +13,9 @@ export default function UserModelDisplay({
   disabled,
   typeName,
 }: UserModelDisplayProps) {
-  const formatValue = () => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      return typeName;
-    }
-
-    const fields = Object.entries(value)
-      .map(([key, fieldValue]) => `${key}=${fieldValue}`)
-      .join(", ");
-
-    return `${typeName}(${fields})`;
-  };
-
   return (
     <SingleLineTextDisplay
-      content={formatValue()}
+      content={formatUserModelValue(value, typeName)}
       dimmed={!value}
       disabled={disabled}
     />
