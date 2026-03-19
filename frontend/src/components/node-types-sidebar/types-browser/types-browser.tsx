@@ -1,21 +1,17 @@
-import { useState, useEffect } from "react";
-import useSWR from "swr";
+import { useState } from "react";
 import { SearchBar } from "@/common/utility-components/search-bar";
 import { KindGroup } from "./kind-group";
-import useTypesStore, { type TypeInfo } from "@/stores/typesStore";
-import { fetcher } from "@/lib/fetcher";
+import useEnvironment from "@/hooks/useEnvironment";
+import useFlowStore from "@/stores/flowStore";
+import type { TypeInfo } from "@/types/environment";
 
 interface TypesByKind {
   [kind: string]: [string, TypeInfo][];
 }
 
 export default function TypesBrowser() {
-  const setTypes = useTypesStore((s) => s.setTypes);
-  const types = useTypesStore((s) => s.types);
-  const { data, mutate } = useSWR("/types", fetcher);
-  useEffect(() => {
-    if (data) setTypes(data as Record<string, TypeInfo>);
-  }, [data, setTypes]);
+  const types = useFlowStore((s) => s.types);
+  const { refetch } = useEnvironment();
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTypes = Object.entries(types).filter(([typeName, typeInfo]) => {
@@ -60,7 +56,7 @@ export default function TypesBrowser() {
       <SearchBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onRefresh={mutate}
+        onRefresh={refetch}
         placeholder="Search types..."
         refreshTitle="Refresh types"
         ariaLabel="Search types"

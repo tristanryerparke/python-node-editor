@@ -17,6 +17,14 @@ export default defineConfig({
       plugins: [["babel-plugin-react-compiler"]]
     }
   }), tailwindcss()],
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(dirname, "./src")

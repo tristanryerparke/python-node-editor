@@ -53,7 +53,7 @@ def test_single_node_execute():
     # Create Graph instance
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -78,7 +78,7 @@ def test_two_nodes_execute():
     # Create Graph instance
     graph = Graph(nodes=[node1, node2], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -117,7 +117,7 @@ def test_two_connected_nodes_execute():
     # Create Graph instance
     graph = Graph(nodes=[node1, node2], edges=[edge1])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()

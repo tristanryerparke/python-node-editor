@@ -10,9 +10,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSelect } from "./theme-select";
+import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore from "@/stores/settingsStore";
-
-const BACKEND_URL = "http://localhost:8000";
 
 export function SettingsModal() {
   const openInEditorName = useSettingsStore((state) => state.openInEditorName);
@@ -72,9 +71,9 @@ export function SettingsModal() {
             />
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Backend Address</label>
+            <label className="text-sm font-medium">Backend API</label>
             <div className="text-sm text-muted-foreground font-mono bg-muted px-3 py-2 rounded-md">
-              {BACKEND_URL}
+              {API_PREFIX}
             </div>
           </div>
         </div>

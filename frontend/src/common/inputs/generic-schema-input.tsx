@@ -2,7 +2,7 @@ import { memo, useEffect } from "react";
 import { StringArea } from "../utility-components/string-area";
 import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
 import { Input } from "@/components/ui/input";
-import useTypesStore from "@/stores/typesStore";
+import useFlowStore from "@/stores/flowStore";
 import type { TypeSchema } from "@/types/backend-schema";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 
@@ -37,7 +37,7 @@ export default memo(function GenericSchemaInput({
   schema,
   placeholder = "Value",
 }: GenericSchemaInputProps) {
-  const types = useTypesStore((state) => state.types);
+  const types = useFlowStore((state) => state.types);
   const rawValue = formatValue(value);
   const effectiveSchema = typeSchema ?? schema;
   const isValid =

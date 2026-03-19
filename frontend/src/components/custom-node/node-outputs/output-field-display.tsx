@@ -3,8 +3,9 @@ import SingleLineTextDisplay from "@/common/utility-components/single-line-text-
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import { useOutputField } from "@/hooks/useOutputField";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
-import useTypesStore from "@/stores/typesStore";
+import useFlowStore from "@/stores/flowStore";
 import type { StructDescr, TypeSchema } from "@/types/backend-schema";
+import type { TypeInfo } from "@/types/environment";
 import { formatUserModelValue } from "@/utils/user-model-formatting";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import OutputMenu from "./output-menu";
@@ -56,7 +57,7 @@ function formatStructuredValue(value: unknown, itemsType: string): string {
 function formatOutputValue(
   value: unknown,
   type: FrontendFieldDataWrapper["type"],
-  types: ReturnType<typeof useTypesStore.getState>["types"],
+  types: Record<string, TypeInfo>,
 ): string {
   if (value === undefined) {
     return "";
@@ -105,7 +106,7 @@ export default memo(function OutputDisplay({
   path,
 }: OutputDisplayProps) {
   const { value } = useOutputField(path);
-  const types = useTypesStore((state) => state.types);
+  const types = useFlowStore((state) => state.types);
   const fieldName = path[path.length - 1];
 
   let actualType = fieldData.type;

@@ -6,7 +6,7 @@ import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";
-import useTypesStore from "@/stores/typesStore";
+import useFlowStore from "@/stores/flowStore";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr, TypeSchema } from "@/types/backend-schema";
@@ -38,7 +38,7 @@ export default memo(function InputFieldDisplay({
   edgeConnected,
 }: InputFieldDisplayProps) {
   const { value, setValue } = useInputField(fieldData, path);
-  const types = useTypesStore((state) => state.types);
+  const types = useFlowStore((state) => state.types);
   const { height, setHeight } = useResizableHeight(path, DEFAULT_INPUT_HEIGHT);
   const nodeId = path[0];
   const fieldName = path[path.length - 1];

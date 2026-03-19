@@ -64,7 +64,7 @@ def test_create_dict_of_floats():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -95,7 +95,7 @@ def test_create_list_of_floats():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -136,7 +136,7 @@ def test_create_and_index_dict():
 
     graph = Graph(nodes=[node1, node2], edges=[edge1])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -224,7 +224,7 @@ def test_create_and_index_list():
         ],
     }
 
-    response = client.post("/graph_execute", json=graph_data)
+    response = client.post("/api/graph_execute", json=graph_data)
     assert response.status_code == 200
 
     result = response.json()

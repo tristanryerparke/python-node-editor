@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from python_node_editor.schema_base import CamelBaseModel
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/data")
 
 # Global cache for large data values
 LARGE_DATA_CACHE: dict[str, Any] = {}

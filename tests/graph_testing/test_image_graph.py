@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Test Python Node Editor - Image Graph", lifespan=lifespan)
 app.include_router(graph_router)
-app.include_router(data_router, prefix="/data")
+app.include_router(data_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -208,7 +208,7 @@ def test_image_upload():
         },
     }
 
-    response = client.post("/data/cache", json=payload)
+    response = client.post("/api/data/cache", json=payload)
     assert response.status_code == 200
 
     result = response.json()
@@ -239,19 +239,19 @@ def test_cache_exists():
         },
     }
 
-    response = client.post("/data/cache", json=payload)
+    response = client.post("/api/data/cache", json=payload)
     assert response.status_code == 200
     cache_key = extract_cache_key(response.json())
 
     # Check if it exists
-    response = client.get(f"/data/cache_exists/{cache_key}")
+    response = client.get(f"/api/data/cache_exists/{cache_key}")
     assert response.status_code == 200
 
     result = response.json()
     assert result["exists"] is True
 
     # Check a non-existent key
-    response = client.get("/data/cache_exists/nonexistent_key")
+    response = client.get("/api/data/cache_exists/nonexistent_key")
     assert response.status_code == 200
 
     result = response.json()
@@ -275,7 +275,7 @@ def test_single_image_node_execute():
         },
     }
 
-    upload_response = client.post("/data/cache", json=upload_payload)
+    upload_response = client.post("/api/data/cache", json=upload_payload)
     assert upload_response.status_code == 200
     upload_result = upload_response.json()
     cache_key = extract_cache_key(upload_result)
@@ -288,7 +288,7 @@ def test_single_image_node_execute():
     graph = Graph(nodes=[node1], edges=[])
 
     # Execute the graph
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -329,7 +329,7 @@ def test_two_connected_image_nodes():
         },
     }
 
-    upload_response = client.post("/data/cache", json=upload_payload)
+    upload_response = client.post("/api/data/cache", json=upload_payload)
     assert upload_response.status_code == 200
     cache_key = extract_cache_key(upload_response.json())
 
@@ -355,7 +355,7 @@ def test_two_connected_image_nodes():
     d(graph.model_dump(by_alias=True))
 
     # Execute the graph
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()

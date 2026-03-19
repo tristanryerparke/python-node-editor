@@ -79,7 +79,7 @@ def test_single_construct_node():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -117,7 +117,7 @@ def test_construct_and_deconstruct():
 
     graph = Graph(nodes=[construct_node, deconstruct_node], edges=[edge1])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -149,7 +149,7 @@ def test_direct_deconstruct_dict_input():
 
     graph = Graph(nodes=[deconstruct_node], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -169,7 +169,7 @@ def test_direct_deconstruct_invalid_user_model_payload():
 
     graph = Graph(nodes=[deconstruct_node], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 422
     assert "instance" in response.text
     assert "Point2D" in response.text
@@ -210,7 +210,7 @@ def test_two_point_distance_calculation():
 
     graph = Graph(nodes=[point_a, point_b, distance_node], edges=[edge1, edge2])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()

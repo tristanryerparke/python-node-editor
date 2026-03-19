@@ -3,7 +3,7 @@ import type {
   TypeSchema,
   UnionDescr,
 } from "@/types/backend-schema";
-import type { TypeInfo } from "@/stores/typesStore";
+import type { TypeInfo } from "@/types/environment";
 
 // TODO: the frontend type metadata does not currently encode optional-vs-required fields beyond what appears in properties, so validation will have to assume declared properties are required unless the schema itself expresses optionality via unions like str | ...
 

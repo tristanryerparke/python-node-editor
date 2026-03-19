@@ -12,6 +12,7 @@ import type {
 } from "@xyflow/react";
 import { produce } from "immer";
 import type { FrontendFieldDataWrapper, FunctionNode } from "../types/types";
+import type { EnvironmentResponse, FunctionSchemas, TypeInfo } from "@/types/environment";
 import {
   getConcreteType,
   isArgumentValuePath,
@@ -20,12 +21,15 @@ import {
 } from "../utils/large-data-utils";
 import { preserveUIData } from "../utils/preserve-ui-data";
 import { findNodeIndexById } from "../utils/store-utils";
+import { indexFunctionSchemas } from "@/types/environment";
 
 type FlowStoreState = {
   nodes: FunctionNode[];
   edges: Edge[];
   viewport: Viewport;
   rfInstance: ReactFlowInstance<FunctionNode, Edge> | null;
+  functionSchemas: FunctionSchemas;
+  types: Record<string, TypeInfo>;
 };
 
 type FlowStoreActions = {
@@ -35,6 +39,7 @@ type FlowStoreActions = {
   setEdges: (edges: Edge[]) => void;
   setViewport: (viewport: Viewport) => void;
   setRfInstance: (instance: ReactFlowInstance<FunctionNode, Edge>) => void;
+  setEnvironment: (environment: EnvironmentResponse) => void;
   onNodesChange: OnNodesChange<FunctionNode>;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
@@ -59,6 +64,8 @@ const useFlowStore = createWithEqualityFn<
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
       rfInstance: null,
+      functionSchemas: {},
+      types: {},
 
       onNodesChange: (changes) => {
         set(
@@ -93,6 +100,12 @@ const useFlowStore = createWithEqualityFn<
       setViewport: (viewport) => set({ viewport }),
 
       setRfInstance: (instance) => set({ rfInstance: instance }),
+
+      setEnvironment: (environment) =>
+        set({
+          functionSchemas: indexFunctionSchemas(environment.nodes),
+          types: environment.types,
+        }),
 
       updateNodeData: async (path, newData, options = {}) => {
         const { suppress = false, prefix = "", fromUser = false } = options;

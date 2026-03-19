@@ -81,7 +81,7 @@ async def poll_execution_until_complete(
     last_update_index = -1
 
     while time.time() - start_time < timeout:
-        response = await client.get(f"/execution_update/{execution_id}")
+        response = await client.get(f"/api/execution_update/{execution_id}")
         assert response.status_code == 200
         data = response.json()
 
@@ -126,7 +126,7 @@ async def test_single_node_async_execute():
     ) as client:
         # Submit execution
         response = await client.post(
-            "/execution_submit", json=graph.model_dump(by_alias=True)
+            "/api/execution_submit", json=graph.model_dump(by_alias=True)
         )
         assert response.status_code == 200
         result = response.json()
@@ -210,7 +210,7 @@ async def test_two_connected_nodes_async_execute():
     ) as client:
         # Submit execution
         response = await client.post(
-            "/execution_submit", json=graph.model_dump(by_alias=True)
+            "/api/execution_submit", json=graph.model_dump(by_alias=True)
         )
         assert response.status_code == 200
         result = response.json()
@@ -270,7 +270,7 @@ async def test_async_execution_with_error():
     ) as client:
         # Submit execution
         response = await client.post(
-            "/execution_submit", json=graph.model_dump(by_alias=True)
+            "/api/execution_submit", json=graph.model_dump(by_alias=True)
         )
         assert response.status_code == 200
         result = response.json()

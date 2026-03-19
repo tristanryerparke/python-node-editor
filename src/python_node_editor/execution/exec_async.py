@@ -16,7 +16,7 @@ from python_node_editor.execution.exec_utils import (
 from python_node_editor.schema import Graph, NodeFromFrontend, NodeUpdate
 from python_node_editor.schema_base import CamelBaseModel
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 # Time in seconds to keep completed executions before cleanup
 EXECUTION_CLEANUP_DELAY = 10

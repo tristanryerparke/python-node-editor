@@ -62,7 +62,7 @@ def test_single_node_execute_raw():
         "edges": [],
     }
 
-    response = client.post("/graph_execute", json=graph_data)
+    response = client.post("/api/graph_execute", json=graph_data)
     assert response.status_code == 200
 
     result = response.json()
@@ -107,7 +107,7 @@ def test_two_nodes_execute_raw():
         "edges": [],
     }
 
-    response = client.post("/graph_execute", json=graph_data)
+    response = client.post("/api/graph_execute", json=graph_data)
     assert response.status_code == 200
 
     result = response.json()
@@ -164,7 +164,7 @@ def test_two_connected_nodes_execute_raw():
         ],
     }
 
-    response = client.post("/graph_execute", json=graph_data)
+    response = client.post("/api/graph_execute", json=graph_data)
     assert response.status_code == 200
 
     result = response.json()

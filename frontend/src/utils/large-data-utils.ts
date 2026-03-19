@@ -2,6 +2,7 @@ import type {
   CachedValueReference,
   FrontendFieldDataWrapper,
 } from "../types/types";
+import { buildApiPath } from "@/lib/fetcher";
 
 export const isArgumentValuePath = (path: (string | number)[]) =>
   path.length >= 4 && path[1] === "arguments" && path[3] === "value";
@@ -105,7 +106,7 @@ export const uploadLargeData = async (
     payload = { value };
   }
 
-  const response = await fetch("http://localhost:8000/data/cache", {
+  const response = await fetch(buildApiPath("/data/cache"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

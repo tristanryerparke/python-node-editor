@@ -56,7 +56,7 @@ def test_terminal_output_capture():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -84,7 +84,7 @@ def test_error_output_capture():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -115,7 +115,7 @@ def test_empty_terminal_output_on_success():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()

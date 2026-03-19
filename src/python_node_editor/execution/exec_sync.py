@@ -9,7 +9,7 @@ from python_node_editor.execution.exec_utils import (
 )
 from python_node_editor.schema import Graph, NodeUpdate
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 
 @router.post("/graph_execute")

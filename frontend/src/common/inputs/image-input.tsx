@@ -3,6 +3,7 @@ import { Input } from "../../components/ui/input";
 import { cn } from "@/lib/utils";
 import { ErrorDialog } from "../utility-components/error-dialog";
 import ImagePreview from "../utility-components/image-preview";
+import { buildApiPath } from "@/lib/fetcher";
 import { isCachedValueReference } from "@/utils/large-data-utils";
 import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
 
@@ -30,7 +31,7 @@ const ImageInput = memo(function ImageInput({
   useEffect(() => {
     if (!cacheKey) return;
 
-    fetch(`http://localhost:8000/data/cache_exists/${cacheKey}`)
+    fetch(buildApiPath(`/data/cache_exists/${cacheKey}`))
       .then((response) => response.json())
       .then((data) => {
         if (!data.exists) {

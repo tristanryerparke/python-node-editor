@@ -5,7 +5,8 @@ import GenericSchemaInput from "../common/inputs/generic-schema-input";
 import { SyncedWidthHandleProvider } from "@/common/utility-components/synced-width-resizable";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import type { TypeSchema } from "@/types/backend-schema";
-import useTypesStore, { type TypeInfo } from "@/stores/typesStore";
+import useFlowStore from "@/stores/flowStore";
+import type { TypeInfo } from "@/types/environment";
 
 type GenericSchemaInputStoryArgs = {
   expanded?: boolean;
@@ -50,7 +51,6 @@ function GenericSchemaInputStory({
   onValueChange: (value: unknown) => void;
 }) {
   const [localValue, setLocalValue] = useState(value);
-  const setTypes = useTypesStore((state) => state.setTypes);
 
   useEffect(() => {
     setLocalValue(value);
@@ -61,16 +61,18 @@ function GenericSchemaInputStory({
       return;
     }
 
-    const previousTypes = useTypesStore.getState().types;
-    setTypes({
-      ...previousTypes,
-      ...mockTypes,
+    const previousTypes = useFlowStore.getState().types;
+    useFlowStore.setState({
+      types: {
+        ...previousTypes,
+        ...mockTypes,
+      },
     });
 
     return () => {
-      setTypes(previousTypes);
+      useFlowStore.setState({ types: previousTypes });
     };
-  }, [mockTypes, setTypes]);
+  }, [mockTypes]);
 
   return (
     <SyncedWidthHandleProvider

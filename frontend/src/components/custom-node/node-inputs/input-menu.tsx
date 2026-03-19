@@ -12,7 +12,6 @@ import {
 } from "../../ui/dropdown-menu";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
-import useTypesStore from "@/stores/typesStore";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
 
@@ -25,7 +24,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const getNodeData = useFlowStore((state) => state.getNodeData);
-  const types = useTypesStore((state) => state.types);
+  const types = useFlowStore((state) => state.types);
 
   const nodeId = path ? path[0] : undefined;
 
