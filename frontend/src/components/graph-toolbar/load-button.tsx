@@ -5,9 +5,10 @@ import useInspectorStore, {
   type InspectorPathSegment,
   type InspectorTarget,
 } from "../../stores/inspectorStore";
-import { useReactFlow } from "@xyflow/react";
+import { useReactFlow, type Edge } from "@xyflow/react";
 import { useRef } from "react";
 import type { FunctionSchemas, TypeInfo } from "@/types/environment";
+import type { FunctionNode } from "@/types/types";
 import { buildEnvironmentMismatchWarning } from "@/utils/environment-mismatch";
 import useSettingsStore from "@/stores/settingsStore";
 
@@ -24,11 +25,14 @@ type SavedFlowFile = {
     y?: unknown;
     zoom?: unknown;
   };
+  functionSchemas?: unknown;
+  types?: unknown;
   inspector?: SavedInspectorState;
 };
 
-type SavedInspectorEntry = Omit<InspectorEntryState, "customName"> & {
+type SavedInspectorEntry = Omit<InspectorEntryState, "customName" | "viewMode"> & {
   customName?: unknown;
+  viewMode?: unknown;
 };
 
 function isInspectorPath(path: unknown): path is InspectorPathSegment[] {
@@ -56,6 +60,9 @@ function isInspectorEntryState(entry: unknown): entry is SavedInspectorEntry {
     (!("customName" in entry) ||
       entry.customName === null ||
       typeof entry.customName === "string") &&
+    (!("viewMode" in entry) ||
+      entry.viewMode === "json" ||
+      entry.viewMode === "rich") &&
     (entry.selectedTarget === null || isInspectorTarget(entry.selectedTarget));
 }
 
@@ -70,6 +77,9 @@ function normalizeInspectorState(
           ...entry,
           customName:
             typeof entry.customName === "string" ? entry.customName : null,
+          viewMode: (entry.viewMode === "rich"
+            ? "rich"
+            : "json") as InspectorEntryState["viewMode"],
           selectedTarget:
             entry.selectedTarget &&
             nodeIds.has(entry.selectedTarget.nodeId)
@@ -116,6 +126,19 @@ export const LoadButton = () => {
         const flow = JSON.parse(content) as SavedFlowFile;
 
         if (flow) {
+          const nodes = Array.isArray(flow.nodes)
+            ? (flow.nodes as FunctionNode[])
+            : [];
+          const edges = Array.isArray(flow.edges)
+            ? (flow.edges as Edge[])
+            : [];
+          const nodeIds = new Set(
+            nodes
+              .map((node) =>
+                typeof node?.id === "string" ? node.id : null,
+              )
+              .filter((id): id is string => id !== null),
+          );
           const incomingFunctionSchemas = (flow.functionSchemas ??
             {}) as FunctionSchemas;
           const incomingTypes = (flow.types ?? {}) as Record<string, TypeInfo>;
@@ -133,13 +156,18 @@ export const LoadButton = () => {
             }
           }
 
-          const { x = 0, y = 0, zoom = 1 } = flow.viewport || {};
+          const x = typeof flow.viewport?.x === "number" ? flow.viewport.x : 0;
+          const y = typeof flow.viewport?.y === "number" ? flow.viewport.y : 0;
+          const zoom =
+            typeof flow.viewport?.zoom === "number" ? flow.viewport.zoom : 1;
           const viewport = { x, y, zoom };
-          setNodes(flow.nodes || []);
-          setEdges(flow.edges || []);
+          setNodes(nodes);
+          setEdges(edges);
           setStoreViewport(viewport);
           setViewport(viewport);
-          useInspectorStore.setState(normalizeInspectorState(flow.inspector, nodeIds));
+          useInspectorStore.setState(
+            normalizeInspectorState(flow.inspector, nodeIds),
+          );
         }
       } catch (error) {
         console.error("Error loading flow:", error);

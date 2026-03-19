@@ -70,14 +70,6 @@ export function EnvironmentMismatchDialog() {
                 </ul>
               </div>
             )}
-            <div className="max-h-56 overflow-auto rounded-md border bg-muted/40 p-2">
-              <div className="text-xs font-medium mb-1">Mismatch Paths</div>
-              <ul className="list-disc pl-5 text-xs font-mono space-y-1">
-                {warning.paths.map((path) => (
-                  <li key={path}>{path}</li>
-                ))}
-              </ul>
-            </div>
           </div>
         )}
         <DialogFooter>

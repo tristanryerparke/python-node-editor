@@ -1,13 +1,22 @@
 import { memo } from "react";
-import useTypesStore from "@/stores/typesStore";
-import UserModelDisplay from "./user-model-display";
-import { INPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./input-type-registry";
+import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
+import UserModelDisplay from "@/common/utility-components/user-model-display";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import GenericSchemaInput from "./generic-schema-input";
+import useFlowStore from "@/stores/flowStore";
+import { useInputField } from "@/hooks/useInputField";
+import { useResizableHeight } from "@/hooks/useResizableHeight";
+import { formatTypeForDisplay } from "@/utils/type-formatting";
+import type { TypeSchema } from "@/types/backend-schema";
 import type { FrontendFieldDataWrapper } from "@/types/types";
+
+const DEFAULT_INPUT_HEIGHT = 30;
 
 interface InputFieldDisplayProps {
   fieldData: FrontendFieldDataWrapper;
   path: (string | number)[];
+  disabled?: boolean;
+  edgeConnected?: boolean;
   isExpanded?: boolean;
   menu?: React.ReactNode;
   renderFieldName?: (fieldName: string | number) => React.ReactNode;
@@ -16,11 +25,15 @@ interface InputFieldDisplayProps {
 export default memo(function InputFieldDisplay({
   fieldData,
   path,
+  disabled = false,
+  edgeConnected = false,
   isExpanded: isExpandedProp,
   menu,
   renderFieldName,
 }: InputFieldDisplayProps) {
-  const types = useTypesStore((state) => state.types);
+  const { value, setValue } = useInputField(fieldData, path);
+  const types = useFlowStore((state) => state.types);
+  const { height, setHeight } = useResizableHeight(path, DEFAULT_INPUT_HEIGHT);
   const fieldName = path[path.length - 1];
 
   if (!fieldData) {
@@ -39,45 +52,49 @@ export default memo(function InputFieldDisplay({
 
   const isExpanded = isExpandedProp ?? (fieldData._expanded ?? false);
 
-  const hasRegistryComponent =
-    typeof actualType === "string" &&
-    Boolean(INPUT_TYPE_COMPONENT_REGISTRY[actualType]);
-
   const typeInfo =
     typeof actualType === "string" ? types[actualType] : undefined;
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
+  const typeName = formatTypeForDisplay(actualType);
+  const registryEntry =
+    typeof actualType === "string"
+      ? INPUT_TYPE_COMPONENT_REGISTRY[actualType]
+      : undefined;
+  const usesGenericRenderer = !registryEntry && !isUserModel;
 
-  const usesGenericRenderer = !hasRegistryComponent && !isUserModel;
+  const controlledProps = {
+    value,
+    onChange: setValue,
+    disabled,
+    expanded: isExpanded,
+    typeSchema: actualType as TypeSchema,
+  };
 
-  // Function to render the main input component
   const renderMainInput = () => {
-    if (typeof actualType === "string") {
-      const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (registryEntry) {
-        if (isExpanded && isObjectRegistryEntry(registryEntry) && registryEntry.expandable) {
-          return <div className="flex flex-1 min-h-8" />;
-        }
-        const Component = isObjectRegistryEntry(registryEntry)
-          ? registryEntry.main
-          : registryEntry;
-        return (
-          <Component
-            inputData={{ ...fieldData, type: actualType, _expanded: isExpanded }}
-            path={path}
-          />
-        );
+    if (isUserModel && edgeConnected) {
+      if (isExpanded) {
+        return <div className="flex flex-1 min-h-8" />;
       }
-    }
 
-    // Check if this type exists in the store and is a user_model
-    if (typeof actualType === "string" && typeInfo && typeInfo.kind === "user_model") {
       return (
         <UserModelDisplay
-          inputData={{ ...fieldData, type: actualType, _expanded: isExpanded }}
-          path={path}
-          typeInfo={typeInfo}
+          value={value}
+          disabled={disabled}
+          expanded={false}
+          showEmptyTypeName={false}
+          typeName={typeName}
+          typeSchema={actualType}
         />
       );
+    }
+
+    if (registryEntry) {
+      if (isExpanded && registryEntry.expandable) {
+        return <div className="flex flex-1 min-h-8" />;
+      }
+
+      const Component = registryEntry.component;
+      return <Component {...controlledProps} />;
     }
 
     if (usesGenericRenderer && isExpanded) {
@@ -86,27 +103,35 @@ export default memo(function InputFieldDisplay({
 
     return (
       <GenericSchemaInput
-        inputData={{ ...fieldData, type: actualType, _expanded: isExpanded }}
-        path={path}
+        {...controlledProps}
+        placeholder={typeName}
       />
     );
   };
 
-  // Function to render the expanded component if it exists and is enabled
   const renderExpandedContent = () => {
-    if (typeof actualType === "string") {
-      const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
-        const Component = registryEntry.main;
-        return (
-          <div className="flex-1">
-            <Component
-              inputData={{ ...fieldData, type: actualType, _expanded: isExpanded }}
-              path={path}
-            />
-          </div>
-        );
-      }
+    if (isUserModel && edgeConnected && isExpanded) {
+      return (
+        <div className="flex-1">
+          <UserModelDisplay
+            value={value}
+            disabled={disabled}
+            expanded={true}
+            showEmptyTypeName={false}
+            typeName={typeName}
+            typeSchema={actualType}
+          />
+        </div>
+      );
+    }
+
+    if (registryEntry?.expandable && isExpanded) {
+      const Component = registryEntry.component;
+      return (
+        <div className="flex-1">
+          <Component {...controlledProps} />
+        </div>
+      );
     }
 
     if (!usesGenericRenderer || !isExpanded) {
@@ -116,26 +141,28 @@ export default memo(function InputFieldDisplay({
     return (
       <div className="flex-1">
         <GenericSchemaInput
-          inputData={{ ...fieldData, type: actualType, _expanded: isExpanded }}
-          path={path}
+          {...controlledProps}
+          placeholder={typeName}
         />
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="flex flex-1 items-center gap-1">
-        {renderFieldName ? (
-          renderFieldName(fieldName)
-        ) : (
-          <span className="shrink-0">{fieldName}</span>
-        )}
-        <span className="shrink-0">:</span>
-        <div className="flex-1 min-w-0">{renderMainInput()}</div>
-        {menu}
+    <ResizableHeightProvider height={height} setHeight={setHeight}>
+      <div className="flex flex-col flex-1">
+        <div className="flex flex-1 items-center gap-1">
+          {renderFieldName ? (
+            renderFieldName(fieldName)
+          ) : (
+            <span className="shrink-0">{fieldName}</span>
+          )}
+          <span className="shrink-0">:</span>
+          <div className="flex-1 min-w-0">{renderMainInput()}</div>
+          {menu}
+        </div>
+        {renderExpandedContent()}
       </div>
-      {renderExpandedContent()}
-    </div>
+    </ResizableHeightProvider>
   );
 });

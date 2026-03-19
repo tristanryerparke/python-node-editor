@@ -8,10 +8,15 @@ export default function SaveButton() {
   const onSave = () => {
     if (rfInstance) {
       const flow = rfInstance.toObject();
+      const { entries, showBorders } = useInspectorStore.getState();
       const flowWithEnvironment = {
         ...flow,
         functionSchemas,
         types,
+        inspector: {
+          entries,
+          showBorders,
+        },
       };
       const json = JSON.stringify(flowWithEnvironment, null, 2);
       const blob = new Blob([json], { type: "application/json" });

@@ -9,7 +9,7 @@ import type { TypeInfo } from "@/types/environment";
 import { formatUserModelValue } from "@/utils/user-model-formatting";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import OutputMenu from "./output-menu";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
 
 const DEFAULT_OUTPUT_HEIGHT = 30;
 

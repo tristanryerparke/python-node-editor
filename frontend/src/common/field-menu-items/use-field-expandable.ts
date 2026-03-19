@@ -1,6 +1,6 @@
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
 import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
-import useTypesStore from "@/stores/typesStore";
+import useFlowStore from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "@/types/types";
 
 function getEffectiveType(fieldData: FrontendFieldDataWrapper) {
@@ -17,7 +17,7 @@ function getEffectiveType(fieldData: FrontendFieldDataWrapper) {
 export function useInputFieldExpandable(
   fieldData: FrontendFieldDataWrapper | null | undefined,
 ): boolean {
-  const types = useTypesStore((state) => state.types);
+  const types = useFlowStore((state) => state.types);
 
   if (!fieldData) return false;
 
@@ -51,9 +51,6 @@ export function useInputFieldExpandable(
 export function useOutputFieldExpandable(
   fieldData: FrontendFieldDataWrapper | null | undefined,
 ): boolean {
-  // Call useTypesStore unconditionally to satisfy React hook rules
-  useTypesStore((state) => state.types);
-
   if (!fieldData) return false;
 
   const effectiveType = getEffectiveType(fieldData);

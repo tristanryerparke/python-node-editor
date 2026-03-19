@@ -1,12 +1,8 @@
 import { Handle, Position, useNodeConnections } from "@xyflow/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip";
-import InputFieldDisplay from "@/common/inputs/input-field-display";
-import InputMenu from "./input-menu";
-import EditableKey from "./dynamic/editable-key";
+import InputFieldDisplay from "./input-field-display";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
-import { useNodeData } from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
-import type { StructDescr } from "@/types/backend-schema";
 import InspectableFieldWrapper from "../../inspector-sidebar/inspectable-field-wrapper";
 
 interface NodeInputFieldProps {
@@ -19,15 +15,6 @@ export default function InputFieldHandleWrapper({
   path,
 }: NodeInputFieldProps) {
   // A Wrapper component for rendering an input field on a node with a handle and type tooltip
-  const nodeId = path[0];
-  const dynamicInputType = useNodeData([nodeId, "dynamicInputType"]) as
-    | StructDescr
-    | null
-    | undefined;
-  const isDynamicDictInput =
-    fieldData?._dynamicInputType === "dict" &&
-    dynamicInputType?.structureType === "dict";
-
   const handleId = `${path.join(":")}:handle`;
   const connections = useNodeConnections({
     handleType: "target",
@@ -49,7 +36,7 @@ export default function InputFieldHandleWrapper({
       <div className="relative items-center justify-center">
         <Handle
           // TODO: Why don't height and width work?
-          className="p-1 `rounded-full bg-primary"
+          className="p-1 rounded-full bg-primary"
           type="target"
           position={Position.Left}
           id={handleId}

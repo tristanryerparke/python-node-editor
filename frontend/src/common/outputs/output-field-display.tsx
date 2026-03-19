@@ -1,5 +1,8 @@
-import OutputRenderer from "./output-renderer";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry } from "./output-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import useFlowStore from "@/stores/flowStore";
+import type { StructDescr, TypeSchema } from "@/types/backend-schema";
+import type { TypeInfo } from "@/types/environment";
 import type { FrontendFieldDataWrapper } from "@/types/types";
 
 interface OutputFieldDisplayProps {
@@ -9,12 +12,95 @@ interface OutputFieldDisplayProps {
   menu?: React.ReactNode;
 }
 
+function isStructDescr(type: unknown): type is StructDescr {
+  return (
+    typeof type === "object" &&
+    type !== null &&
+    "structureType" in type &&
+    "itemsType" in type
+  );
+}
+
+function formatStructuredValue(value: unknown, itemsType: string): string {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+
+    if (typeof value[0] === "object" && value[0] !== null) {
+      return `[${value.map(() => itemsType).join(", ")}]`;
+    }
+
+    return `[${value.map((v) => String(v)).join(", ")}]`;
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const entries = Object.entries(value)
+      .map(([key]) => `${key}: ${itemsType}`)
+      .join(", ");
+    return `{${entries}}`;
+  }
+
+  return String(value);
+}
+
+function formatOutputValue(
+  value: unknown,
+  type: FrontendFieldDataWrapper["type"],
+  types: Record<string, TypeInfo>,
+): string {
+  if (value === undefined) {
+    return "";
+  }
+
+  if (isStructDescr(type)) {
+    const { itemsType, structureType } = type;
+    const itemTypeName = typeof itemsType === "string" ? itemsType : "Any";
+
+    if (structureType === "list" || structureType === "dict") {
+      return formatStructuredValue(value, itemTypeName);
+    }
+  }
+
+  if (typeof type === "string") {
+    const typeInfo = types[type];
+
+    if (
+      typeInfo &&
+      typeInfo.kind === "user_model" &&
+      typeof value === "object" &&
+      value !== null
+    ) {
+      const fields = Object.entries(value)
+        .map(([key, fieldValue]) => `${key}=${fieldValue}`)
+        .join(", ");
+      return `${type}(${fields})`;
+    }
+  }
+
+  if (typeof value === "object") {
+    if (!Array.isArray(value) && value !== null) {
+      const entries = Object.entries(value)
+        .map(([key, fieldValue]) => `${key}: ${fieldValue}`)
+        .join(", ");
+      return `{${entries}}`;
+    }
+
+    if (Array.isArray(value)) {
+      return `[${value.join(", ")}]`;
+    }
+
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
 export default function OutputFieldDisplay({
   fieldData,
   path,
   isExpanded: isExpandedProp,
   menu,
 }: OutputFieldDisplayProps) {
+  const types = useFlowStore((state) => state.types);
   const fieldName = path[path.length - 1];
 
   // Handle union types - check if type is an object with anyOf
@@ -28,17 +114,31 @@ export default function OutputFieldDisplay({
   }
 
   const isExpanded = isExpandedProp ?? (fieldData._expanded ?? false);
+  const controlledProps = {
+    value: fieldData.value,
+    expanded: isExpanded,
+    typeSchema: actualType as TypeSchema,
+  };
 
   // Function to render the main output component
   const renderMainOutput = () => {
     if (typeof actualType === "string") {
       const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
-      if (isObjectRegistryEntry(registryEntry) && registryEntry.expandable && isExpanded) {
+      if (registryEntry?.expandable && isExpanded) {
         return <div className="flex flex-1 min-h-8" />;
+      }
+
+      if (registryEntry) {
+        const Component = registryEntry.component;
+        return <Component {...controlledProps} />;
       }
     }
 
-    return <OutputRenderer outputData={fieldData} path={path} />;
+    return (
+      <SingleLineTextDisplay
+        content={formatOutputValue(fieldData.value, actualType, types)}
+      />
+    );
   };
 
   // Function to render the expanded component if it exists and is enabled
@@ -46,15 +146,12 @@ export default function OutputFieldDisplay({
     if (typeof actualType !== "string") return null;
 
     const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
-    if (!isObjectRegistryEntry(registryEntry) || !registryEntry.expandable || !isExpanded) return null;
+    if (!registryEntry?.expandable || !isExpanded) return null;
 
-    const Component = registryEntry.main;
+    const Component = registryEntry.component;
     return (
       <div className="flex-1">
-        <Component
-          outputData={{ ...fieldData, type: actualType }}
-          path={path}
-        />
+        <Component {...controlledProps} />
       </div>
     );
   };

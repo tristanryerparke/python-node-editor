@@ -8,8 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import useFlowStore from "../../../stores/flowStore";
-import { useOutputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
 
 interface OutputMenuProps {
   path: (string | number)[];

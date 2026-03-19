@@ -2,7 +2,7 @@ import { memo } from "react";
 import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";

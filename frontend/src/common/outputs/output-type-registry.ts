@@ -1,37 +1,24 @@
-// eslint-disable react-refresh/only-export-components
+import type { ComponentType } from "react";
 import ImageOutput from "./image-output";
 import StringOutput from "./string-output";
-
-export interface OutputRendererProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  outputData: any;
-  path: (string | number)[];
-  readOnly?: boolean;
-}
+import type { ControlledOutputProps } from "@/components/custom-node/node-outputs/output-field-display";
 
 export interface OutputRegistryEntry {
-  main: React.ComponentType<OutputRendererProps>;
-  expanded?: boolean;
-  expandable?: boolean;
+  component: ComponentType<ControlledOutputProps>;
+  expandable: boolean;
+  defaultExpandedHeight?: number;
 }
 
-// Type that supports both direct component and object pattern
-export type OutputRegistryValueType =
-  | React.ComponentType<OutputRendererProps>
-  | OutputRegistryEntry;
-
-// Determine if a value is an object with properties (new pattern)
-export function isObjectRegistryEntry(
-  value: OutputRegistryValueType
-): value is OutputRegistryEntry {
-  return typeof value === "object" && "main" in value;
-}
-
-// Add more output types here
-export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<
-  string,
-  OutputRegistryValueType
-> = {
-  Image: ImageOutput,
-  str: StringOutput,
-};
+export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<string, OutputRegistryEntry> =
+  {
+    Image: {
+      component: ImageOutput,
+      expandable: true,
+      defaultExpandedHeight: 60,
+    },
+    str: {
+      component: StringOutput,
+      expandable: true,
+      defaultExpandedHeight: 30,
+    },
+  };

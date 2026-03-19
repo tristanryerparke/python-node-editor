@@ -10,7 +10,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ThemeSelect } from "./theme-select";
 import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore from "@/stores/settingsStore";
@@ -23,6 +22,12 @@ export function SettingsModal() {
   );
   const executionMode = useSettingsStore((state) => state.executionMode);
   const setExecutionMode = useSettingsStore((state) => state.setExecutionMode);
+  const showInspectorPaths = useSettingsStore(
+    (state) => state.showInspectorPaths,
+  );
+  const setShowInspectorPaths = useSettingsStore(
+    (state) => state.setShowInspectorPaths,
+  );
   const warnOnEnvironmentMismatch = useSettingsStore(
     (state) => state.warnOnEnvironmentMismatch,
   );

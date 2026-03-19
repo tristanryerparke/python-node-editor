@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import { useInputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
+import UnionTypeMenuItems from "@/common/field-menu-items/union-type-menu-items";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import type { StructDescr } from "@/types/backend-schema";
 
@@ -23,7 +24,6 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const getNodeData = useFlowStore((state) => state.getNodeData);
-  const types = useFlowStore((state) => state.types);
 
   const nodeId = path ? path[0] : undefined;
 
@@ -45,28 +45,7 @@ export default function InputMenu({ path, fieldData }: InputMenuProps) {
     fieldData.type.anyOf.length > 1;
 
   // Check if this type has an expandable area
-  const effectiveType = selectedType || fieldData.type;
-  const inputRegistry = INPUT_TYPE_COMPONENT_REGISTRY as Record<
-    string,
-    { expandable: boolean }
-  >;
-  const registryEntry =
-    typeof effectiveType === "string"
-      ? inputRegistry[effectiveType]
-      : undefined;
-
-  const hasRegistryExpandable = Boolean((registryEntry as { expandable?: true } | undefined)?.expandable);
-  const isUserModelType =
-    typeof effectiveType === "string" &&
-    Boolean(types[effectiveType] && types[effectiveType].kind === "user_model");
-  const hasGenericExpandable =
-    (typeof effectiveType === "object" &&
-      "structureType" in effectiveType &&
-      (effectiveType.structureType === "list" ||
-        effectiveType.structureType === "dict")) ||
-    (typeof effectiveType === "string" &&
-      (!registryEntry || isUserModelType));
-  const hasExpandable = hasRegistryExpandable || hasGenericExpandable;
+  const hasExpandable = useInputFieldExpandable(fieldData);
   const isExpanded = fieldData._expanded ?? false;
 
   // Detect if this is a dynamic list input

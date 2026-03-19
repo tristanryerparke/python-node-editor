@@ -1,35 +1,19 @@
-// eslint-disable react-refresh/only-export-components
+import type { ComponentType } from "react";
 import FloatInput from "./float-input";
 import IntInput from "./int-input";
 import StringInput from "./string-input";
 import ImageInput from "./image-input";
-import type { CustomInputProps } from "@/hooks/useInputField";
+import type { ControlledInputProps } from "@/components/custom-node/node-inputs/input-field-display";
 
 export interface InputRegistryEntry {
-  main: React.ComponentType<CustomInputProps>;
-  expanded?: boolean;
-  expandable?: boolean;
+  component: ComponentType<ControlledInputProps>;
+  expandable: boolean;
 }
 
-// Type that supports both direct component and object pattern
-export type InputRegistryValueType =
-  | React.ComponentType<CustomInputProps>
-  | InputRegistryEntry;
-
-// Determine if a value is an object with properties (new pattern)
-export function isObjectRegistryEntry(
-  value: InputRegistryValueType
-): value is InputRegistryEntry {
-  return typeof value === "object" && "main" in value;
-}
-
-// Add more input types here
-export const INPUT_TYPE_COMPONENT_REGISTRY: Record<
-  string,
-  InputRegistryValueType
-> = {
-  float: FloatInput,
-  int: IntInput,
-  str: StringInput,
-  Image: ImageInput,
-};
+export const INPUT_TYPE_COMPONENT_REGISTRY: Record<string, InputRegistryEntry> =
+  {
+    float: { component: FloatInput, expandable: false },
+    int: { component: IntInput, expandable: false },
+    str: { component: StringInput, expandable: true },
+    Image: { component: ImageInput, expandable: true },
+  };

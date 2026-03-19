@@ -101,16 +101,6 @@ export function SyncedWidthHandleProvider({
   );
 }
 
-function useSyncedWidthHandleContext() {
-  const context = useContext(SyncedWidthHandleContext);
-  if (!context) {
-    throw new Error(
-      "SyncedWidthHandle must be used within SyncedWidthHandleProvider",
-    );
-  }
-  return context;
-}
-
 interface SyncedWidthHandleProps {
   children?: ReactNode;
   className?: string;

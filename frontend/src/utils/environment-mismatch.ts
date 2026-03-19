@@ -48,20 +48,38 @@ export const buildEnvironmentMismatchWarning = ({
     return null;
   }
 
-  const missingCallableIds = Object.keys(incomingFunctionSchemas).filter(
-    (callableId) => !(callableId in currentFunctionSchemas),
+  const isBackendRefetch = source === "backend-refetch";
+  const missingCallableIds = (
+    isBackendRefetch
+      ? Object.keys(currentFunctionSchemas).filter(
+          (callableId) => !(callableId in incomingFunctionSchemas),
+        )
+      : Object.keys(incomingFunctionSchemas).filter(
+          (callableId) => !(callableId in currentFunctionSchemas),
+        )
   );
-  const missingTypes = Object.keys(incomingTypes).filter(
-    (typeName) => !(typeName in currentTypes),
+  const missingTypes = (
+    isBackendRefetch
+      ? Object.keys(currentTypes).filter(
+          (typeName) => !(typeName in incomingTypes),
+        )
+      : Object.keys(incomingTypes).filter(
+          (typeName) => !(typeName in currentTypes),
+        )
   );
 
   if (missingCallableIds.length === 0 && missingTypes.length === 0) {
     return null;
   }
 
+  const referenceFunctionSchemas = isBackendRefetch
+    ? currentFunctionSchemas
+    : incomingFunctionSchemas;
+
   const missingFunctions = missingCallableIds.map((callableId) => ({
     callableId,
-    functionName: incomingFunctionSchemas[callableId]?.name ?? "Unknown function",
+    functionName:
+      referenceFunctionSchemas[callableId]?.name ?? "Unknown function",
   }));
 
   const paths = [
@@ -72,8 +90,11 @@ export const buildEnvironmentMismatchWarning = ({
     ...missingTypes.map((typeName) => `types.${typeName}`),
   ];
 
-  const message =
-    missingCallableIds.length > 0
+  const message = isBackendRefetch
+    ? missingCallableIds.length > 0
+      ? "Callable ID mismatch: current store contains callableIds that are not available from the backend."
+      : "Current store contains type metadata that is not available from the backend."
+    : missingCallableIds.length > 0
       ? "Callable ID mismatch: incoming function schemas contain callableIds that do not exist in the current store."
       : "Incoming type metadata contains type names that do not exist in the current store.";
 

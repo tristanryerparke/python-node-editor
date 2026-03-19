@@ -10,6 +10,7 @@ type SettingsStoreState = {
   openInEditorName: string | null;
   executionMode: ExecutionMode;
   warnOnEnvironmentMismatch: boolean;
+  showInspectorPaths: boolean;
 };
 
 type SettingsStoreActions = {
@@ -17,6 +18,7 @@ type SettingsStoreActions = {
   setOpenInEditorName: (editorName: string | null) => void;
   setExecutionMode: (mode: ExecutionMode) => void;
   setWarnOnEnvironmentMismatch: (enabled: boolean) => void;
+  setShowInspectorPaths: (enabled: boolean) => void;
 };
 
 export type SettingsState = SettingsStoreState & SettingsStoreActions;
@@ -31,6 +33,7 @@ const useSettingsStore = createWithEqualityFn<
       openInEditorName: "vscode",
       executionMode: "async",
       warnOnEnvironmentMismatch: true,
+      showInspectorPaths: true,
 
       setTheme: (theme) => set({ theme }),
 
@@ -41,6 +44,9 @@ const useSettingsStore = createWithEqualityFn<
 
       setWarnOnEnvironmentMismatch: (enabled) =>
         set({ warnOnEnvironmentMismatch: enabled }),
+
+      setShowInspectorPaths: (enabled) =>
+        set({ showInspectorPaths: enabled }),
     }),
     {
       name: "settings-storage",
@@ -50,6 +56,7 @@ const useSettingsStore = createWithEqualityFn<
         openInEditorName: state.openInEditorName,
         executionMode: state.executionMode,
         warnOnEnvironmentMismatch: state.warnOnEnvironmentMismatch,
+        showInspectorPaths: state.showInspectorPaths,
       }),
     },
   ),
