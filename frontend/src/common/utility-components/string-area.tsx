@@ -3,12 +3,10 @@ import { Grip } from "lucide-react";
 import {
   ResizableHeight,
   ResizableHeightHandle,
-  ResizableHeightProvider,
 } from "./resizable-height";
 import { SyncedWidthHandle } from "./synced-width-resizable";
 import { Textarea } from "../../components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { useResizableHeight } from "@/hooks/useResizableHeight";
 
 const DEFAULT_MIN_HEIGHT = 30;
 const DEFAULT_MAX_HEIGHT = 200;
