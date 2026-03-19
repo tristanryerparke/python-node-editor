@@ -95,23 +95,3 @@ export const StringArea = memo(function StringArea({
     </ResizableHeight>
   );
 });
-
-export interface StoreBackedStringAreaProps
-  extends StringAreaProps {
-  path: (string | number)[];
-  defaultHeight?: number;
-}
-
-export default memo(function StoreBackedStringArea({
-  path,
-  defaultHeight = DEFAULT_MIN_HEIGHT,
-  ...props
-}: StoreBackedStringAreaProps) {
-  const { height, setHeight } = useResizableHeight(path, defaultHeight);
-
-  return (
-    <ResizableHeightProvider height={height} setHeight={setHeight}>
-      <StringArea {...props} />
-    </ResizableHeightProvider>
-  );
-});

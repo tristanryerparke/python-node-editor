@@ -3,12 +3,6 @@ import { useDebounceCallback } from "usehooks-ts";
 import useFlowStore from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "@/types/types";
 
-export interface CustomInputProps {
-  inputData: FrontendFieldDataWrapper;
-  path: (string | number)[];
-  disabled: boolean;
-}
-
 interface UseInputFieldOptions {
   delay?: number;
 }

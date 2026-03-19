@@ -12,7 +12,7 @@ export function isInputFieldTarget(target: InspectorTarget): boolean {
   return target.path[1] === "arguments";
 }
 
-export function formatInspectorTargetSummary(
+function formatInspectorTargetSummary(
   nodeId: string,
   path: (string | number)[],
 ) {

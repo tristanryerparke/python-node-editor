@@ -245,9 +245,6 @@ const useInspectorStore = createWithEqualityFn<
   shallow,
 );
 
-export const getInspectorData = (path: InspectorPathSegment[]) =>
-  useInspectorStore.getState().getInspectorData(path);
-
 export const updateInspectorData = (
   path: InspectorPathSegment[],
   newData: unknown,

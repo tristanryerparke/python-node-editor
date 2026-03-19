@@ -15,7 +15,6 @@ router = APIRouter(prefix="/api")
 @router.post("/graph_execute")
 async def execute_graph_sync(graph: Graph):
     """Execute a graph containing nodes and edges synchronously"""
-    from python_node_editor.server import TYPES
 
     execution_list = topological_order(graph)
 

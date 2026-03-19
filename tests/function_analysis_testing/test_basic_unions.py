@@ -2,7 +2,6 @@ from devtools import debug as d
 
 from python_node_editor.analysis.functions_analysis import analyze_function
 from python_node_editor.schema import DataWrapper, UnionDescr
-from python_node_editor.schema_base import TypeDefModel
 from tests.assets.functions import add_with_union
 
 

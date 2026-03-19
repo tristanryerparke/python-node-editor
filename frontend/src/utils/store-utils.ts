@@ -57,26 +57,3 @@ export function setDataAtPath(
 
   target[path[path.length - 1]] = newData;
 }
-
-export function deleteDataAtPath(current: NestedRecord, path: NestedPath) {
-  if (path.length === 0) {
-    return false;
-  }
-
-  let target = current;
-
-  for (let i = 0; i < path.length - 1; i++) {
-    const key = path[i];
-    const next = target[key];
-
-    if (!isNestedRecord(next)) {
-      return false;
-    }
-
-    target = next;
-  }
-
-  delete target[path[path.length - 1]];
-
-  return true;
-}

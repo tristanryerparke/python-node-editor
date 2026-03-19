@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import useFlowStore from "@/stores/flowStore";
-import { useFieldRenderContext } from "@/common/field-render-context";
+import { useFieldRenderContext } from "@/common/utility-components/field-render-context";
 
 // Tailwind spacing scale: 1 unit = 0.25rem = 4px
 const TAILWIND_UNIT = 4;

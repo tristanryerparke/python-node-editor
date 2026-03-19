@@ -8,7 +8,7 @@ import {
 import { useNodeData } from "@/stores/flowStore";
 import InputFieldDisplay from "@/common/inputs/input-field-display";
 import OutputFieldDisplay from "@/common/outputs/output-field-display";
-import { InspectorFieldRenderProvider } from "@/common/field-render-context";
+import { InspectorFieldRenderProvider } from "@/common/utility-components/field-render-context";
 import EntryMenu from "./entry-menu";
 import {
   getEntrySummary,
@@ -91,7 +91,6 @@ export default function EntryHeader({
           fieldData={fieldData}
           path={selectedPath}
           isExpanded={entry.isExpanded}
-          menu={entryMenu}
         />
       );
     }
@@ -101,7 +100,6 @@ export default function EntryHeader({
         fieldData={fieldData}
         path={selectedPath}
         isExpanded={entry.isExpanded}
-        menu={entryMenu}
       />
     );
   };
@@ -110,16 +108,17 @@ export default function EntryHeader({
     <>
       {isRichField ? (
         <div className="min-w-0 flex-1 flex flex-col gap-1">
-          <div className="flex flex-row gap-1 items-center">
+          <div className="-mx-1 min-w-0 flex flex-row gap-1 items-center">
             {selectorToggle}
             {headerText}
+            {entryMenu}
           </div>
           <InspectorFieldRenderProvider entryId={entry.id}>
             {renderFieldDisplay()}
           </InspectorFieldRenderProvider>
         </div>
       ) : (
-        <div className="min-w-0 flex-1 flex flex-row gap-1 items-center">
+        <div className="-mx-1 min-w-0 flex-1 flex flex-row gap-1 items-center">
           {selectorToggle}
           {headerText}
           {entryMenu}

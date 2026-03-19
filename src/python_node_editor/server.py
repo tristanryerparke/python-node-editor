@@ -4,7 +4,7 @@ import sys
 from contextlib import asynccontextmanager
 
 from devtools import debug as d
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -108,7 +108,7 @@ def _serialize_types():
 
 
 @app.get("/api/health")
-async def health_check(request: Request):
+async def health_check():
     return {"status": "ok"}
 
 

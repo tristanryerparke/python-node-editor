@@ -1,5 +1,5 @@
 import useFlowStore, { useNodeData } from "@/stores/flowStore";
-import { useFieldRenderContext } from "@/common/field-render-context";
+import { useFieldRenderContext } from "@/common/utility-components/field-render-context";
 
 export function useResizableHeight(
   path: (string | number)[],
