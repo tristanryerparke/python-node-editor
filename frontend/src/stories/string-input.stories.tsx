@@ -9,7 +9,6 @@ type StringInputStoryArgs = {
   expanded?: boolean;
   disabled?: boolean;
   value?: string;
-  valid?: boolean;
   width?: number;
   height?: number;
 };
@@ -18,7 +17,6 @@ function StringInputStory({
   expanded = false,
   disabled = false,
   value = "",
-  valid = true,
   width = 72,
   height = 30,
   onWidthChange,
@@ -50,7 +48,6 @@ function StringInputStory({
               onValueChange(nextStringValue);
             }}
             disabled={disabled}
-            valid={valid}
             expanded={expanded}
           />
         </div>
@@ -65,7 +62,6 @@ const meta = {
     expanded: false,
     disabled: false,
     value: "Storybook text",
-    valid: true,
     width: 72,
     height: 30,
   },
@@ -78,9 +74,6 @@ const meta = {
     },
     value: {
       control: "text",
-    },
-    valid: {
-      control: "boolean",
     },
     width: {
       control: { type: "range", min: 20, max: 160, step: 1 },
@@ -122,7 +115,6 @@ export const TextOverflow: Story = {
     expanded: true,
     disabled: false,
     value: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    valid: true,
     width: 80,
     height: 40,
   },

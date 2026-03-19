@@ -24,9 +24,11 @@ export default memo(function NodeHeader({ data, nodeId }: NodeHeaderProps) {
   }
 
   return (
-    <div className="h-fit flex items-center justify-between p-1 w-full">
-      <span className="px-1 text-sm font-bold shrink-0">{data.name}</span>
-      <div className="flex items-center gap-1">
+    <div className="h-fit flex items-center gap-1 p-1 w-full min-w-0">
+      <span className="px-1 text-sm font-bold flex-1 min-w-0 truncate">
+        {data.name}
+      </span>
+      <div className="flex items-center gap-1 shrink-0">
         <SourceCodeButton definitionPath={data.definitionPath} />
         <NodeStatus
           status={data.status ?? "not-executed"}

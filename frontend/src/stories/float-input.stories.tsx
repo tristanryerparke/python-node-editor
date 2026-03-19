@@ -6,14 +6,12 @@ import FloatInput from "../common/inputs/float-input";
 type FloatInputStoryArgs = {
   disabled?: boolean;
   value?: number;
-  valid?: boolean;
   placeholder?: string;
 };
 
 function FloatInputStory({
   disabled = false,
-  value = 1.5,
-  valid = true,
+  value,
   placeholder = "Enter float",
   onValueChange,
 }: FloatInputStoryArgs & {
@@ -36,7 +34,6 @@ function FloatInputStory({
           onValueChange(nextNumberValue);
         }}
         disabled={disabled}
-        valid={valid}
         placeholder={placeholder}
       />
     </div>
@@ -48,7 +45,6 @@ const meta = {
   args: {
     disabled: false,
     value: 1.5,
-    valid: true,
     placeholder: "Enter float",
   },
   argTypes: {
@@ -57,9 +53,6 @@ const meta = {
     },
     value: {
       control: "number",
-    },
-    valid: {
-      control: "boolean",
     },
     placeholder: {
       control: "text",

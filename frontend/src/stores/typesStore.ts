@@ -1,9 +1,9 @@
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/vanilla/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { TypeExpr, UnionDescr } from "../types/backend-schema";
+import type { TypeSchema, UnionDescr } from "../types/backend-schema";
 
-export type PropertyType = TypeExpr;
+export type PropertyType = TypeSchema;
 
 export interface TypeInfo {
   kind: string;

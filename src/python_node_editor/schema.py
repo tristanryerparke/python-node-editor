@@ -4,6 +4,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    ValidationError,
     field_serializer,
     model_validator,
 )
@@ -72,16 +73,29 @@ class NodeDataFromFrontend(CamelBaseModel):
 
     @model_validator(mode="after")
     def reconstruct_cached_types(self):
-        from python_node_editor.server import CALLABLES
+        from python_node_editor.server import CALLABLES, TYPES
         from python_node_editor.large_data.large_files_endpoint import LARGE_DATA_CACHE
 
         func_obj = CALLABLES.get(self.callable_id)
         handlers = getattr(func_obj, "_large_data_handlers", {}) or {}
-        if not handlers:
-            return self
 
-        for arg in self.arguments.values():
-            if arg.type not in handlers:
+        for arg_name, arg in self.arguments.items():
+            if isinstance(arg.type, str):
+                type_def = TYPES.get(arg.type)
+                if (
+                    type_def is not None
+                    and type_def.kind == "user_model"
+                    and type_def._class is not None
+                    and isinstance(arg.value, dict)
+                ):
+                    try:
+                        arg.value = type_def._class.model_validate(arg.value)
+                    except ValidationError as exc:
+                        raise ValueError(
+                            f"Invalid value for argument '{arg_name}' of type '{arg.type}'"
+                        ) from exc
+
+            if not handlers or arg.type not in handlers:
                 continue
             if not isinstance(arg.value, dict):
                 continue

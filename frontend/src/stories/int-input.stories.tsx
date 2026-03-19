@@ -6,14 +6,12 @@ import IntInput from "../common/inputs/int-input";
 type IntInputStoryArgs = {
   disabled?: boolean;
   value?: number;
-  valid?: boolean;
   placeholder?: string;
 };
 
 function IntInputStory({
   disabled = false,
-  value = 2,
-  valid = true,
+  value,
   placeholder = "Index",
   onValueChange,
 }: IntInputStoryArgs & {
@@ -36,7 +34,6 @@ function IntInputStory({
           onValueChange(nextNumberValue);
         }}
         disabled={disabled}
-        valid={valid}
         placeholder={placeholder}
       />
     </div>
@@ -48,8 +45,7 @@ const meta = {
   args: {
     disabled: false,
     value: 2,
-    valid: true,
-    placeholder: "Index",
+    placeholder: "Enter integer",
   },
   argTypes: {
     disabled: {
@@ -57,9 +53,6 @@ const meta = {
     },
     value: {
       control: "number",
-    },
-    valid: {
-      control: "boolean",
     },
     placeholder: {
       control: "text",
@@ -85,7 +78,7 @@ const renderIntInput: Story["render"] = (args) => {
 export const Playground: Story = {
   args: {
     value: 2,
-    placeholder: "Index",
+    placeholder: "Enter integer",
   },
   render: renderIntInput,
 };

@@ -21,9 +21,10 @@ export default function InputFieldHandleWrapper({
     handleType: "target",
     handleId,
   });
-  const disabled = connections.some(
+  const edgeConnected = connections.some(
     (connection) => connection.targetHandle === handleId,
   );
+  const disabled = edgeConnected;
 
   if (!fieldData) {
     return <div>No field data</div>;
@@ -49,6 +50,7 @@ export default function InputFieldHandleWrapper({
                 fieldData={fieldData}
                 path={path}
                 disabled={disabled}
+                edgeConnected={edgeConnected}
               />
             </div>
           </TooltipTrigger>

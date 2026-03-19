@@ -2,14 +2,14 @@ import { memo } from "react";
 import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
-import useTypesStore from "@/stores/typesStore";
-import UserModelDisplay from "../../../common/inputs/user-model-display";
 import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
+import UserModelDisplay from "@/common/utility-components/user-model-display";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";
+import useTypesStore from "@/stores/typesStore";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
-import type { StructDescr } from "@/types/backend-schema";
+import type { StructDescr, TypeSchema } from "@/types/backend-schema";
 import { useInputField } from "@/hooks/useInputField";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 
@@ -19,6 +19,7 @@ interface InputFieldDisplayProps {
   fieldData: FrontendFieldDataWrapper;
   path: (string | number)[];
   disabled: boolean;
+  edgeConnected: boolean;
 }
 
 export interface ControlledInputProps {
@@ -26,13 +27,15 @@ export interface ControlledInputProps {
   onChange: (value: unknown, debounce?: number) => Promise<void> | void;
   disabled: boolean;
   expanded?: boolean;
-  valid?: boolean;
+  setValid?: (valid: boolean) => void;
+  typeSchema?: TypeSchema;
 }
 
 export default memo(function InputFieldDisplay({
   fieldData,
   path,
   disabled,
+  edgeConnected,
 }: InputFieldDisplayProps) {
   const { value, setValue } = useInputField(fieldData, path);
   const types = useTypesStore((state) => state.types);
@@ -75,15 +78,23 @@ export default memo(function InputFieldDisplay({
     onChange: setValue,
     disabled,
     expanded: isExpanded,
+    typeSchema: actualType,
   };
 
   const renderMainInput = () => {
-    if (isUserModel) {
+    if (isUserModel && edgeConnected) {
+      if (isExpanded) {
+        return <div className="flex flex-1 min-h-8" />;
+      }
+
       return (
         <UserModelDisplay
           value={value}
           disabled={disabled}
+          expanded={false}
+          showEmptyTypeName={false}
           typeName={typeName}
+          typeSchema={actualType}
         />
       );
     }
@@ -104,13 +115,27 @@ export default memo(function InputFieldDisplay({
     return (
       <GenericSchemaInput
         {...controlledProps}
-        schema={actualType}
         placeholder={typeName}
       />
     );
   };
 
   const renderExpandedContent = () => {
+    if (isUserModel && edgeConnected && isExpanded) {
+      return (
+        <div className="flex-1">
+          <UserModelDisplay
+            value={value}
+            disabled={disabled}
+            expanded={true}
+            showEmptyTypeName={false}
+            typeName={typeName}
+            typeSchema={actualType}
+          />
+        </div>
+      );
+    }
+
     if (registryEntry?.expandable && isExpanded) {
       const Component = registryEntry.component;
       return (
@@ -120,12 +145,11 @@ export default memo(function InputFieldDisplay({
       );
     }
 
-    if (!registryEntry && !isUserModel && isExpanded) {
+    if (!registryEntry && isExpanded) {
       return (
         <div className="flex-1">
           <GenericSchemaInput
             {...controlledProps}
-            schema={actualType}
             placeholder={typeName}
           />
         </div>

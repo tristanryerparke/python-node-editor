@@ -4,7 +4,7 @@ import { ResizableHeightProvider } from "@/common/utility-components/resizable-h
 import { useOutputField } from "@/hooks/useOutputField";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
 import useTypesStore from "@/stores/typesStore";
-import type { StructDescr } from "@/types/backend-schema";
+import type { StructDescr, TypeSchema } from "@/types/backend-schema";
 import { formatUserModelValue } from "@/utils/user-model-formatting";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import OutputMenu from "./output-menu";
@@ -20,6 +20,7 @@ interface OutputDisplayProps {
 export interface ControlledOutputProps {
   value: unknown;
   expanded?: boolean;
+  typeSchema?: TypeSchema;
 }
 
 function isStructDescr(type: unknown): type is StructDescr {
@@ -128,6 +129,7 @@ export default memo(function OutputDisplay({
   const controlledProps: ControlledOutputProps = {
     value,
     expanded: isExpanded,
+    typeSchema: actualType,
   };
 
   const renderMainOutput = () => {

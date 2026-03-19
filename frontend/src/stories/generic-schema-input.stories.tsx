@@ -4,29 +4,41 @@ import { useArgs } from "storybook/preview-api";
 import GenericSchemaInput from "../common/inputs/generic-schema-input";
 import { SyncedWidthHandleProvider } from "@/common/utility-components/synced-width-resizable";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
-import type { TypeExpr } from "@/types/backend-schema";
+import type { TypeSchema } from "@/types/backend-schema";
+import useTypesStore, { type TypeInfo } from "@/stores/typesStore";
 
 type GenericSchemaInputStoryArgs = {
   expanded?: boolean;
   disabled?: boolean;
   value?: unknown;
-  valid?: boolean;
   placeholder?: string;
-  schema?: TypeExpr;
+  schema?: TypeSchema;
+  mockTypes?: Record<string, TypeInfo>;
   width?: number;
   height?: number;
+};
+
+const POINT2D_TYPE: Record<string, TypeInfo> = {
+  Point2D: {
+    kind: "user_model",
+    category: ["stories"],
+    properties: {
+      x: "float",
+      y: "float",
+    },
+  },
 };
 
 function GenericSchemaInputStory({
   expanded = false,
   disabled = false,
   value = ["alpha", "beta", "gamma"],
-  valid = true,
   placeholder = "list[str]",
   schema = {
     structureType: "list",
     itemsType: "str",
   },
+  mockTypes,
   width = 80,
   height = 40,
   onWidthChange,
@@ -38,10 +50,27 @@ function GenericSchemaInputStory({
   onValueChange: (value: unknown) => void;
 }) {
   const [localValue, setLocalValue] = useState(value);
+  const setTypes = useTypesStore((state) => state.setTypes);
 
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
+
+  useEffect(() => {
+    if (!mockTypes) {
+      return;
+    }
+
+    const previousTypes = useTypesStore.getState().types;
+    setTypes({
+      ...previousTypes,
+      ...mockTypes,
+    });
+
+    return () => {
+      setTypes(previousTypes);
+    };
+  }, [mockTypes, setTypes]);
 
   return (
     <SyncedWidthHandleProvider
@@ -57,7 +86,6 @@ function GenericSchemaInputStory({
               onValueChange(nextValue);
             }}
             disabled={disabled}
-            valid={valid}
             expanded={expanded}
             placeholder={placeholder}
             schema={schema}
@@ -74,7 +102,6 @@ const meta = {
     expanded: true,
     disabled: false,
     value: ["alpha", "beta", "gamma"],
-    valid: true,
     placeholder: "list[str]",
     schema: {
       structureType: "list",
@@ -93,13 +120,13 @@ const meta = {
     value: {
       control: "object",
     },
-    valid: {
-      control: "boolean",
-    },
     placeholder: {
       control: "text",
     },
     schema: {
+      control: "object",
+    },
+    mockTypes: {
       control: "object",
     },
     width: {
@@ -137,6 +164,75 @@ export const Playground: Story = {
     },
     width: 80,
     height: 40,
+  },
+  render: renderGenericSchemaInput,
+};
+
+export const InvalidJSON: Story = {
+  args: {
+    expanded: true,
+    disabled: false,
+    value: "[\"alpha\",\"beta\",\"gamma\"",
+    placeholder: "list[str]",
+
+    schema: {
+      "structureType": "list",
+      "itemsType": "str"
+    },
+
+    width: 80,
+    height: 40
+  },
+
+  render: renderGenericSchemaInput
+};
+
+export const InvalidType: Story = {
+  args: {
+    expanded: true,
+    disabled: false,
+    value: "[\"alpha\",\"beta\",0]",
+    placeholder: "list[str]",
+
+    schema: {
+      "structureType": "list",
+      "itemsType": "str"
+    },
+
+    width: 80,
+    height: 40
+  },
+
+  render: renderGenericSchemaInput
+};
+
+export const UserModel: Story = {
+  args: {
+    expanded: true,
+    disabled: false,
+    value: {
+      x: 7,
+      y: 10,
+    },
+    placeholder: "Point2D",
+    schema: "Point2D",
+    mockTypes: POINT2D_TYPE,
+    width: 80,
+    height: 56,
+  },
+  render: renderGenericSchemaInput,
+};
+
+export const InvalidUserModel: Story = {
+  args: {
+    expanded: true,
+    disabled: false,
+    value: "{\"x\":7,\"y\":\"bad\"}",
+    placeholder: "Point2D",
+    schema: "Point2D",
+    mockTypes: POINT2D_TYPE,
+    width: 80,
+    height: 56,
   },
   render: renderGenericSchemaInput,
 };

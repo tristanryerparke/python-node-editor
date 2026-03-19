@@ -7,10 +7,10 @@ export interface StructDescr {
   itemsType: string | UnionDescr;
 }
 
-export type TypeExpr = string | UnionDescr | StructDescr;
+export type TypeSchema = string | UnionDescr | StructDescr;
 
 export interface DataWrapper {
-  type: TypeExpr;
+  type: TypeSchema;
   value?: unknown | null;
 }
 
@@ -35,7 +35,7 @@ export interface BuiltinTypeDef {
 export interface UserTypeDef {
   kind: "user_model";
   category: string[];
-  properties?: Record<string, TypeExpr> | null;
+  properties?: Record<string, TypeSchema> | null;
 }
 
 export interface CachedTypeDef {

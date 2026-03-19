@@ -27,6 +27,8 @@ export interface StringAreaProps {
   isInvalid?: boolean;
   /** Disables typing even when editable=true (e.g. port is connected) */
   disabled?: boolean;
+  /** Dims read-only text without relying on browser disabled styling */
+  dimmed?: boolean;
 }
 
 export const StringArea = memo(function StringArea({
@@ -39,6 +41,7 @@ export const StringArea = memo(function StringArea({
   maxHeight = DEFAULT_MAX_HEIGHT,
   isInvalid = false,
   disabled = false,
+  dimmed = false,
 }: StringAreaProps) {
   const handleCommit = onCommit ?? onChange;
 
@@ -68,6 +71,7 @@ export const StringArea = memo(function StringArea({
           disabled={!editable || disabled}
           className={cn(
             "block nopan nowheel border-none bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0 w-full h-full px-2 py-1",
+            !editable && dimmed && "text-muted-foreground",
             editable ? "nodrag" : "cursor-default",
           )}
           placeholder={placeholder}

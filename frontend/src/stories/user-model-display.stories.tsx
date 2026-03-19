@@ -1,11 +1,16 @@
 import type { ComponentProps } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import UserModelDisplay from "../common/inputs/user-model-display";
+import UserModelDisplay from "../common/utility-components/user-model-display";
+import { SyncedWidthHandleProvider } from "@/common/utility-components/synced-width-resizable";
+import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 
-type UserModelDisplayStoryArgs = ComponentProps<typeof UserModelDisplay>;
+type UserModelDisplayStoryArgs = ComponentProps<typeof UserModelDisplay> & {
+  width?: number;
+  height?: number;
+};
 
 const meta = {
-  title: "Common/Inputs/UserModelDisplay",
+  title: "Common/Utility Components/UserModelDisplay",
   component: UserModelDisplay,
   args: {
     value: {
@@ -13,7 +18,10 @@ const meta = {
       separator: ",",
     },
     disabled: false,
+    expanded: false,
     typeName: "SplitStringInput",
+    width: 80,
+    height: 40,
   },
   argTypes: {
     value: {
@@ -22,28 +30,45 @@ const meta = {
     disabled: {
       control: "boolean",
     },
+    expanded: {
+      control: "boolean",
+    },
     typeName: {
       control: "text",
+    },
+    width: {
+      control: { type: "range", min: 20, max: 160, step: 1 },
+    },
+    height: {
+      control: { type: "range", min: 30, max: 200, step: 1 },
     },
   },
 } satisfies Meta<UserModelDisplayStoryArgs>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<UserModelDisplayStoryArgs>;
 
 const renderUserModelDisplay = ({
   value,
   disabled = false,
+  expanded = false,
   typeName,
+  width = 80,
+  height = 40,
 }: UserModelDisplayStoryArgs) => (
-  <div className="w-80">
-    <UserModelDisplay
-      value={value}
-      disabled={disabled}
-      typeName={typeName}
-    />
-  </div>
+  <SyncedWidthHandleProvider width={width}>
+    <ResizableHeightProvider height={height} setHeight={() => {}}>
+      <div>
+        <UserModelDisplay
+          value={value}
+          disabled={disabled}
+          expanded={expanded}
+          typeName={typeName}
+        />
+      </div>
+    </ResizableHeightProvider>
+  </SyncedWidthHandleProvider>
 );
 
 export const Playground: Story = {
@@ -53,7 +78,10 @@ export const Playground: Story = {
       "y": 1
     },
     disabled: false,
+    expanded: false,
     typeName: "Point2d",
+    width: 80,
+    height: 40,
   },
   render: renderUserModelDisplay,
 };

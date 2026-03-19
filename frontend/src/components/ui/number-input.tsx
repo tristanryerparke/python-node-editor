@@ -1,159 +1,159 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { forwardRef, useCallback, useEffect, useRef } from "react";
-import { NumericFormat, type NumericFormatProps } from "react-number-format";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import {
+  NumericFormat,
+  type NumberFormatValues,
+  type SourceInfo,
+} from "react-number-format";
 import { Button } from "./button";
 import { Input } from "./input";
 import { cn } from "@/lib/utils";
 
-export interface NumberInputProps
-  extends Omit<NumericFormatProps, "value" | "onValueChange"> {
-  stepper?: number;
-  thousandSeparator?: string;
-  placeholder?: string;
-  defaultValue?: number;
-  min?: number;
-  max?: number;
-  value?: number; // Controlled value
-  suffix?: string;
-  prefix?: string;
+export interface NumberInputProps {
+  value?: number;
   onValueChange?: (value: number | undefined) => void;
-  fixedDecimalScale?: boolean;
-  decimalScale?: number;
-  className?: string;
   disabled?: boolean;
   invalid?: boolean;
+  placeholder?: string;
+  className?: string;
+  decimalScale?: number;
+  step?: number;
+  allowNegative?: boolean;
+  coerceValue?: (value: number | undefined) => number | undefined;
 }
 
-export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
-  (
-    {
-      stepper,
-      thousandSeparator,
-      placeholder,
-      defaultValue,
-      min = -Infinity,
-      max = Infinity,
-      onValueChange,
-      fixedDecimalScale = false,
-      decimalScale = 0,
-      suffix,
-      prefix,
-      value: controlledValue,
-      className,
-      disabled = false,
-      invalid = false,
-      ...props
+function getDisplayValue(value: number | undefined): string {
+  return value === undefined ? "" : String(value);
+}
+
+export default memo(function NumberInput({
+  value,
+  onValueChange,
+  disabled = false,
+  invalid = false,
+  placeholder = "Enter number",
+  className,
+  decimalScale = 0,
+  step = 1,
+  allowNegative = true,
+  coerceValue,
+}: NumberInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [draftValue, setDraftValue] = useState(() => getDisplayValue(value));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setDraftValue(getDisplayValue(value));
+    }
+  }, [isFocused, value]);
+
+  const normalizeValue = useCallback(
+    (nextValue: number | undefined) => {
+      if (coerceValue) {
+        return coerceValue(nextValue);
+      }
+
+      return nextValue;
     },
-    ref,
-  ) => {
-    const internalRef = useRef<HTMLInputElement>(null); // Create an internal ref
-    const combinedRef = ref || internalRef; // Use provided ref or internal ref
-    const currentValue = controlledValue;
-    const displayValue = currentValue ?? "";
+    [coerceValue],
+  );
 
-    const handleIncrement = useCallback(() => {
-      const nextValue =
-        currentValue === undefined
-          ? (stepper ?? 1)
-          : Math.min(currentValue + (stepper ?? 1), max);
-      onValueChange?.(nextValue);
-    }, [currentValue, stepper, max, onValueChange]);
+  const handleIncrement = useCallback(() => {
+    const nextValue = value === undefined ? step : value + step;
+    setDraftValue(String(nextValue));
+    onValueChange?.(normalizeValue(nextValue));
+  }, [normalizeValue, onValueChange, step, value]);
 
-    const handleDecrement = useCallback(() => {
-      const nextValue =
-        currentValue === undefined
-          ? -(stepper ?? 1)
-          : Math.max(currentValue - (stepper ?? 1), min);
-      onValueChange?.(nextValue);
-    }, [currentValue, stepper, min, onValueChange]);
+  const handleDecrement = useCallback(() => {
+    const nextValue = value === undefined ? -step : value - step;
+    setDraftValue(String(nextValue));
+    onValueChange?.(normalizeValue(nextValue));
+  }, [normalizeValue, onValueChange, step, value]);
 
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (
-          document.activeElement ===
-          (combinedRef as React.RefObject<HTMLInputElement>).current
-        ) {
-          if (e.key === "ArrowUp") {
-            handleIncrement();
-          } else if (e.key === "ArrowDown") {
-            handleDecrement();
-          }
-        }
-      };
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement !== inputRef.current) {
+        return;
+      }
 
-      window.addEventListener("keydown", handleKeyDown);
-      return () => {
-        window.removeEventListener("keydown", handleKeyDown);
-      };
-    }, [handleIncrement, handleDecrement, combinedRef]);
-
-    const handleChange = (values: {
-      value: string;
-      floatValue: number | undefined;
-    }) => {
-      const newValue =
-        values.floatValue === undefined ? undefined : values.floatValue;
-      if (onValueChange) {
-        onValueChange(newValue);
+      if (e.key === "ArrowUp") {
+        handleIncrement();
+      } else if (e.key === "ArrowDown") {
+        handleDecrement();
       }
     };
 
-    const handleBlur = () => {
-      if (currentValue !== undefined) {
-        if (currentValue < min) {
-          onValueChange?.(min);
-        } else if (currentValue > max) {
-          onValueChange?.(max);
-        }
-      }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
     };
+  }, [handleDecrement, handleIncrement]);
 
-    return (
-      <div className={cn("flex items-center flex-1", className)}>
-        <NumericFormat
-          value={displayValue}
-          onValueChange={handleChange}
-          thousandSeparator={thousandSeparator}
-          decimalScale={decimalScale}
-          fixedDecimalScale={fixedDecimalScale}
-          allowNegative={min < 0}
-          valueIsNumericString
-          onBlur={handleBlur}
-          max={max}
-          min={min}
-          suffix={suffix}
-          prefix={prefix}
-          customInput={Input}
-          placeholder={placeholder}
-          className={cn(
-            "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-r-none relative h-full",
-            invalid && "border-destructive focus-visible:border-destructive",
-          )}
-          getInputRef={combinedRef}
+  const handleValueChange = useCallback(
+    (values: NumberFormatValues, sourceInfo: SourceInfo) => {
+      const eventTarget = sourceInfo.event?.target as HTMLInputElement | null;
+      const nextDraftValue =
+        sourceInfo.source === "event" && eventTarget
+          ? eventTarget.value
+          : values.formattedValue;
+      const nextValue = normalizeValue(values.floatValue);
+
+      setDraftValue(nextDraftValue);
+
+      if (sourceInfo.source === "event") {
+        onValueChange?.(nextValue);
+      }
+    },
+    [normalizeValue, onValueChange],
+  );
+
+  return (
+    <div
+      className={cn(
+        "flex items-center flex-1 rounded-md border border-input bg-transparent shadow-xs transition-[color,box-shadow] overflow-hidden",
+        "focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]",
+        !disabled &&
+          invalid &&
+          "border-invalid focus-within:border-invalid",
+        "nodrag nopan nowheel",
+        className,
+      )}
+    >
+      <NumericFormat
+        value={draftValue}
+        onValueChange={handleValueChange}
+        decimalScale={decimalScale}
+        allowNegative={allowNegative}
+        aria-invalid={invalid}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        customInput={Input}
+        placeholder={placeholder}
+        className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none relative h-full rounded-none border-0 shadow-none focus-visible:border-transparent focus-visible:ring-0 aria-invalid:border-0 aria-invalid:ring-0"
+        getInputRef={inputRef}
+        disabled={disabled}
+      />
+      <div className="flex flex-col h-8">
+        <Button
+          aria-label="Increase value"
+          className="px-0.5 py-0 rounded-none border-0 border-l border-b border-input bg-transparent shadow-none focus-visible:relative focus-visible:border-input focus-visible:ring-0 h-4 w-4 min-h-0"
+          variant="outline"
+          onClick={handleIncrement}
           disabled={disabled}
-          {...props}
-        />
-        <div className="flex flex-col h-8">
-          <Button
-            aria-label="Increase value"
-            className="px-0.5 py-0 rounded-l-none rounded-br-none border-input border-l-0 border-b-[0.5px] focus-visible:relative h-4 w-4 min-h-0"
-            variant="outline"
-            onClick={handleIncrement}
-            disabled={disabled || currentValue === max}
-          >
-            <ChevronUp size={10} />
-          </Button>
-          <Button
-            aria-label="Decrease value"
-            className="px-0.5 py-0 rounded-l-none rounded-tr-none border-input border-l-0 border-t-[0.5px] focus-visible:relative h-4 w-4 min-h-0"
-            variant="outline"
-            onClick={handleDecrement}
-            disabled={disabled || currentValue === min}
-          >
-            <ChevronDown size={10} />
-          </Button>
-        </div>
+        >
+          <ChevronUp size={10} />
+        </Button>
+        <Button
+          aria-label="Decrease value"
+          className="px-0.5 py-0 rounded-none border-0 border-l border-input bg-transparent shadow-none focus-visible:relative focus-visible:border-input focus-visible:ring-0 h-4 w-4 min-h-0"
+          variant="outline"
+          onClick={handleDecrement}
+          disabled={disabled}
+        >
+          <ChevronDown size={10} />
+        </Button>
       </div>
-    );
-  },
-);
+    </div>
+  );
+});

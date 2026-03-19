@@ -1,11 +1,14 @@
-import { memo } from "react";
-import StringInput, { type StringInputProps } from "./string-input";
-import type { TypeExpr } from "@/types/backend-schema";
+import { memo, useEffect } from "react";
+import { StringArea } from "../utility-components/string-area";
+import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
+import { Input } from "@/components/ui/input";
+import useTypesStore from "@/stores/typesStore";
+import type { TypeSchema } from "@/types/backend-schema";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 
-export interface GenericSchemaInputProps extends Omit<StringInputProps, "value"> {
-  value: unknown;
-  schema: TypeExpr;
+export interface GenericSchemaInputProps extends ControlledInputProps {
+  schema?: TypeSchema;
+  placeholder?: string;
 }
 
 function formatValue(value: unknown): string {
@@ -26,25 +29,72 @@ function formatValue(value: unknown): string {
 
 export default memo(function GenericSchemaInput({
   value,
+  onChange,
+  disabled,
+  expanded = false,
+  setValid,
+  typeSchema,
   schema,
   placeholder = "Value",
-  ...props
 }: GenericSchemaInputProps) {
+  const types = useTypesStore((state) => state.types);
+  const rawValue = formatValue(value);
+  const effectiveSchema = typeSchema ?? schema;
+  const isValid =
+    !effectiveSchema ||
+    validateInputAgainstSchema(rawValue, effectiveSchema, types).valid;
+  const isInvalid = !isValid;
+
+  useEffect(() => {
+    setValid?.(isValid);
+  }, [isValid, setValid]);
+
+  const handleChange = (nextValue: string) => {
+    const nextRawValue = String(nextValue);
+
+    if (!effectiveSchema) {
+      void onChange(nextRawValue);
+      return;
+    }
+
+    const validationResult = validateInputAgainstSchema(
+      nextRawValue,
+      effectiveSchema,
+      types,
+    );
+
+    if (validationResult.valid) {
+      void onChange(validationResult.value);
+      return;
+    }
+
+    void onChange(nextRawValue);
+  };
+
+  if (expanded) {
+    return (
+      <StringArea
+        value={rawValue}
+        onChange={handleChange}
+        editable={true}
+        placeholder={placeholder}
+        isInvalid={!disabled && isInvalid}
+        disabled={disabled}
+      />
+    );
+  }
+
   return (
-    <StringInput
-      {...props}
-      value={formatValue(value)}
-      onChange={(nextValue) => {
-        const rawValue = String(nextValue);
-        const validationResult = validateInputAgainstSchema(rawValue, schema);
-
-        if (validationResult.valid) {
-          return props.onChange(validationResult.value);
-        }
-
-        return props.onChange(rawValue);
-      }}
-      placeholder={placeholder}
-    />
+    <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
+      <Input
+        type="text"
+        value={rawValue}
+        onChange={(e) => handleChange(e.target.value)}
+        disabled={disabled}
+        aria-invalid={!disabled && isInvalid}
+        className="nodrag nopan nowheel"
+        placeholder={placeholder}
+      />
+    </div>
   );
 });
