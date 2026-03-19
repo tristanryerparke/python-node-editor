@@ -1,6 +1,6 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "../../custom-node/node-inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "../../custom-node/node-outputs/output-type-registry";
-import type { TypeInfo, PropertyType } from "@/stores/typesStore";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
+import type { PropertyType, TypeInfo } from "@/types/environment";
 
 function getPropertyTypeName(propType: PropertyType): string | null {
   if (typeof propType === "string") {

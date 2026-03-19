@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import useFlowStore from "@/stores/flowStore";
+import { useFieldRenderContext } from "@/common/utility-components/field-render-context";
 
 // Tailwind spacing scale: 1 unit = 0.25rem = 4px
 const TAILWIND_UNIT = 4;
@@ -37,7 +38,7 @@ export function SyncedWidthHandleProvider({
   children,
   className = "",
   maxWidth = Infinity,
-  useTailwindScale = false,
+  useTailwindScale = true,
   width: controlledWidth,
   setWidth: controlledSetWidth,
 }: SyncedWidthHandleProviderProps) {
@@ -100,17 +101,6 @@ export function SyncedWidthHandleProvider({
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export function useSyncedWidthHandleContext() {
-  const context = useContext(SyncedWidthHandleContext);
-  if (!context) {
-    throw new Error(
-      "SyncedWidthHandle must be used within SyncedWidthHandleProvider",
-    );
-  }
-  return context;
-}
-
 interface SyncedWidthHandleProps {
   children?: ReactNode;
   className?: string;
@@ -122,14 +112,25 @@ export function SyncedWidthHandle({
   className = "",
   dragMultiplier,
 }: SyncedWidthHandleProps) {
-  const { parentWidth, setParentWidth, parentRef, maxWidth, useTailwindScale } =
-    useSyncedWidthHandleContext();
+  const fieldCtx = useFieldRenderContext();
+  // Use useContext directly (not the throwing wrapper) so we can handle
+  // inspector mode gracefully without a SyncedWidthHandleProvider ancestor.
+  const syncCtx = useContext(SyncedWidthHandleContext);
   const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
   const handleRef = useRef<HTMLDivElement>(null);
   const currentDragWidthRef = useRef(0);
   const viewportZoom = useFlowStore((state) => state.viewport.zoom);
+
+  const isInspector = fieldCtx?.mode === "inspector";
+
+  // Derive values from syncCtx with fallbacks (all hooks must be called unconditionally)
+  const parentWidth = syncCtx?.parentWidth ?? null;
+  const setParentWidth = syncCtx?.setParentWidth ?? (() => {});
+  const parentRef = syncCtx?.parentRef ?? null;
+  const maxWidth = syncCtx?.maxWidth;
+  const useTailwindScale = syncCtx?.useTailwindScale ?? false;
 
   const disabled = parentWidth === null;
 
@@ -151,7 +152,7 @@ export function SyncedWidthHandle({
   }, [dragMultiplier, viewportZoom]);
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isDragging || isInspector || !syncCtx) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = (e.clientX - startXRef.current) * resolvedDragMultiplier;
@@ -176,10 +177,6 @@ export function SyncedWidthHandle({
     const finishDrag = () => {
       if (!isDragging) return;
 
-      // console.log(
-      //   "[SyncedWidth] DRAG COMPLETE - NOW updating state:",
-      //   currentDragWidthRef.current,
-      // );
       setIsDragging(false);
       document.body.style.cursor = "default";
       document.body.style.userSelect = "";
@@ -216,6 +213,8 @@ export function SyncedWidthHandle({
     };
   }, [
     isDragging,
+    isInspector,
+    syncCtx,
     maxWidthPx,
     resolvedDragMultiplier,
     setParentWidth,
@@ -224,7 +223,7 @@ export function SyncedWidthHandle({
   ]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (disabled) return;
+    if (disabled || isInspector) return;
 
     // Don't stopPropagation - allow parent handlers (like ResizableHeightHandle) to also receive the event
     setIsDragging(true);
@@ -237,6 +236,12 @@ export function SyncedWidthHandle({
       : currentWidthPx;
     document.body.style.cursor = "ew-resize";
   };
+
+  // In inspector mode (or when no SyncedWidthHandleProvider ancestor exists),
+  // render as a plain w-full wrapper – no width-resize behaviour.
+  if (isInspector || !syncCtx) {
+    return <div className="w-full">{children}</div>;
+  }
 
   return (
     <div

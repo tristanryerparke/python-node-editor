@@ -24,6 +24,7 @@ export interface FrontendFieldDataWrapper extends DataWrapper {
   _selectedType?: string;
   _dynamicInputType?: "list" | "dict";
   _expanded?: boolean;
+  _expandedHeight?: number;
 }
 
 export interface terminalDrawerDisplayState {

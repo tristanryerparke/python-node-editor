@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MoreVertical, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
@@ -7,8 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import useFlowStore from "../../../stores/flowStore";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
 
 interface OutputMenuProps {
   path: (string | number)[];
@@ -16,40 +17,34 @@ interface OutputMenuProps {
 }
 
 export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
+  const [open, setOpen] = useState(false);
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const deleteNodeData = useFlowStore((state) => state.deleteNodeData);
 
-  // Handle union types - detect from fieldData
-  const isUnionType =
-    typeof fieldData.type === "object" && "anyOf" in fieldData.type;
-  const selectedType =
-    fieldData._selectedType ||
-    (isUnionType &&
+  let actualType = fieldData.type;
+  if (
     typeof fieldData.type === "object" &&
-    "anyOf" in fieldData.type
-      ? fieldData.type.anyOf[0]
-      : undefined);
+    "anyOf" in fieldData.type &&
+    fieldData.type.anyOf
+  ) {
+    actualType = fieldData._selectedType || fieldData.type.anyOf[0];
+  }
 
-  // Check if this type has an expandable area
-  const effectiveType = selectedType || fieldData.type;
   const registryEntry =
-    typeof effectiveType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
+    typeof actualType === "string"
+      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
       : undefined;
-  const hasExpandable = (registryEntry as { expandable?: true } | undefined)?.expandable;
+  const hasExpandable = registryEntry?.expandable ?? false;
   const isExpanded = fieldData._expanded ?? false;
 
-  // Only show menu if there's something expandable
-  const shouldShowMenu = hasExpandable;
-
-  // Return null if there's nothing to show in the menu
-  if (!shouldShowMenu) {
+  if (!hasExpandable) {
     return null;
   }
 
   const handleToggleExpanded = () => {
     const newExpandedState = !isExpanded;
     void updateNodeData([...path, "_expanded"], newExpandedState);
+    setOpen(false);
 
     // If minimizing, clear the stored height
     if (!newExpandedState) {
@@ -58,13 +53,18 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon-xs" className="shrink-0">
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="right" sideOffset={5}>
+      <DropdownMenuContent
+        align="center"
+        side="right"
+        sideOffset={5}
+        onInteractOutside={() => setOpen(false)}
+      >
         {hasExpandable && (
           <DropdownMenuItem
             onClick={handleToggleExpanded}

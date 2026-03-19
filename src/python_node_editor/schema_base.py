@@ -1,6 +1,6 @@
 from typing import ClassVar, Literal, TypeAlias
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, PrivateAttr
 from pydantic.alias_generators import to_camel
 
 

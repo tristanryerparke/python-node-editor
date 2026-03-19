@@ -26,28 +26,79 @@ type JsonViewerProps = {
   textSize?: string;
   textLimit?: number;
   showArrayIndices?: boolean;
+  showRootCopyButton?: boolean;
+  showRowCopyButtons?: boolean;
+  containerPadding?: boolean;
 };
 
 export function JsonViewer({
   data,
-  rootName = "root",
+  rootName = "",
   defaultExpanded = true,
   className,
   textSize = "text-sm",
   textLimit = 40,
   showArrayIndices = false,
+  showRootCopyButton = true,
+  showRowCopyButtons = false,
+  containerPadding = true,
 }: JsonViewerProps) {
+  const [isCopied, setIsCopied] = React.useState(false);
+
+  const copyFullJson = async () => {
+    let copyText: string;
+
+    try {
+      copyText = JSON.stringify(data, null, 2);
+    } catch {
+      copyText = String(data);
+    }
+
+    await navigator.clipboard.writeText(copyText);
+    setIsCopied(true);
+    window.setTimeout(() => setIsCopied(false), 2000);
+  };
+
   return (
     <TooltipProvider>
-      <div className={cn("font-mono", textSize, className)}>
-        <JsonNode
-          name={rootName}
-          data={data}
-          isRoot={true}
-          defaultExpanded={defaultExpanded}
-          textLimit={textLimit}
-          showArrayIndices={showArrayIndices}
-        />
+      <div
+        className={cn(
+          "relative",
+          containerPadding && "p-2",
+          className,
+        )}
+      >
+        {showRootCopyButton ? (
+          <button
+            type="button"
+            onClick={copyFullJson}
+            className="absolute right-2 top-2 z-10 hover:bg-muted p-1 rounded"
+            title="Copy full JSON"
+          >
+            {isCopied ? (
+              <Check className="h-3.5 w-3.5 text-green-500" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
+        ) : null}
+        <div
+          className={cn(
+            "font-mono w-full h-full",
+            textSize,
+            showRootCopyButton && "pr-6",
+          )}
+        >
+          <JsonNode
+            name={rootName}
+            data={data}
+            isRoot={true}
+            defaultExpanded={defaultExpanded}
+            textLimit={textLimit}
+            showArrayIndices={showArrayIndices}
+            showRowCopyButtons={showRowCopyButtons}
+          />
+        </div>
       </div>
     </TooltipProvider>
   );
@@ -62,6 +113,7 @@ type JsonNodeProps = {
   level?: number;
   textLimit?: number;
   showArrayIndices?: boolean;
+  showRowCopyButtons?: boolean;
 };
 
 function JsonNode({
@@ -72,6 +124,7 @@ function JsonNode({
   level = 0,
   textLimit = 40,
   showArrayIndices = false,
+  showRowCopyButtons = false,
 }: JsonNodeProps) {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
   const [isCopied, setIsCopied] = React.useState(false);
@@ -118,6 +171,7 @@ function JsonNode({
             defaultExpanded={defaultExpanded}
             textLimit={textLimit}
             showArrayIndices={showArrayIndices}
+            showRowCopyButtons={showRowCopyButtons}
           />
         ))}
         <div className="text-muted-foreground py-1">
@@ -133,7 +187,7 @@ function JsonNode({
     >
       <div
         className={cn(
-          "flex items-center gap-1 py-1 hover:bg-muted/50 rounded px-1 -ml-2 cursor-pointer group/property",
+          "flex items-center gap-1 py-1 rounded px-1 -ml-2 cursor-pointer group/property",
           isRoot && "text-primary font-semibold",
         )}
         onClick={isExpandable ? handleToggle : undefined}
@@ -174,17 +228,19 @@ function JsonNode({
 
         {!isExpandable && <div className="w-3.5" />}
 
-        <button
-          onClick={copyToClipboard}
-          className="ml-auto opacity-0 group-hover/property:opacity-100 hover:bg-muted p-1 rounded"
-          title="Copy to clipboard"
-        >
-          {isCopied ? (
-            <Check className="h-3.5 w-3.5 text-green-500" />
-          ) : (
-            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-          )}
-        </button>
+        {showRowCopyButtons ? (
+          <button
+            onClick={copyToClipboard}
+            className="ml-auto opacity-0 group-hover/property:opacity-100 hover:bg-muted p-1 rounded"
+            title="Copy to clipboard"
+          >
+            {isCopied ? (
+              <Check className="h-3.5 w-3.5 text-green-500" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
+        ) : null}
       </div>
 
       {isExpandable && isExpanded && data !== null && data !== undefined && (
@@ -198,6 +254,7 @@ function JsonNode({
               defaultExpanded={defaultExpanded}
               textLimit={textLimit}
               showArrayIndices={showArrayIndices}
+              showRowCopyButtons={showRowCopyButtons}
             />
           ))}
           <div className="text-muted-foreground pl-2 py-1">

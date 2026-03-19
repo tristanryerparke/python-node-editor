@@ -1,5 +1,5 @@
 import { TypeDisplay } from "./type-display";
-import { type TypeInfo } from "@/stores/typesStore";
+import type { TypeInfo } from "@/types/environment";
 
 interface KindGroupProps {
   kind: string;

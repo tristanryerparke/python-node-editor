@@ -33,6 +33,14 @@ export default function ExecuteMenu() {
   const hasInvalidInputs = invalidInputIssues.length > 0;
 
   const execute = useCallback(async () => {
+    if (invalidInputIssues.length > 0) {
+      console.group("Executing with invalid node inputs");
+      invalidInputIssues.forEach(({ nodeId, inputName, reason }) => {
+        console.warn(`${nodeId}.${inputName}: ${reason}`);
+      });
+      console.groupEnd();
+    }
+
     setLoading(true);
     const { nodes: clearedNodes, edges: clearedEdges } =
       clearOutputsAndConnectedInputs();
@@ -52,7 +60,7 @@ export default function ExecuteMenu() {
     } finally {
       setLoading(false);
     }
-  }, [executionMode, executeSyncFn, executeAsyncFn]);
+  }, [executionMode, executeSyncFn, executeAsyncFn, invalidInputIssues]);
 
   const disabledReasons: string[] = [];
   if (loading) {
@@ -64,10 +72,6 @@ export default function ExecuteMenu() {
   if (!isConnected && !isChecking) {
     disabledReasons.push("Backend not connected");
   }
-  if (hasInvalidInputs) {
-    disabledReasons.push("Invalid node inputs");
-  }
-
   const isDisabled = disabledReasons.length > 0;
   const buttonClass =
     isConnected && !isChecking && !hasInvalidInputs

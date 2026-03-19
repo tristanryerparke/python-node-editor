@@ -79,7 +79,7 @@ def test_single_construct_node():
 
     graph = Graph(nodes=[node1], edges=[])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -117,7 +117,7 @@ def test_construct_and_deconstruct():
 
     graph = Graph(nodes=[construct_node, deconstruct_node], edges=[edge1])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()
@@ -140,6 +140,39 @@ def test_construct_and_deconstruct():
     assert deconstruct_update["nodeId"] == "deconstruct-node-1"
     assert deconstruct_update["outputs"]["x"]["value"] == 3.0
     assert deconstruct_update["outputs"]["y"]["value"] == 5.0
+
+
+def test_direct_deconstruct_dict_input():
+    """Test deconstructing a direct dict payload for a user model input."""
+    deconstruct_node = node_from_schema("deconstruct-node-1", deconstruct_schema)
+    deconstruct_node.data.arguments["instance"].value = {"x": 7.0, "y": 11.0}
+
+    graph = Graph(nodes=[deconstruct_node], edges=[])
+
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
+    assert response.status_code == 200
+
+    result = response.json()
+    assert result["status"] == "success"
+    assert len(result["updates"]) == 1
+
+    deconstruct_update = result["updates"][0]
+    assert deconstruct_update["nodeId"] == "deconstruct-node-1"
+    assert deconstruct_update["outputs"]["x"]["value"] == 7.0
+    assert deconstruct_update["outputs"]["y"]["value"] == 11.0
+
+
+def test_direct_deconstruct_invalid_user_model_payload():
+    """Test invalid user model payloads are rejected before execution."""
+    deconstruct_node = node_from_schema("deconstruct-node-1", deconstruct_schema)
+    deconstruct_node.data.arguments["instance"].value = {"x": 7.0, "y": "bad"}
+
+    graph = Graph(nodes=[deconstruct_node], edges=[])
+
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
+    assert response.status_code == 422
+    assert "instance" in response.text
+    assert "Point2D" in response.text
 
 
 def test_two_point_distance_calculation():
@@ -177,7 +210,7 @@ def test_two_point_distance_calculation():
 
     graph = Graph(nodes=[point_a, point_b, distance_node], edges=[edge1, edge2])
 
-    response = client.post("/graph_execute", json=graph.model_dump(by_alias=True))
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
     assert response.status_code == 200
 
     result = response.json()

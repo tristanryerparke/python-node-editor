@@ -1,38 +1,40 @@
-import { memo, useCallback, useMemo } from "react";
-import { NumberInput } from "../../components/ui/number-input";
-import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
-import { validateValueAgainstSchema } from "@/utils/schema-input-validator";
+import { memo, useEffect } from "react";
+import IntegerInput from "../../components/ui/integer-input";
+import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
 
-export default memo(function IntInput({ inputData, path }: CustomInputProps) {
-  const { value, setValue, disabled } = useInputField<number | undefined>(
-    inputData,
-    path,
-  );
+export interface IntInputProps extends ControlledInputProps {
+  placeholder?: string;
+}
 
-  const handleChange = useCallback(
-    (v: number | undefined) => setValue(v !== undefined ? Math.round(v) : undefined),
-    [setValue],
-  );
+const IntInput = memo(function ControlledIntInput({
+  value,
+  onChange,
+  disabled,
+  setValid,
+  placeholder = "Enter integer",
+}: IntInputProps) {
+  const numericValue =
+    typeof value === "number" && Number.isInteger(value) ? value : undefined;
+  const isValueValid = numericValue !== undefined;
+  const isInvalid = !isValueValid;
 
-  const validationResult = useMemo(() => {
-    if (value === undefined) {
-      return { valid: true as const, value: undefined };
-    }
-    return validateValueAgainstSchema(value, inputData.type);
-  }, [inputData.type, value]);
+  useEffect(() => {
+    setValid?.(isValueValid);
+  }, [isValueValid, setValid]);
 
   return (
     <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
-      <NumberInput
-        value={value}
-        decimalScale={0}
-        onValueChange={handleChange}
-        onBlur={() => setValue(value, 0)}
+      <IntegerInput
+        value={numericValue}
+        onValueChange={(nextValue) => {
+          void onChange(nextValue);
+        }}
         disabled={disabled}
-        invalid={!validationResult.valid}
-        className="nodrag nopan nowheel"
-        placeholder="Enter integer"
+        invalid={isInvalid}
+        placeholder={placeholder}
       />
     </div>
   );
 });
+
+export default IntInput;

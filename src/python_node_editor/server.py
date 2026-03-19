@@ -4,7 +4,7 @@ import sys
 from contextlib import asynccontextmanager
 
 from devtools import debug as d
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -29,7 +29,7 @@ SERVE_FRONTEND = False
 class _HealthCheckAccessFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         message = record.getMessage()
-        if " /health " in message or " /health?" in message:
+        if " /api/health " in message or " /api/health?" in message:
             return False
         return True
 
@@ -88,34 +88,37 @@ _attach_access_log_filter()
 # Include routers
 app.include_router(execute_sync_router)
 app.include_router(execute_async_router)
-app.include_router(large_data_router, prefix="/data", tags=["data"])
+app.include_router(large_data_router, tags=["data"])
 
 
-@app.get("/health")
-async def health_check(request: Request):
-    return {"status": "ok"}
-
-
-@app.get("/nodes")
-async def get_functions():
-    """get schema for all loaded functions that are to be served as nodes"""
-    # Manually serialize with exclude_none to remove auto_generated when False
+def _serialize_function_schemas():
     return [
         schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
         for schema in FUNCTION_SCHEMAS
     ]
 
 
-@app.get("/types")
-async def get_types():
-    """get schema for all loaded types that are to be served as node inputs / outputs"""
-
+def _serialize_types():
     types_serialized = {}
     for k, v in TYPES.items():
         # Use model_dump which will automatically exclude _class and referenced_datamodel
         # and convert snake_case to camelCase for StructDescr/UnionDescr instances
         types_serialized[k] = v.model_dump(mode="json")
     return types_serialized
+
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
+
+
+@app.get("/api/environment")
+async def get_environment():
+    """Get the loaded function schemas and type metadata used by the frontend."""
+    return {
+        "nodes": _serialize_function_schemas(),
+        "types": _serialize_types(),
+    }
 
 
 app.add_middleware(

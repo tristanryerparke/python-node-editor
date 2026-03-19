@@ -1,5 +1,4 @@
 import {
-  useState,
   useRef,
   useEffect,
   createContext,
@@ -7,6 +6,7 @@ import {
   useMemo,
 } from "react";
 import useFlowStore from "@/stores/flowStore";
+import { useFieldRenderContext } from "@/common/utility-components/field-render-context";
 
 // Tailwind spacing scale: 1 unit = 0.25rem = 4px
 const TAILWIND_UNIT = 4;
@@ -19,11 +19,34 @@ const ResizableHeightContext = createContext<ResizableHeightContextType | null>(
   null,
 );
 
+interface ResizableHeightStateContextType {
+  height: number;
+  setHeight: (height: number) => void;
+}
+
+const ResizableHeightStateContext =
+  createContext<ResizableHeightStateContextType | null>(null);
+
+interface ResizableHeightProviderProps {
+  children: React.ReactNode;
+  height: number;
+  setHeight: (height: number) => void;
+}
+
+export function ResizableHeightProvider({
+  children,
+  height,
+  setHeight,
+}: ResizableHeightProviderProps) {
+  return (
+    <ResizableHeightStateContext.Provider value={{ height, setHeight }}>
+      {children}
+    </ResizableHeightStateContext.Provider>
+  );
+}
+
 interface ResizableHeightProps {
   children: React.ReactNode;
-  height?: number;
-  setHeight?: (height: number) => void;
-  initialHeight?: number;
   minHeight?: number;
   maxHeight?: number;
   useTailwindScale?: boolean;
@@ -32,27 +55,27 @@ interface ResizableHeightProps {
 
 export function ResizableHeight({
   children,
-  height: controlledHeight,
-  setHeight: controlledSetHeight,
-  initialHeight = 40,
   minHeight = 20,
   maxHeight = Infinity,
-  useTailwindScale = false,
+  useTailwindScale = true,
   dragMultiplier,
 }: ResizableHeightProps) {
-  const [internalHeight, setInternalHeight] = useState(initialHeight);
   const isDraggingRef = useRef(false);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const currentDragHeightRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fieldCtx = useFieldRenderContext();
   const viewportZoom = useFlowStore((state) => state.viewport.zoom);
+  const heightState = useContext(ResizableHeightStateContext);
 
-  // Determine if component is controlled
-  const isControlled =
-    controlledHeight !== undefined && controlledSetHeight !== undefined;
-  const height = isControlled ? controlledHeight : internalHeight;
-  const setHeight = isControlled ? controlledSetHeight : setInternalHeight;
+  if (!heightState) {
+    throw new Error(
+      "ResizableHeight must be used within ResizableHeightProvider",
+    );
+  }
+
+  const { height, setHeight } = heightState;
 
   // Convert to pixels if using Tailwind scale
   const minHeightPx = useTailwindScale ? minHeight * TAILWIND_UNIT : minHeight;
@@ -65,9 +88,12 @@ export function ResizableHeight({
     if (dragMultiplier !== undefined) {
       return dragMultiplier;
     }
+    if (fieldCtx?.mode === "inspector") {
+      return 1;
+    }
     const safeZoom = viewportZoom || 1;
     return safeZoom === 0 ? 1 : 1 / safeZoom;
-  }, [dragMultiplier, viewportZoom]);
+  }, [dragMultiplier, fieldCtx?.mode, viewportZoom]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

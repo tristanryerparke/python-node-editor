@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry as isInputObjectRegistryEntry } from "../components/custom-node/node-inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry as isOutputObjectRegistryEntry } from "../components/custom-node/node-outputs/output-type-registry";
+import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
+import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
 
 /**
  * Initializes UI-specific data for arguments and outputs:
@@ -9,6 +9,11 @@ import { OUTPUT_TYPE_COMPONENT_REGISTRY, isObjectRegistryEntry as isOutputObject
  * This should be called when creating a new node (e.g., on drop).
  */
 export function initializeUIData(nodeData: any): void {
+  const inputRegistry = INPUT_TYPE_COMPONENT_REGISTRY as Record<
+    string,
+    { expandable: boolean }
+  >;
+
   // Note: _expandedComponentWidth is not initialized here
   // It will be set dynamically when the first component is resized
 
@@ -41,15 +46,10 @@ export function initializeUIData(nodeData: any): void {
       // Initialize _expanded for types based on registry
       const actualType = arg._selectedType || arg.type;
       if (typeof actualType === "string") {
-        const registryEntry = INPUT_TYPE_COMPONENT_REGISTRY[actualType];
-        if (registryEntry && isInputObjectRegistryEntry(registryEntry)) {
-          // Initialize _expanded for types with expandable areas
-          if (registryEntry.expanded) {
-            if (arg._expanded === undefined) {
-              // Default to collapsed (false)
-              arg._expanded = false;
-            }
-          }
+        const registryEntry = inputRegistry[actualType];
+        if (registryEntry?.expandable && arg._expanded === undefined) {
+          // Default to collapsed (false)
+          arg._expanded = false;
         }
       }
     });
@@ -61,14 +61,15 @@ export function initializeUIData(nodeData: any): void {
       const output = nodeData.outputs[outputName];
 
       // Initialize _expanded for outputs with expandable areas
-      const outputType = output.type;
-      if (typeof outputType === "string") {
-        const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[outputType];
-        if (
-          registryEntry &&
-          isOutputObjectRegistryEntry(registryEntry) &&
-          registryEntry.expanded
-        ) {
+      const actualType =
+        output._selectedType ||
+        (typeof output.type === "object" && output.type?.anyOf
+          ? output.type.anyOf[0]
+          : output.type);
+
+      if (typeof actualType === "string") {
+        const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
+        if (registryEntry?.expandable) {
           if (output._expanded === undefined) {
             // Default to collapsed (false)
             output._expanded = false;

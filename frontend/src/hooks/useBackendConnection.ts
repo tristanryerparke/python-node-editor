@@ -11,7 +11,7 @@ interface HealthResponse {
 export function useBackendConnection() {
   // NOTE: When backend is down, browser will log ERR_CONNECTION_REFUSED to console.
   // This is normal browser behavior and cannot be suppressed programmatically.
-  const { data, isLoading } = useSWR<HealthResponse>("/health", fetcher, {
+  const { data, isLoading } = useSWR<HealthResponse>("/api/health", fetcher, {
     refreshInterval: (latestData) =>
       latestData?.status === "ok"
         ? POLL_INTERVAL_CONNECTED

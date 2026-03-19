@@ -3,11 +3,8 @@ import type {
   FrontendFieldDataWrapper,
   FunctionNode,
 } from "@/types/types";
-import type { StructDescr, UnionDescr } from "@/types/backend-schema";
-import {
-  validateValueAgainstSchema,
-  type SchemaType,
-} from "./schema-input-validator";
+import type { StructDescr, TypeSchema, UnionDescr } from "@/types/backend-schema";
+import { validateValueAgainstSchema } from "./schema-input-validator";
 
 const SUPPORTED_SCALAR_TYPES = new Set(["int", "float", "str", "bool"]);
 
@@ -17,7 +14,7 @@ export interface InvalidInputIssue {
   reason: string;
 }
 
-function getEffectiveSchema(fieldData: FrontendFieldDataWrapper): SchemaType {
+function getEffectiveSchema(fieldData: FrontendFieldDataWrapper): TypeSchema {
   if (
     typeof fieldData.type === "object" &&
     "anyOf" in fieldData.type &&
@@ -27,7 +24,7 @@ function getEffectiveSchema(fieldData: FrontendFieldDataWrapper): SchemaType {
     return selectedType;
   }
 
-  return fieldData.type as SchemaType;
+  return fieldData.type as TypeSchema;
 }
 
 function isSupportedUnion(schema: UnionDescr): boolean {
@@ -42,7 +39,7 @@ function isSupportedStruct(schema: StructDescr): boolean {
   return isSupportedUnion(schema.itemsType);
 }
 
-function isSchemaSupported(schema: SchemaType): boolean {
+function isSchemaSupported(schema: TypeSchema): boolean {
   if (typeof schema === "string") {
     return SUPPORTED_SCALAR_TYPES.has(schema);
   }

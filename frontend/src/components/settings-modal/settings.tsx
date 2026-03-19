@@ -7,12 +7,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSelect } from "./theme-select";
+import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore from "@/stores/settingsStore";
-
-const BACKEND_URL = "http://localhost:8000";
+import useFlowStore from "@/stores/flowStore";
 
 export function SettingsModal() {
   const openInEditorName = useSettingsStore((state) => state.openInEditorName);
@@ -21,6 +22,21 @@ export function SettingsModal() {
   );
   const executionMode = useSettingsStore((state) => state.executionMode);
   const setExecutionMode = useSettingsStore((state) => state.setExecutionMode);
+  const showInspectorPaths = useSettingsStore(
+    (state) => state.showInspectorPaths,
+  );
+  const setShowInspectorPaths = useSettingsStore(
+    (state) => state.setShowInspectorPaths,
+  );
+  const warnOnEnvironmentMismatch = useSettingsStore(
+    (state) => state.warnOnEnvironmentMismatch,
+  );
+  const setWarnOnEnvironmentMismatch = useSettingsStore(
+    (state) => state.setWarnOnEnvironmentMismatch,
+  );
+  const clearEnvironmentMismatchWarning = useFlowStore(
+    (state) => state.clearEnvironmentMismatchWarning,
+  );
 
   return (
     <Dialog>
@@ -53,6 +69,24 @@ export function SettingsModal() {
               </TabsList>
             </Tabs>
           </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <label
+                htmlFor="show-inspector-paths"
+                className="text-sm font-medium"
+              >
+                Show Inspector Paths
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Show the selected path above inspector data.
+              </p>
+            </div>
+            <Checkbox
+              id="show-inspector-paths"
+              checked={showInspectorPaths}
+              onCheckedChange={(checked) => setShowInspectorPaths(checked === true)}
+            />
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <label htmlFor="editor-name" className="text-sm font-medium pt-1">
@@ -72,9 +106,34 @@ export function SettingsModal() {
             />
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Backend Address</label>
+            <div className="flex flex-col">
+              <label
+                htmlFor="environment-warning"
+                className="text-sm font-medium pt-1"
+              >
+                Mismatch Warnings
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Warn when incoming flow/backend metadata has unknown callable IDs
+                or types
+              </p>
+            </div>
+            <Checkbox
+              id="environment-warning"
+              checked={warnOnEnvironmentMismatch}
+              onCheckedChange={(checked) => {
+                const enabled = checked === true;
+                setWarnOnEnvironmentMismatch(enabled);
+                if (!enabled) {
+                  clearEnvironmentMismatchWarning();
+                }
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Backend API</label>
             <div className="text-sm text-muted-foreground font-mono bg-muted px-3 py-2 rounded-md">
-              {BACKEND_URL}
+              {API_PREFIX}
             </div>
           </div>
         </div>

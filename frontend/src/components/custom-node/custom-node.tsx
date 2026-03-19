@@ -39,7 +39,6 @@ export default memo(function CustomNode({
   return (
     <div ref={nodeRef}>
       <SyncedWidthHandleProvider
-        useTailwindScale={true}
         width={nodeWidth}
         maxWidth={250}
         setWidth={setNodeWidth}

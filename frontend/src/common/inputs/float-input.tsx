@@ -1,33 +1,46 @@
-import { memo, useMemo } from "react";
-import { NumberInput } from "../../components/ui/number-input";
-import { useInputField, type CustomInputProps } from "@/hooks/useInputField";
-import { validateValueAgainstSchema } from "@/utils/schema-input-validator";
+import { memo, useEffect } from "react";
+import NumberInput from "../../components/ui/number-input";
+import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
 
-export default memo(function FloatInput({ inputData, path }: CustomInputProps) {
-  const { value, setValue, disabled } = useInputField<number | undefined>(
-    inputData,
-    path,
-  );
+export interface FloatInputProps extends ControlledInputProps {
+  placeholder?: string;
+}
 
-  const validationResult = useMemo(() => {
-    if (value === undefined) {
-      return { valid: true as const, value: undefined };
-    }
-    return validateValueAgainstSchema(value, inputData.type);
-  }, [inputData.type, value]);
+function coerceFloatValue(value: number | undefined): number | undefined {
+  return Number.isFinite(value) ? value : undefined;
+}
+
+const FloatInput = memo(function ControlledFloatInput({
+  value,
+  onChange,
+  disabled,
+  setValid,
+  placeholder = "Enter float",
+}: FloatInputProps) {
+  const numericValue =
+    typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  const isValueValid = numericValue !== undefined;
+  const isInvalid = !isValueValid;
+
+  useEffect(() => {
+    setValid?.(isValueValid);
+  }, [isValueValid, setValid]);
 
   return (
     <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
       <NumberInput
-        value={value}
-        decimalScale={3}
-        onValueChange={setValue}
-        onBlur={() => setValue(value, 0)}
+        value={numericValue}
+        onValueChange={(nextValue) => {
+          void onChange(nextValue);
+        }}
         disabled={disabled}
-        invalid={!validationResult.valid}
-        className="nodrag nopan nowheel"
-        placeholder="Enter float"
+        invalid={isInvalid}
+        placeholder={placeholder}
+        decimalScale={3}
+        coerceValue={coerceFloatValue}
       />
     </div>
   );
 });
+
+export default FloatInput;

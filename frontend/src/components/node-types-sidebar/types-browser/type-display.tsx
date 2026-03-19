@@ -5,7 +5,8 @@ import {
   ItemTitle,
   ItemActions,
 } from "@/components/ui/item";
-import useTypesStore, { type TypeInfo } from "@/stores/typesStore";
+import useFlowStore from "@/stores/flowStore";
+import type { TypeInfo } from "@/types/environment";
 import { hasDisplayComponent } from "./has-display-component";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 
@@ -15,7 +16,7 @@ interface TypeDisplayProps {
 }
 
 export function TypeDisplay({ typeName, typeInfo }: TypeDisplayProps) {
-  const types = useTypesStore((state) => state.types);
+  const types = useFlowStore((state) => state.types);
   const hasComponent = hasDisplayComponent(typeName, types);
 
   return (
