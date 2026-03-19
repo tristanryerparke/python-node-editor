@@ -2,12 +2,17 @@ import { Button } from "@/components/ui/button";
 import useFlowStore from "../../stores/flowStore";
 
 export default function SaveButton() {
-  const { rfInstance } = useFlowStore();
+  const { rfInstance, functionSchemas, types } = useFlowStore();
 
   const onSave = () => {
     if (rfInstance) {
       const flow = rfInstance.toObject();
-      const json = JSON.stringify(flow, null, 2);
+      const flowWithEnvironment = {
+        ...flow,
+        functionSchemas,
+        types,
+      };
+      const json = JSON.stringify(flowWithEnvironment, null, 2);
       const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
 

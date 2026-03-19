@@ -19,6 +19,7 @@ import {
   isCachedValueReference,
   uploadLargeData,
 } from "../utils/large-data-utils";
+import type { EnvironmentMismatchWarning } from "@/utils/environment-mismatch";
 import { preserveUIData } from "../utils/preserve-ui-data";
 import { findNodeIndexById } from "../utils/store-utils";
 import { indexFunctionSchemas } from "@/types/environment";
@@ -30,6 +31,7 @@ type FlowStoreState = {
   rfInstance: ReactFlowInstance<FunctionNode, Edge> | null;
   functionSchemas: FunctionSchemas;
   types: Record<string, TypeInfo>;
+  environmentMismatchWarning: EnvironmentMismatchWarning | null;
 };
 
 type FlowStoreActions = {
@@ -40,6 +42,10 @@ type FlowStoreActions = {
   setViewport: (viewport: Viewport) => void;
   setRfInstance: (instance: ReactFlowInstance<FunctionNode, Edge>) => void;
   setEnvironment: (environment: EnvironmentResponse) => void;
+  setEnvironmentMismatchWarning: (
+    warning: EnvironmentMismatchWarning,
+  ) => void;
+  clearEnvironmentMismatchWarning: () => void;
   onNodesChange: OnNodesChange<FunctionNode>;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
@@ -66,6 +72,7 @@ const useFlowStore = createWithEqualityFn<
       rfInstance: null,
       functionSchemas: {},
       types: {},
+      environmentMismatchWarning: null,
 
       onNodesChange: (changes) => {
         set(
@@ -106,6 +113,12 @@ const useFlowStore = createWithEqualityFn<
           functionSchemas: indexFunctionSchemas(environment.nodes),
           types: environment.types,
         }),
+
+      setEnvironmentMismatchWarning: (warning) =>
+        set({ environmentMismatchWarning: warning }),
+
+      clearEnvironmentMismatchWarning: () =>
+        set({ environmentMismatchWarning: null }),
 
       updateNodeData: async (path, newData, options = {}) => {
         const { suppress = false, prefix = "", fromUser = false } = options;

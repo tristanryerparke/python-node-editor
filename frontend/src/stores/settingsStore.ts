@@ -9,12 +9,14 @@ type SettingsStoreState = {
   theme: Theme;
   openInEditorName: string | null;
   executionMode: ExecutionMode;
+  warnOnEnvironmentMismatch: boolean;
 };
 
 type SettingsStoreActions = {
   setTheme: (theme: Theme) => void;
   setOpenInEditorName: (editorName: string | null) => void;
   setExecutionMode: (mode: ExecutionMode) => void;
+  setWarnOnEnvironmentMismatch: (enabled: boolean) => void;
 };
 
 export type SettingsState = SettingsStoreState & SettingsStoreActions;
@@ -28,6 +30,7 @@ const useSettingsStore = createWithEqualityFn<
       theme: "system",
       openInEditorName: "vscode",
       executionMode: "async",
+      warnOnEnvironmentMismatch: true,
 
       setTheme: (theme) => set({ theme }),
 
@@ -35,6 +38,9 @@ const useSettingsStore = createWithEqualityFn<
         set({ openInEditorName: editorName }),
 
       setExecutionMode: (mode) => set({ executionMode: mode }),
+
+      setWarnOnEnvironmentMismatch: (enabled) =>
+        set({ warnOnEnvironmentMismatch: enabled }),
     }),
     {
       name: "settings-storage",
@@ -43,6 +49,7 @@ const useSettingsStore = createWithEqualityFn<
         theme: state.theme,
         openInEditorName: state.openInEditorName,
         executionMode: state.executionMode,
+        warnOnEnvironmentMismatch: state.warnOnEnvironmentMismatch,
       }),
     },
   ),

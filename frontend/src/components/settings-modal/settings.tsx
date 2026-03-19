@@ -9,9 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ThemeSelect } from "./theme-select";
 import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore from "@/stores/settingsStore";
+import useFlowStore from "@/stores/flowStore";
 
 export function SettingsModal() {
   const openInEditorName = useSettingsStore((state) => state.openInEditorName);
@@ -20,6 +22,15 @@ export function SettingsModal() {
   );
   const executionMode = useSettingsStore((state) => state.executionMode);
   const setExecutionMode = useSettingsStore((state) => state.setExecutionMode);
+  const warnOnEnvironmentMismatch = useSettingsStore(
+    (state) => state.warnOnEnvironmentMismatch,
+  );
+  const setWarnOnEnvironmentMismatch = useSettingsStore(
+    (state) => state.setWarnOnEnvironmentMismatch,
+  );
+  const clearEnvironmentMismatchWarning = useFlowStore(
+    (state) => state.clearEnvironmentMismatchWarning,
+  );
 
   return (
     <Dialog>
@@ -68,6 +79,31 @@ export function SettingsModal() {
               value={openInEditorName || ""}
               onChange={(e) => setOpenInEditorName(e.target.value || null)}
               className="min-w-30 max-w-30 min-h-9"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <label
+                htmlFor="environment-warning"
+                className="text-sm font-medium pt-1"
+              >
+                Mismatch Warnings
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Warn when incoming flow/backend metadata has unknown callable IDs
+                or types
+              </p>
+            </div>
+            <Checkbox
+              id="environment-warning"
+              checked={warnOnEnvironmentMismatch}
+              onCheckedChange={(checked) => {
+                const enabled = checked === true;
+                setWarnOnEnvironmentMismatch(enabled);
+                if (!enabled) {
+                  clearEnvironmentMismatchWarning();
+                }
+              }}
             />
           </div>
           <div className="flex items-center justify-between">

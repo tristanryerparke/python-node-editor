@@ -2,9 +2,22 @@ import { Button } from "@/components/ui/button";
 import useFlowStore from "../../stores/flowStore";
 import { useReactFlow } from "@xyflow/react";
 import { useRef } from "react";
+import type { FunctionSchemas, TypeInfo } from "@/types/environment";
+import { buildEnvironmentMismatchWarning } from "@/utils/environment-mismatch";
+import useSettingsStore from "@/stores/settingsStore";
 
 export const LoadButton = () => {
-  const { setNodes, setEdges, setViewport: setStoreViewport } = useFlowStore();
+  const {
+    setNodes,
+    setEdges,
+    setViewport: setStoreViewport,
+    functionSchemas,
+    types,
+    setEnvironmentMismatchWarning,
+  } = useFlowStore();
+  const warnOnEnvironmentMismatch = useSettingsStore(
+    (state) => state.warnOnEnvironmentMismatch,
+  );
   const { setViewport } = useReactFlow();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,6 +36,23 @@ export const LoadButton = () => {
         const flow = JSON.parse(content);
 
         if (flow) {
+          const incomingFunctionSchemas = (flow.functionSchemas ??
+            {}) as FunctionSchemas;
+          const incomingTypes = (flow.types ?? {}) as Record<string, TypeInfo>;
+          if (warnOnEnvironmentMismatch) {
+            const warning = buildEnvironmentMismatchWarning({
+              source: "flow-load",
+              incomingFunctionSchemas,
+              incomingTypes,
+              currentFunctionSchemas: functionSchemas,
+              currentTypes: types,
+            });
+
+            if (warning) {
+              setEnvironmentMismatchWarning(warning);
+            }
+          }
+
           const { x = 0, y = 0, zoom = 1 } = flow.viewport || {};
           const viewport = { x, y, zoom };
           setNodes(flow.nodes || []);
