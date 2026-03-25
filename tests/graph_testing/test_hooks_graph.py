@@ -12,19 +12,24 @@ from tests.assets.graph_utils import node_from_schema
 from tests.assets.hooks import (
     HOOK_EVENTS,
     add_with_hooked_options,
+    add_with_silent_pre_hook,
     multiply_with_hooked_options,
     reset_hook_events,
 )
 
 _, schema_add, _, types_add = analyze_function(add_with_hooked_options)
 _, schema_multiply, _, types_multiply = analyze_function(multiply_with_hooked_options)
+_, schema_silent_pre, _, types_silent_pre = analyze_function(add_with_silent_pre_hook)
 
 server_module.CALLABLES[schema_add.callable_id] = add_with_hooked_options
 server_module.CALLABLES[schema_multiply.callable_id] = multiply_with_hooked_options
+server_module.CALLABLES[schema_silent_pre.callable_id] = add_with_silent_pre_hook
 server_module.FUNCTION_SCHEMAS.append(schema_add)
 server_module.FUNCTION_SCHEMAS.append(schema_multiply)
+server_module.FUNCTION_SCHEMAS.append(schema_silent_pre)
 server_module.TYPES.update(types_add)
 server_module.TYPES.update(types_multiply)
+server_module.TYPES.update(types_silent_pre)
 
 
 @asynccontextmanager
@@ -107,3 +112,26 @@ def test_hooks_and_add_node_options_work_with_reversed_decorator_order():
     assert post_event_name == "post_inputs_output"
     assert post_payload["inputs"] == {"a": 4, "b": 6}
     assert post_payload["output"] == 24
+
+
+def test_pre_hook_output_can_be_omitted_from_terminal_output():
+    reset_hook_events()
+
+    node = node_from_schema("node3", schema_silent_pre)
+    node.data.arguments["a"].value = 2
+    node.data.arguments["b"].value = 3
+
+    graph = Graph(nodes=[node], edges=[])
+
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
+    assert response.status_code == 200
+
+    result = response.json()
+    assert result["status"] == "success"
+    assert result["updates"][0]["outputs"]["sum"]["value"] == 5
+    assert result["updates"][0]["terminalOutput"] == "FUNCTION OUTPUT\n"
+
+    assert len(HOOK_EVENTS) == 1
+    pre_event_name, pre_payload = HOOK_EVENTS[0]
+    assert pre_event_name == "pre_inputs_only_no_terminal_output"
+    assert pre_payload["inputs"] == {"a": 2, "b": 3}

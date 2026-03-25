@@ -1,5 +1,7 @@
 from functools import wraps
 import inspect
+import io
+from contextlib import redirect_stderr, redirect_stdout
 
 
 def skip_node(func):
@@ -13,13 +15,20 @@ def _append_hook(wrapper, attribute_name, hook):
     setattr(wrapper, attribute_name, hooks)
 
 
-def pre_execution_hook(hook):
+def pre_execution_hook(hook, include_terminal_output: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
 
-        _append_hook(wrapper, "_pre_execution_hooks", hook)
+        _append_hook(
+            wrapper,
+            "_pre_execution_hooks",
+            {
+                "hook": hook,
+                "include_terminal_output": include_terminal_output,
+            },
+        )
         return wrapper
 
     return decorator
@@ -84,7 +93,21 @@ def _run_hooks(hooks, context):
         hooks = [hooks]
 
     for hook in hooks:
-        _call_hook_with_subset_context(hook, context)
+        hook_callable = hook
+        include_terminal_output = True
+        if isinstance(hook, dict):
+            hook_callable = hook.get("hook")
+            include_terminal_output = hook.get("include_terminal_output", True)
+
+        if not callable(hook_callable):
+            continue
+
+        if include_terminal_output:
+            _call_hook_with_subset_context(hook_callable, context)
+            continue
+
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            _call_hook_with_subset_context(hook_callable, context)
 
 
 def run_pre_execution_hooks(func, execution_id, node_id, inputs):
