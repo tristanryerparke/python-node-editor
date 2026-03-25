@@ -19,6 +19,15 @@ class FunctionNotFoundError(Exception):
     pass
 
 
+def should_skip_function(func_obj) -> bool:
+    current_obj = func_obj
+    while current_obj is not None:
+        if getattr(current_obj, "_skip_node_analysis", False):
+            return True
+        current_obj = getattr(current_obj, "__wrapped__", None)
+    return False
+
+
 def split_search_path_and_function(search_path: str) -> tuple[str, str | None]:
     if ":" not in search_path:
         return search_path, None
@@ -116,7 +125,8 @@ def analyze_file(file_path: str, function_names: set[str] | None = None):
     funcs = {
         name: obj
         for name, obj in inspect.getmembers(module, inspect.isfunction)
-        if obj.__module__ == module_name or obj.__module__ == module.__name__
+        if (obj.__module__ == module_name or obj.__module__ == module.__name__)
+        and not should_skip_function(obj)
     }
 
     if function_names is not None:

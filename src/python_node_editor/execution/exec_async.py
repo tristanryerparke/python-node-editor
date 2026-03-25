@@ -152,7 +152,11 @@ async def execute_and_create_update(
     try:
         # Execute node (will run in thread, with context_dict passed to store buffer)
         success, result, terminal_output = await asyncio.to_thread(
-            execute_node, node.data, context_dict
+            execute_node,
+            node.data,
+            context_dict,
+            node.id,
+            execution_id,
         )
     finally:
         # Always clean up the context variable

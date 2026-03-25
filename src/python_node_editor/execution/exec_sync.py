@@ -1,3 +1,4 @@
+import shortuuid
 from devtools import debug as d
 from fastapi import APIRouter
 
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/api")
 async def execute_graph_sync(graph: Graph):
     """Execute a graph containing nodes and edges synchronously"""
 
+    execution_id = shortuuid.uuid()
     execution_list = topological_order(graph)
 
     if VERBOSE:
@@ -26,7 +28,9 @@ async def execute_graph_sync(graph: Graph):
     for node in execution_list:
         if VERBOSE:
             print(f"Executing node {node.id}")
-        success, result, terminal_output = execute_node(node.data)
+        success, result, terminal_output = execute_node(
+            node.data, node_id=node.id, execution_id=execution_id
+        )
 
         node_update = create_node_update(
             node, success, result, terminal_output, graph, execution_list

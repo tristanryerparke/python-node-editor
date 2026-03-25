@@ -5,6 +5,10 @@ import traceback
 from typing import Any
 from python_node_editor.schema import Graph, NodeDataFromFrontend, NodeFromFrontend
 from python_node_editor.schema_base import StructDescr, UnionDescr
+from python_node_editor.runtime import (
+    run_post_execution_hooks,
+    run_pre_execution_hooks,
+)
 from python_node_editor.large_data.large_files_endpoint import (
     CachedValueReference,
     LARGE_DATA_CACHE,
@@ -72,7 +76,10 @@ def infer_concrete_type(value, type_descriptor, TYPES):
 
 
 def execute_node(
-    node: NodeDataFromFrontend, context_dict: dict[str, Any] | None = None
+    node: NodeDataFromFrontend,
+    context_dict: dict[str, Any] | None = None,
+    node_id: str | None = None,
+    execution_id: str | None = None,
 ) -> tuple[bool, Any, str]:
     """Finds a node's callable and executes it with the arguments from the frontend
     Return signature is:
@@ -96,39 +103,31 @@ def execute_node(
         context_dict["buffer"] = captured_output
 
     try:
+        args = {}
+        for k, v in node.arguments.items():
+            args[k] = v.value
+
+        run_pre_execution_hooks(callable, execution_id, node_id, dict(args))
+
         if getattr(callable, "list_inputs", False):
             numbered_args = {}
             named_args = {}
 
-            for k, v in node.arguments.items():
-                arg_value = v.value
-
+            for k, v in args.items():
                 if k.isdigit():
-                    numbered_args[int(k)] = arg_value
+                    numbered_args[int(k)] = v
                 else:
-                    named_args[k] = arg_value
+                    named_args[k] = v
 
             sorted_numbered_args = [
                 numbered_args[i] for i in sorted(numbered_args.keys())
             ]
-
-            named_args_values = list(named_args.values())
-
-            all_args = named_args_values + sorted_numbered_args
-
+            all_args = list(named_args.values()) + sorted_numbered_args
             result = callable(*all_args)
-        elif getattr(callable, "dict_inputs", False):
-            args = {}
-            for k, v in node.arguments.items():
-                args[k] = v.value
-
-            result = callable(**args)
         else:
-            args = {}
-            for k, v in node.arguments.items():
-                args[k] = v.value
-
             result = callable(**args)
+
+        run_post_execution_hooks(callable, execution_id, node_id, dict(args), result)
 
         sys.stdout = old_stdout
         sys.stderr = old_stderr
