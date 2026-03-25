@@ -11,7 +11,7 @@ def _parse_backend_args(builds_frontend):
     parser.add_argument(
         "--do_not_ignore_underscore_prefix",
         action="store_true",
-        help="Do not ignore files and folders starting with underscore",
+        help="Do not ignore files, folders, and functions starting with underscore",
     )
     if builds_frontend:
         parser.add_argument(
@@ -155,7 +155,7 @@ def analyze():
     parser.add_argument(
         "--do_not_ignore_underscore_prefix",
         action="store_true",
-        help="Do not ignore files and folders starting with underscore",
+        help="Do not ignore files, folders, and functions starting with underscore",
     )
     parser.add_argument(
         "-j",
