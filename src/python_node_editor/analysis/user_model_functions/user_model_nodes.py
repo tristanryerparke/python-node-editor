@@ -38,10 +38,7 @@ def create_const_deconst_models(types):
                         )
 
                 # Handle construction node
-                if (
-                    hasattr(python_class, "_construct_node")
-                    and python_class._construct_node
-                ):
+                if python_class.__dict__.get("_construct_node", False):
                     const_model, callable_id, constructor_func = create_construct_node(
                         python_class,
                         type_name,
@@ -54,10 +51,7 @@ def create_const_deconst_models(types):
                     model_callables[callable_id] = constructor_func
 
                 # Handle deconstruction node
-                if (
-                    hasattr(python_class, "_deconstruct_node")
-                    and python_class._deconstruct_node
-                ):
+                if python_class.__dict__.get("_deconstruct_node", False):
                     deconst_model, callable_id, deconstructor_func = (
                         create_deconstruct_node(
                             python_class,

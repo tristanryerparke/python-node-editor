@@ -1,8 +1,9 @@
 from examples.user_model import Point2D
-from python_node_editor.display import add_node_options
+from python_node_editor.display import add_node_options, construct_deconstruct
 from python_node_editor.schema_base import UserModel
 
 
+@construct_deconstruct
 class Polygon(UserModel):
     vertices: list[Point2D]
 

@@ -5,6 +5,7 @@ from typing import Any, Callable, TypeVar, cast
 from python_node_editor.execution.context import progress_context
 
 F = TypeVar("F", bound=Callable[..., Any])
+T = TypeVar("T", bound=type)
 
 
 def _handlers_to_dict(handlers):
@@ -13,6 +14,24 @@ def _handlers_to_dict(handlers):
     if isinstance(handlers, dict):
         return dict(handlers)
     return {handler.type_name: handler for handler in handlers}
+
+
+def construct(user_model_class: T) -> T:
+    user_model_class._construct_node = True
+    user_model_class._deconstruct_node = False
+    return user_model_class
+
+
+def deconstruct(user_model_class: T) -> T:
+    user_model_class._construct_node = False
+    user_model_class._deconstruct_node = True
+    return user_model_class
+
+
+def construct_deconstruct(user_model_class: T) -> T:
+    user_model_class._construct_node = True
+    user_model_class._deconstruct_node = True
+    return user_model_class
 
 
 def add_node_options(
