@@ -34,6 +34,14 @@ def construct_deconstruct(user_model_class: T) -> T:
     return user_model_class
 
 
+def retrieve_input_data(retriever: Callable[[], Any]):
+    def decorator(user_model_class: T) -> T:
+        user_model_class._retrieve_input_data_callable = retriever
+        return user_model_class
+
+    return decorator
+
+
 def add_node_options(
     node_name: str | None = None,
     return_value_name: str | None = None,

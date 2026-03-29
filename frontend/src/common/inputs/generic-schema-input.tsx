@@ -9,6 +9,7 @@ import { validateInputAgainstSchema } from "@/utils/schema-input-validator";
 export interface GenericSchemaInputProps extends ControlledInputProps {
   schema?: TypeSchema;
   placeholder?: string;
+  rightButton?: React.ReactNode;
 }
 
 function formatValue(value: unknown): string {
@@ -36,6 +37,7 @@ export default memo(function GenericSchemaInput({
   typeSchema,
   schema,
   placeholder = "Value",
+  rightButton,
 }: GenericSchemaInputProps) {
   const types = useFlowStore((state) => state.types);
   const rawValue = formatValue(value);
@@ -85,16 +87,17 @@ export default memo(function GenericSchemaInput({
   }
 
   return (
-    <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
+    <div className="flex flex-1 min-w-35 nodrag nopan nowheel gap-1">
       <Input
         type="text"
         value={rawValue}
         onChange={(e) => handleChange(e.target.value)}
         disabled={disabled}
         aria-invalid={!disabled && isInvalid}
-        className="nodrag nopan nowheel"
+        className="nodrag nopan nowheel flex-1 min-w-0"
         placeholder={placeholder}
       />
+      {rightButton ? <div className="shrink-0">{rightButton}</div> : null}
     </div>
   );
 });
