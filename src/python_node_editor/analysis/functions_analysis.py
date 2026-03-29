@@ -4,7 +4,12 @@ import os
 import typing
 from typing import Any, Callable, Dict, Tuple
 
-from python_node_editor.schema import DataWrapper, FunctionSchema, StructDescr
+from python_node_editor.schema import (
+    DataWrapper,
+    FunctionSchema,
+    MultipleOutputs,
+    StructDescr,
+)
 
 from .types_analysis import analyze_type, get_type_repr, merge_types_dict
 
@@ -118,7 +123,8 @@ def analyze_function(
     outputs = {}
     if (
         inspect.isclass(ret_ann)
-        and hasattr(ret_ann, "model_fields")
+        and issubclass(ret_ann, MultipleOutputs)
+        and ret_ann is not MultipleOutputs
         and not hasattr(ret_ann, "_is_cached_type")
     ):
         # Get the model fields using Pydantic's model_fields

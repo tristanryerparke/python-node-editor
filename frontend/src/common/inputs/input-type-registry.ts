@@ -21,4 +21,8 @@ export const INPUT_TYPE_COMPONENT_REGISTRY: Record<string, InputRegistryEntry> =
       component: Point2DFromBackendInput,
       expandable: false,
     },
+    RhinoPolyline: {
+      component: Point2DFromBackendInput,
+      expandable: false,
+    },
   };
