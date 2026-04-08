@@ -23,3 +23,38 @@ def test_analyze_file_selector_raises_when_function_missing():
 
     assert "not_a_real_function" in str(exc_info.value)
     assert "examples/integer_math.py" in str(exc_info.value)
+
+
+def _write_temp_functions_file(tmp_path):
+    test_file = tmp_path / "underscore_filter_sample.py"
+    test_file.write_text(
+        """\
+def visible(a: int, b: int) -> int:
+    return a + b
+
+def _hidden(a: int, b: int) -> int:
+    return a - b
+"""
+    )
+    return str(test_file)
+
+
+def test_underscore_prefixed_functions_are_ignored_by_default(tmp_path):
+    test_file = _write_temp_functions_file(tmp_path)
+    function_schemas, callables, _ = analyze_file_structure(test_file)
+
+    schema_names = {schema.name for schema in function_schemas}
+    assert schema_names == {"visible"}
+    assert len(callables) == 1
+
+
+def test_underscore_prefixed_functions_can_be_included(tmp_path):
+    test_file = _write_temp_functions_file(tmp_path)
+    function_schemas, callables, _ = analyze_file_structure(
+        test_file, ignore_underscore_prefix=False
+    )
+
+    schema_names = {schema.name for schema in function_schemas}
+    assert "visible" in schema_names
+    assert "_hidden" in schema_names
+    assert len(callables) == 2

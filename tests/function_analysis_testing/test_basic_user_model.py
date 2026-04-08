@@ -2,7 +2,7 @@ from devtools import debug as d
 
 from python_node_editor.analysis.functions_analysis import analyze_function
 from python_node_editor.schema import DataWrapper
-from tests.assets.user_model import Point2D, two_point_distance
+from tests.assets.user_model import Point2D, passthrough_point, two_point_distance
 from tests.assets.user_model_not_used_in_function import add
 
 
@@ -59,6 +59,26 @@ def test_user_model_not_used_in_function():
     assert "float" not in found_types
 
 
+def test_user_model_return_is_single_output():
+    point = Point2D(x=1.0, y=2.0)
+    assert passthrough_point(point) == point
+
+    _, schema, _, found_types = analyze_function(passthrough_point)
+    d(schema)
+
+    assert schema.name == "passthrough_point"
+    assert schema.category == ["tests", "assets", "user_model"]
+    assert schema.output_style == "single"
+    assert schema.arguments == {"point": DataWrapper(type="Point2D")}
+    assert schema.outputs == {"return": DataWrapper(type="Point2D")}
+
+    d(found_types)
+    assert "Point2D" in found_types
+    assert found_types["Point2D"].kind == "user_model"
+    assert "float" in found_types
+
+
 if __name__ == "__main__":
     test_user_model_detection()
     test_user_model_not_used_in_function()
+    test_user_model_return_is_single_output()

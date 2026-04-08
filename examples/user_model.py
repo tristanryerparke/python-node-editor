@@ -1,6 +1,8 @@
+from python_node_editor.display import construct_deconstruct
 from python_node_editor.schema_base import UserModel
 
 
+@construct_deconstruct
 class Point2D(UserModel):
     x: float
     y: float

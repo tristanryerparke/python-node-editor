@@ -14,6 +14,7 @@ interface UserModelDisplayProps {
   showEmptyTypeName?: boolean;
   typeName: string;
   typeSchema?: TypeSchema;
+  rightButton?: React.ReactNode;
 }
 
 export default function UserModelDisplay({
@@ -22,8 +23,10 @@ export default function UserModelDisplay({
   expanded = false,
   showEmptyTypeName = true,
   typeName,
+  rightButton,
 }: UserModelDisplayProps) {
   const hasValue = value != null;
+  const RightButton = rightButton ? () => <>{rightButton}</> : undefined;
 
   if (expanded) {
     return (
@@ -41,6 +44,7 @@ export default function UserModelDisplay({
       content={hasValue || showEmptyTypeName ? formatUserModelValue(value, typeName) : ""}
       dimmed={!hasValue}
       disabled={disabled}
+      rightButton={RightButton}
     />
   );
 }

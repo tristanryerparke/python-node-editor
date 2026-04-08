@@ -19,6 +19,15 @@ class FunctionNotFoundError(Exception):
     pass
 
 
+def should_skip_function(func_obj) -> bool:
+    current_obj = func_obj
+    while current_obj is not None:
+        if getattr(current_obj, "_skip_node_analysis", False):
+            return True
+        current_obj = getattr(current_obj, "__wrapped__", None)
+    return False
+
+
 def split_search_path_and_function(search_path: str) -> tuple[str, str | None]:
     if ":" not in search_path:
         return search_path, None
@@ -93,7 +102,11 @@ def find_python_files(
     return py_files
 
 
-def analyze_file(file_path: str, function_names: set[str] | None = None):
+def analyze_file(
+    file_path: str,
+    function_names: set[str] | None = None,
+    ignore_underscore_prefix: bool = True,
+):
     """Analyze a single file for functions that can be turned into nodes.
     Also collects the input and output types of the functions and returns them."""
 
@@ -116,7 +129,9 @@ def analyze_file(file_path: str, function_names: set[str] | None = None):
     funcs = {
         name: obj
         for name, obj in inspect.getmembers(module, inspect.isfunction)
-        if obj.__module__ == module_name or obj.__module__ == module.__name__
+        if (obj.__module__ == module_name or obj.__module__ == module.__name__)
+        and (not ignore_underscore_prefix or not name.startswith("_"))
+        and not should_skip_function(obj)
     }
 
     if function_names is not None:
@@ -149,7 +164,9 @@ def analyze_file(file_path: str, function_names: set[str] | None = None):
 
 
 def analyze_files(
-    py_files_with_function_filters: list[tuple[str, set[str] | None]], base_dir: str
+    py_files_with_function_filters: list[tuple[str, set[str] | None]],
+    base_dir: str,
+    ignore_underscore_prefix: bool = True,
 ):
     """Takes in a flat list of python files and analyzes the functions in them"""
     # Initialize accumulation structures
@@ -166,7 +183,9 @@ def analyze_files(
 
         # Analyze the file
         file_functions, file_callables, file_types = analyze_file(
-            py_file, function_names=function_names
+            py_file,
+            function_names=function_names,
+            ignore_underscore_prefix=ignore_underscore_prefix,
         )
 
         # Merge functions schemas from this file
@@ -241,4 +260,8 @@ def analyze_file_structure(
     if cwd not in sys.path:
         sys.path.insert(0, cwd)
 
-    return analyze_files(list(py_files_with_function_filters.items()), base_dir)
+    return analyze_files(
+        list(py_files_with_function_filters.items()),
+        base_dir,
+        ignore_underscore_prefix=ignore_underscore_prefix,
+    )

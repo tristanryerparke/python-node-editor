@@ -7,8 +7,8 @@ from pydantic.alias_generators import to_camel
 class UserModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    _deconstruct_node: ClassVar[bool] = True
-    _construct_node: ClassVar[bool] = True
+    _deconstruct_node: ClassVar[bool] = False
+    _construct_node: ClassVar[bool] = False
 
 
 # Base types that don't depend on anything
