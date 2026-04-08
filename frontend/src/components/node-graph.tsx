@@ -83,13 +83,15 @@ function NodeGraph() {
           return currentNodes.map((node) => ({ ...node, selected: true }));
         });
       } else if (cmdOrCtrl && key === "c") {
-        if (!hasSelectedNodes) return;
+        if (isEditingText || !hasSelectedNodes) return;
         event.preventDefault();
         copy();
       } else if (cmdOrCtrl && key === "x") {
+        if (isEditingText || !hasSelectedNodes) return;
         event.preventDefault();
         cut();
       } else if (cmdOrCtrl && key === "v") {
+        if (isEditingText) return;
         event.preventDefault();
         paste();
       }
