@@ -41,6 +41,8 @@ dev = [
 ]
 rhino = [
     "rhino-python-renderer",
+    "shapely>=2.1.2",
+]
 llm = [
     "openai>=2.30.0",
 ]

@@ -1,18 +1,34 @@
 import math
 
 from examples.user_model import Point2D
-import rhino3dm
-from rhino_renderer import FileClient, active_document
+from rhino_renderer import (
+    ConduitAction,
+    ConduitGeometry,
+    FileClient,
+    ObjectStyle,
+    current_document_path,
+    encode_polyline_from_points,
+)
+from rhino_renderer.action import RGBColor
 from shapely.geometry import LineString
 
 from python_node_editor.display import retrieve_input_data
 from python_node_editor.runtime import post_execution_hook
 from python_node_editor.schema_base import UserModel
 
+_PREVIEW_GROUP_ID = "pne.closed_polyline"
 _RESOLVED_PREVIEW_OBJECT_ID = "pne.closed_polyline.resolved"
 _BUFFERED_PREVIEW_OBJECT_ID = "pne.closed_polyline.buffered"
-_RESOLVED_PREVIEW_STYLE = {"rgb": [220, 140, 40], "opacity": 0.9, "thickness": 2}
-_BUFFERED_PREVIEW_STYLE = {"rgb": [20, 180, 120], "opacity": 0.95, "thickness": 3}
+_RESOLVED_PREVIEW_STYLE = ObjectStyle(
+    color=RGBColor(red=220, green=140, blue=40),
+    opacity=0.9,
+    line_width=2,
+)
+_BUFFERED_PREVIEW_STYLE = ObjectStyle(
+    color=RGBColor(red=20, green=180, blue=120),
+    opacity=0.95,
+    line_width=3,
+)
 
 
 def _point_distance(a, b):
@@ -45,10 +61,8 @@ def _polyline_points_from_geometry(geometry):
     return points
 
 
-def _to_closed_polyline(points):
-    return ClosedPolyline(
-        vertices=[Point2D(x=float(x), y=float(y)) for x, y, _ in points]
-    )
+def _to_point2d_vertices(points):
+    return [Point2D(x=float(x), y=float(y)) for x, y, _ in points]
 
 
 def _is_same_xy_point(a, b):
@@ -66,12 +80,36 @@ def _closed_xy_vertices(polyline: "ClosedPolyline"):
     return coords
 
 
-def _to_rhino_polyline_curve(polyline: "ClosedPolyline"):
-    coords = _closed_xy_vertices(polyline)
-    rhino_polyline = rhino3dm.Polyline()
-    for x, y in coords:
-        rhino_polyline.Add(float(x), float(y), 0.0)
-    return rhino3dm.PolylineCurve(rhino_polyline)
+def _preview_points(polyline: "ClosedPolyline"):
+    return [(x, y, 0.0) for x, y in _closed_xy_vertices(polyline)]
+
+
+def _client_for_active_document(timeout_seconds=10.0):
+    file_path = current_document_path()
+    if not file_path:
+        raise RuntimeError("Could not determine active Rhino document path")
+
+    return FileClient(
+        file_path=file_path,
+        timeout_seconds=timeout_seconds,
+        group_ids=[_PREVIEW_GROUP_ID],
+    )
+
+
+def _upsert_preview_polyline(object_id, polyline: "ClosedPolyline", style) -> None:
+    client = _client_for_active_document()
+    client.run_action(
+        ConduitAction(
+            group_id=_PREVIEW_GROUP_ID,
+            object_id=object_id,
+            action="upsert",
+            geometry=ConduitGeometry(
+                type="polyline",
+                geometry_string=encode_polyline_from_points(_preview_points(polyline)),
+                style=style,
+            ),
+        )
+    )
 
 
 def _preview_resolved_polyline_in_rhino(output) -> None:
@@ -82,12 +120,10 @@ def _preview_resolved_polyline_in_rhino(output) -> None:
         if not isinstance(parsed_polyline, ClosedPolyline):
             return
 
-        doc = active_document()
-        client = FileClient(doc=doc)
-        client.upsert_geometry(
-            geometry=_to_rhino_polyline_curve(parsed_polyline),
-            object_id=_RESOLVED_PREVIEW_OBJECT_ID,
-            style=_RESOLVED_PREVIEW_STYLE,
+        _upsert_preview_polyline(
+            _RESOLVED_PREVIEW_OBJECT_ID,
+            parsed_polyline,
+            _RESOLVED_PREVIEW_STYLE,
         )
     except Exception as exc:
         print(f"Warning: failed to preview resolved polyline in Rhino: {exc}")
@@ -101,43 +137,33 @@ def _preview_buffered_polyline_in_rhino(output) -> None:
         if not isinstance(buffered_polyline, ClosedPolyline):
             return
 
-        doc = active_document()
-        client = FileClient(doc=doc)
-        client.upsert_geometry(
-            geometry=_to_rhino_polyline_curve(buffered_polyline),
-            object_id=_BUFFERED_PREVIEW_OBJECT_ID,
-            style=_BUFFERED_PREVIEW_STYLE,
+        _upsert_preview_polyline(
+            _BUFFERED_PREVIEW_OBJECT_ID,
+            buffered_polyline,
+            _BUFFERED_PREVIEW_STYLE,
         )
     except Exception as exc:
         print(f"Warning: failed to preview buffered polyline in Rhino: {exc}")
 
 
 def _retrieve_rhino_polyline_from_rhino():
-    doc = active_document()
-    client = FileClient(doc=doc)
-
-    selected = client.get_object(
+    client = _client_for_active_document(timeout_seconds=45.0)
+    selected_geometry = client.prompt_select_geometry(
         prompt="Select one closed polyline",
-        object_type="Curve",
+        object_type="curve",
+        require_enter=True,
     )
 
-    if selected is None:
+    if selected_geometry is None:
         raise ValueError("No geometry returned from Rhino")
 
-    return RhinoPolyline(guid=str(selected.guid))
-
-
-def _closed_polyline_from_rhino_guid(guid):
-    doc = active_document()
-    client = FileClient(doc=doc)
-    rhino_object = client.rhino_objects.sync(guid)
-    points = _polyline_points_from_geometry(rhino_object.geometry)
-    return _to_closed_polyline(points)
+    points = _polyline_points_from_geometry(selected_geometry)
+    return RhinoPolyline(vertices=_to_point2d_vertices(points))
 
 
 @retrieve_input_data(_retrieve_rhino_polyline_from_rhino)
 class RhinoPolyline(UserModel):
-    guid: str
+    vertices: list[Point2D]
 
 
 class ClosedPolyline(UserModel):
@@ -146,7 +172,7 @@ class ClosedPolyline(UserModel):
 
 @post_execution_hook(_preview_resolved_polyline_in_rhino)
 def rhino_polyline_to_pne(rhino_polyline: RhinoPolyline) -> ClosedPolyline:
-    return _closed_polyline_from_rhino_guid(rhino_polyline.guid)
+    return ClosedPolyline(vertices=list(rhino_polyline.vertices))
 
 
 @post_execution_hook(_preview_buffered_polyline_in_rhino)
