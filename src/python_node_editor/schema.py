@@ -1,9 +1,10 @@
-from typing import Literal
+from typing import Any, Callable, Literal
 
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    PrivateAttr,
     ValidationError,
     field_serializer,
     model_validator,
@@ -48,6 +49,23 @@ class DataWrapper(CamelBaseModel):
             ]
         return value
 
+class HookDefinition(CamelBaseModel):
+    name: str
+
+    _callable: Callable[..., Any] | None = PrivateAttr(default=None)
+
+    @classmethod
+    def from_callable(cls, hook: Callable[..., Any]) -> "HookDefinition":
+        hook_definition = cls(
+            name=getattr(hook, "__name__", hook.__class__.__name__)
+        )
+        hook_definition._callable = hook
+        return hook_definition
+
+    @property
+    def hook_callable(self) -> Callable[..., Any] | None:
+        return self._callable
+
 
 # We allow arbitrary types on FunctionAsNode for passing it around in the backend
 # But callable is removed when we serialize it
@@ -62,6 +80,7 @@ class FunctionSchema(CamelBaseModel):
     output_style: Literal["single", "multiple"] = "single"
     outputs: dict[str, DataWrapper]
     cached_types: list[str] = Field(default_factory=list)
+    hooks: dict[Literal["add", "pre", "post", "delete"], list[HookDefinition]] = Field(default_factory=dict)
     auto_generated: bool = False
 
 

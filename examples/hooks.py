@@ -11,7 +11,7 @@ def _the_post_hook(inputs, output) -> None:
 
 
 @add_node_options(node_name="Add With Hooks", return_value_name="sum")
-@pre_execution_hook(_the_pre_hook, include_terminal_output=False)
+@pre_execution_hook(_the_pre_hook)
 @post_execution_hook(_the_post_hook)
 def add_with_hooks(a: int, b: int) -> int:
     return a + b

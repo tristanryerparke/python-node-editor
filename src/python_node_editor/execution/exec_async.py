@@ -11,6 +11,7 @@ from python_node_editor.execution.exec_utils import (
     VERBOSE,
     create_node_update,
     execute_node,
+    propagate_node_outputs,
     topological_order,
 )
 from python_node_editor.schema import Graph, NodeFromFrontend, NodeUpdate
@@ -212,34 +213,10 @@ async def execute_graph_async(execution_id: str, graph: Graph):
         # Push the final update
         push_node_update(state.node_updates, node_update)
 
-        # Propagate outputs to downstream nodes and create updates for them
-        for edge in graph.edges:
-            if edge.source == node.id:
-                # Extract the output field name from the source_handle
-                output_field_name = edge.source_handle.split(":")[-2]
-
-                # Extract target node ID and argument name
-                target_node_id = edge.target
-                argument_name = edge.target_handle.split(":")[-2]
-
-                # Update the execution graph so downstream nodes have inputs generated from the output in question
-                target_node = next(n for n in execution_list if n.id == target_node_id)
-                target_node.data.arguments[argument_name] = node_update.outputs[
-                    output_field_name
-                ].model_copy()
-
-                # Create an update for the downstream node so we see it's input value change in the UI
-                downstream_update = NodeUpdate(
-                    node_id=target_node_id,
-                    arguments={
-                        argument_name: node_update.outputs[
-                            output_field_name
-                        ].model_copy()
-                    },
-                )
-
-                # Push the downstream update
-                push_node_update(state.node_updates, downstream_update)
+        for downstream_update in propagate_node_outputs(
+            node, node_update, graph, execution_list
+        ):
+            push_node_update(state.node_updates, downstream_update)
 
         # Increment update_index after execution completes
         state.update_index += 1

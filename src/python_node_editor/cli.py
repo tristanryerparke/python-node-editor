@@ -142,6 +142,7 @@ def analyze():
         analyze_file_structure,
         split_search_path_and_function,
     )
+    from python_node_editor.serialization import serialize_environment
 
     parser = argparse.ArgumentParser(
         description="Analyze Python files for functions and types"
@@ -192,22 +193,10 @@ def analyze():
         print(error)
         exit(1)
 
+    serialized_environment = serialize_environment(function_schemas, types)
+
     if args.json is not None:
-        serialized_function_schemas = [
-            schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-            for schema in function_schemas
-        ]
-        serialized_types = {
-            k: v.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-            for k, v in types.items()
-        }
-        json_output = json.dumps(
-            {
-                "FUNCTION_SCHEMAS": serialized_function_schemas,
-                "TYPES": serialized_types,
-            },
-            indent=2,
-        )
+        json_output = json.dumps(serialized_environment, indent=2)
 
         if args.json == "-":
             print(json_output)
@@ -224,15 +213,7 @@ def analyze():
     print(f"\nFound {len(function_schemas)} functions and {len(types)} types")
 
     if args.verbose:
-        print("\nFUNCTION_SCHEMAS:")
-        serialized_function_schemas = [
-            schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-            for schema in function_schemas
-        ]
-        d(serialized_function_schemas)
+        print("\nNODES:")
+        d(serialized_environment["nodes"])
         print("\nTYPES:")
-        serialized_types = {
-            k: v.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-            for k, v in types.items()
-        }
-        d(serialized_types)
+        d(serialized_environment["types"])

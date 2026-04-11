@@ -23,19 +23,22 @@ export default memo(function NodeStatus({
 }: NodeStatusProps) {
   let icon: React.ReactNode;
   let tooltipText: string;
+  const showOutputAvailabilityHint = hasTerminalOutput && !isDrawerOpen;
 
   if (status === "not-executed") {
     icon = <CircleDashed className="w-4 h-4" />;
     tooltipText = "Not Executed";
   } else if (status === "executing") {
     icon = <Loader2 className="w-4 h-4 animate-spin" />;
-    tooltipText = "Executing";
+    tooltipText = showOutputAvailabilityHint
+      ? "Executing (terminal output available)"
+      : "Executing";
   } else if (status === "error") {
     icon = <CircleAlert className="w-4 h-4 text-red-500" />;
     tooltipText = hasTerminalOutput ? "Error (traceback available)" : "Error";
   } else if (status === "executed") {
     icon = <CircleCheck className="w-4 h-4 text-green-500" />;
-    tooltipText = hasTerminalOutput
+    tooltipText = showOutputAvailabilityHint
       ? "Executed (terminal output available)"
       : "Executed";
   } else {

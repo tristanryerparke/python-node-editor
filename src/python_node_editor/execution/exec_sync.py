@@ -6,9 +6,10 @@ from python_node_editor.execution.exec_utils import (
     VERBOSE,
     create_node_update,
     execute_node,
+    propagate_node_outputs,
     topological_order,
 )
-from python_node_editor.schema import Graph, NodeUpdate
+from python_node_editor.schema import Graph
 
 router = APIRouter(prefix="/api")
 
@@ -37,34 +38,9 @@ async def execute_graph_sync(graph: Graph):
         )
 
         updates.append(node_update)
-
-        # Propagate outputs to downstream nodes for both execution and visual display
-        for edge in graph.edges:
-            if edge.source == node.id:
-                # Extract the output field name from the source_handle
-                output_field_name = edge.source_handle.split(":")[-2]
-
-                # Extract target node ID and argument name
-                target_node_id = edge.target
-                argument_name = edge.target_handle.split(":")[-2]
-
-                # Update the execution graph so downstream nodes have correct inputs
-                target_node = next(n for n in execution_list if n.id == target_node_id)
-                target_node.data.arguments[argument_name] = node_update.outputs[
-                    output_field_name
-                ].model_copy()
-
-                # Create a visual update for the downstream node
-                downstream_update = NodeUpdate(
-                    node_id=target_node_id,
-                    arguments={
-                        argument_name: node_update.outputs[
-                            output_field_name
-                        ].model_copy()
-                    },
-                )
-
-                updates.append(downstream_update)
+        updates.extend(
+            propagate_node_outputs(node, node_update, graph, execution_list)
+        )
 
     update_message = {
         "status": "success",

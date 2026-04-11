@@ -17,6 +17,7 @@ from python_node_editor.execution.exec_sync import router as execute_sync_router
 from python_node_editor.large_data.large_files_endpoint import (
     router as large_data_router,
 )
+from python_node_editor.serialization import serialize_environment
 
 FUNCTION_SCHEMAS = []
 CALLABLES = {}
@@ -91,22 +92,6 @@ app.include_router(execute_async_router)
 app.include_router(large_data_router, tags=["data"])
 
 
-def _serialize_function_schemas():
-    return [
-        schema.model_dump(mode="json", exclude_defaults=True, exclude_none=True)
-        for schema in FUNCTION_SCHEMAS
-    ]
-
-
-def _serialize_types():
-    types_serialized = {}
-    for k, v in TYPES.items():
-        # Use model_dump which will automatically exclude _class and referenced_datamodel
-        # and convert snake_case to camelCase for StructDescr/UnionDescr instances
-        types_serialized[k] = v.model_dump(mode="json")
-    return types_serialized
-
-
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
@@ -115,10 +100,7 @@ async def health_check():
 @app.get("/api/environment")
 async def get_environment():
     """Get the loaded function schemas and type metadata used by the frontend."""
-    return {
-        "nodes": _serialize_function_schemas(),
-        "types": _serialize_types(),
-    }
+    return serialize_environment(FUNCTION_SCHEMAS, TYPES)
 
 
 app.add_middleware(

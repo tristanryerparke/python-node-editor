@@ -1,20 +1,90 @@
 import uuid
+import inspect
 import io
 import sys
 import traceback
 from typing import Any
-from python_node_editor.schema import Graph, NodeDataFromFrontend, NodeFromFrontend
-from python_node_editor.schema_base import StructDescr, UnionDescr
-from python_node_editor.runtime import (
-    run_post_execution_hooks,
-    run_pre_execution_hooks,
-)
+
 from python_node_editor.large_data.large_files_endpoint import (
     CachedValueReference,
     LARGE_DATA_CACHE,
 )
+from python_node_editor.schema import (
+    Graph,
+    NodeDataFromFrontend,
+    NodeFromFrontend,
+    NodeUpdate,
+)
+from python_node_editor.schema_base import StructDescr, UnionDescr
 
 VERBOSE = False
+
+
+def _get_function_schema(callable_id):
+    from python_node_editor.server import FUNCTION_SCHEMAS
+
+    for function_schema in FUNCTION_SCHEMAS:
+        if function_schema.callable_id == callable_id:
+            return function_schema
+
+    return None
+
+
+def _get_execution_hooks(callable_id, hook_name):
+    function_schema = _get_function_schema(callable_id)
+    if function_schema is None:
+        return []
+
+    hook_definitions = function_schema.hooks.get(hook_name, [])
+    return [
+        hook_definition.hook_callable
+        for hook_definition in hook_definitions
+        if hook_definition.hook_callable is not None
+    ]
+
+
+def _call_hook_with_subset_context(hook, context):
+    signature = inspect.signature(hook)
+    args = []
+    kwargs = {}
+    consumed_names = set()
+    has_var_keyword = False
+
+    for parameter in signature.parameters.values():
+        parameter_name = parameter.name
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            has_var_keyword = True
+            continue
+        if parameter.kind == inspect.Parameter.VAR_POSITIONAL:
+            continue
+
+        if parameter_name in context:
+            if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
+                args.append(context[parameter_name])
+            else:
+                kwargs[parameter_name] = context[parameter_name]
+            consumed_names.add(parameter_name)
+            continue
+
+        if parameter.default is inspect.Parameter.empty:
+            supported_names = ", ".join(context.keys())
+            raise TypeError(
+                f"Hook '{hook.__name__}' has unsupported required parameter '{parameter_name}'. "
+                f"Supported parameter names are: {supported_names}"
+            )
+
+    if has_var_keyword:
+        for key, value in context.items():
+            if key in consumed_names:
+                continue
+            kwargs[key] = value
+
+    hook(*args, **kwargs)
+
+
+def _run_execution_hooks(callable_id, hook_name, context):
+    for hook_callable in _get_execution_hooks(callable_id, hook_name):
+        _call_hook_with_subset_context(hook_callable, context)
 
 
 def get_cache_key(value: Any) -> str | None:
@@ -23,8 +93,10 @@ def get_cache_key(value: Any) -> str | None:
         return value.cache_key
     return None
 
+
 def get_large_data_handlers(func_obj):
     return getattr(func_obj, "_large_data_handlers", {})
+
 
 def resolve_cached_references(wrappers, node):
     """Replace cached value references in wrappers with runtime cached values."""
@@ -89,7 +161,7 @@ def execute_node(
     """
     from python_node_editor.server import CALLABLES
 
-    callable = CALLABLES[node.callable_id]
+    callable_obj = CALLABLES[node.callable_id]
     node.arguments = resolve_cached_references(node.arguments, node)
 
     old_stdout = sys.stdout
@@ -107,9 +179,14 @@ def execute_node(
         for k, v in node.arguments.items():
             args[k] = v.value
 
-        run_pre_execution_hooks(callable, execution_id, node_id, dict(args))
+        hook_context = {
+            "execution_id": execution_id,
+            "node_id": node_id,
+            "inputs": dict(args),
+        }
+        _run_execution_hooks(node.callable_id, "pre", hook_context)
 
-        if getattr(callable, "list_inputs", False):
+        if getattr(callable_obj, "list_inputs", False):
             numbered_args = {}
             named_args = {}
 
@@ -123,11 +200,18 @@ def execute_node(
                 numbered_args[i] for i in sorted(numbered_args.keys())
             ]
             all_args = list(named_args.values()) + sorted_numbered_args
-            result = callable(*all_args)
+            result = callable_obj(*all_args)
         else:
-            result = callable(**args)
+            result = callable_obj(**args)
 
-        run_post_execution_hooks(callable, execution_id, node_id, dict(args), result)
+        _run_execution_hooks(
+            node.callable_id,
+            "post",
+            {
+                **hook_context,
+                "output": result,
+            },
+        )
 
         sys.stdout = old_stdout
         sys.stderr = old_stderr
@@ -193,9 +277,47 @@ def topological_order(graph: Graph) -> list[NodeFromFrontend]:
     return result
 
 
+def propagate_node_outputs(
+    node: NodeFromFrontend,
+    node_update: NodeUpdate,
+    graph: Graph,
+    execution_list: list[NodeFromFrontend],
+) -> list[NodeUpdate]:
+    if not node_update.outputs:
+        return []
+
+    execution_nodes_by_id = {
+        execution_node.id: execution_node for execution_node in execution_list
+    }
+    downstream_updates = []
+
+    for edge in graph.edges:
+        if edge.source != node.id:
+            continue
+
+        output_field_name = edge.source_handle.split(":")[-2]
+        argument_name = edge.target_handle.split(":")[-2]
+        target_node = execution_nodes_by_id[edge.target]
+
+        target_node.data.arguments[argument_name] = node_update.outputs[
+            output_field_name
+        ].model_copy()
+
+        downstream_updates.append(
+            NodeUpdate(
+                node_id=edge.target,
+                arguments={
+                    argument_name: node_update.outputs[output_field_name].model_copy()
+                },
+            )
+        )
+
+    return downstream_updates
+
+
 def create_node_update(node, success, result, terminal_output, graph, execution_list):
     """Create a node update object from execution results"""
-    from python_node_editor.schema import DataWrapper, MultipleOutputs, NodeUpdate
+    from python_node_editor.schema import DataWrapper, MultipleOutputs
     from python_node_editor.server import TYPES, CALLABLES
 
     outputs = {}

@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, Tuple
 from python_node_editor.schema import (
     DataWrapper,
     FunctionSchema,
+    HookDefinition,
     MultipleOutputs,
     StructDescr,
 )
@@ -14,8 +15,36 @@ from python_node_editor.schema import (
 from .types_analysis import analyze_type, get_type_repr, merge_types_dict
 
 
+HOOK_ATTRIBUTE_NAMES = {
+    "add": "_add_hooks",
+    "pre": "_pre_execution_hooks",
+    "post": "_post_execution_hooks",
+    "delete": "_delete_hooks",
+}
+
+
 class ParameterNotTypeAnnotated(Exception):
     pass
+
+
+def _get_function_schema_hooks(func_obj: Callable) -> dict[str, list[HookDefinition]]:
+    schema_hooks = {}
+
+    for hook_key, attribute_name in HOOK_ATTRIBUTE_NAMES.items():
+        hooks = getattr(func_obj, attribute_name, None)
+        if hooks is None:
+            continue
+
+        if callable(hooks):
+            hooks = [hooks]
+
+        hook_definitions = [
+            HookDefinition.from_callable(hook) for hook in hooks if callable(hook)
+        ]
+        if hook_definitions:
+            schema_hooks[hook_key] = hook_definitions
+
+    return schema_hooks
 
 
 def analyze_function(
@@ -187,6 +216,7 @@ def analyze_function(
     if not isinstance(handlers, dict):
         handlers = {}
     cached_types = list(handlers.keys())
+    hooks = _get_function_schema_hooks(func_obj)
 
     # Get the line number where the function is defined.
     # This is intentionally done after type validation so annotation errors
@@ -217,6 +247,7 @@ def analyze_function(
             outputs=outputs,
             dynamic_input_type=dynamic_input_type,
             cached_types=cached_types,
+            hooks=hooks,
         ),
         func_obj,
         found_types,
