@@ -14,6 +14,7 @@ import CustomNode from "./custom-node/custom-node";
 import useFlowStore from "../stores/flowStore";
 import { useTheme } from "./theme-provider";
 import { initializeUIData } from "../utils/add-ui-data";
+import { nodeToHookAction, runHookActions } from "../lib/hook-actions";
 import type { FrontendNodeData, FunctionNode } from "../types/types";
 import { useCopyPaste } from "../hooks/useCopyPaste";
 
@@ -119,7 +120,7 @@ function NodeGraph() {
   }
 
   const onDrop = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
+    async (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
       const nodeDataString = event.dataTransfer.getData(
         "application/reactflow",
@@ -145,11 +146,28 @@ function NodeGraph() {
         data: nodeData,
       };
 
+      try {
+        await runHookActions([nodeToHookAction(newNode, "add")]);
+      } catch (error) {
+        console.error("Failed to run add hook actions:", error);
+        return;
+      }
+
       // Use functional update to avoid dependency on nodes array
       setNodes((currentNodes) => [...currentNodes, newNode]);
     },
     [screenToFlowPosition, setNodes],
   );
+
+  const onNodesDelete = useCallback(async (deletedNodes: FunctionNode[]) => {
+    try {
+      await runHookActions(
+        deletedNodes.map((node) => nodeToHookAction(node, "delete")),
+      );
+    } catch (error) {
+      console.error("Failed to run delete hook actions:", error);
+    }
+  }, []);
 
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -168,6 +186,7 @@ function NodeGraph() {
         defaultEdgeOptions={{ style: { strokeWidth: 2 } }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodesDelete={onNodesDelete}
         onConnect={onConnect}
         onDrop={onDrop}
         onDragOver={onDragOver}

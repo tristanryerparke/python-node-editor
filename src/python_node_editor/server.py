@@ -14,6 +14,7 @@ from python_node_editor.analysis.utils import (
 )
 from python_node_editor.execution.exec_async import router as execute_async_router
 from python_node_editor.execution.exec_sync import router as execute_sync_router
+from python_node_editor.hook_actions import router as hook_actions_router
 from python_node_editor.large_data.large_files_endpoint import (
     router as large_data_router,
 )
@@ -89,6 +90,7 @@ _attach_access_log_filter()
 # Include routers
 app.include_router(execute_sync_router)
 app.include_router(execute_async_router)
+app.include_router(hook_actions_router)
 app.include_router(large_data_router, tags=["data"])
 
 

@@ -49,6 +49,10 @@ class DataWrapper(CamelBaseModel):
             ]
         return value
 
+
+HookKey = Literal["add", "pre", "post", "delete"]
+
+
 class HookDefinition(CamelBaseModel):
     name: str
 
@@ -80,8 +84,14 @@ class FunctionSchema(CamelBaseModel):
     output_style: Literal["single", "multiple"] = "single"
     outputs: dict[str, DataWrapper]
     cached_types: list[str] = Field(default_factory=list)
-    hooks: dict[Literal["add", "pre", "post", "delete"], list[HookDefinition]] = Field(default_factory=dict)
+    hooks: dict[HookKey, list[HookDefinition]] = Field(default_factory=dict)
     auto_generated: bool = False
+
+
+class HookActionMessage(CamelBaseModel):
+    action: Literal["add", "delete"]
+    node_id: str
+    callable_id: str
 
 
 class NodeDataFromFrontend(CamelBaseModel):

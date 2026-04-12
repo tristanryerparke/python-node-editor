@@ -9,6 +9,7 @@ import { useReactFlow, type Edge } from "@xyflow/react";
 import { useRef } from "react";
 import type { FunctionSchemas, TypeInfo } from "@/types/environment";
 import type { FunctionNode } from "@/types/types";
+import { nodeToHookAction, runHookActions } from "@/lib/hook-actions";
 import { buildEnvironmentMismatchWarning } from "@/utils/environment-mismatch";
 import useSettingsStore from "@/stores/settingsStore";
 
@@ -98,6 +99,7 @@ function normalizeInspectorState(
 
 export const LoadButton = () => {
   const {
+    nodes: currentNodes,
     setNodes,
     setEdges,
     setViewport: setStoreViewport,
@@ -120,7 +122,7 @@ export const LoadButton = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const flow = JSON.parse(content) as SavedFlowFile;
@@ -161,6 +163,12 @@ export const LoadButton = () => {
           const zoom =
             typeof flow.viewport?.zoom === "number" ? flow.viewport.zoom : 1;
           const viewport = { x, y, zoom };
+
+          await runHookActions([
+            ...currentNodes.map((node) => nodeToHookAction(node, "delete")),
+            ...nodes.map((node) => nodeToHookAction(node, "add")),
+          ]);
+
           setNodes(nodes);
           setEdges(edges);
           setStoreViewport(viewport);

@@ -13,10 +13,10 @@ from rhino_renderer.action import RGBColor
 from shapely.geometry import LineString
 
 from python_node_editor.display import retrieve_input_data
-from python_node_editor.runtime import post_execution_hook
+from python_node_editor.runtime import delete_hook, post_execution_hook
 from python_node_editor.schema_base import UserModel
 
-_PREVIEW_GROUP_ID = "pne.closed_polyline"
+_PREVIEW_GROUP_ID_PREFIX = "pne.closed_polyline"
 _RESOLVED_PREVIEW_OBJECT_ID = "pne.closed_polyline.resolved"
 _BUFFERED_PREVIEW_OBJECT_ID = "pne.closed_polyline.buffered"
 _RESOLVED_PREVIEW_STYLE = ObjectStyle(
@@ -84,7 +84,13 @@ def _preview_points(polyline: "ClosedPolyline"):
     return [(x, y, 0.0) for x, y in _closed_xy_vertices(polyline)]
 
 
-def _client_for_active_document(timeout_seconds=10.0):
+def _preview_group_id(node_id: str | None = None) -> str:
+    if node_id is None:
+        return _PREVIEW_GROUP_ID_PREFIX
+    return f"{_PREVIEW_GROUP_ID_PREFIX}.{node_id}"
+
+
+def _client_for_active_document(timeout_seconds=10.0, node_id: str | None = None):
     file_path = current_document_path()
     if not file_path:
         raise RuntimeError("Could not determine active Rhino document path")
@@ -92,16 +98,20 @@ def _client_for_active_document(timeout_seconds=10.0):
     return FileClient(
         file_path=file_path,
         timeout_seconds=timeout_seconds,
-        group_ids=[_PREVIEW_GROUP_ID],
+        group_ids=[_preview_group_id(node_id=node_id)],
     )
 
 
-def _upsert_preview_polyline(object_id, polyline: "ClosedPolyline", style) -> None:
-    client = _client_for_active_document()
+def _upsert_preview_polyline(
+    object_id, polyline: "ClosedPolyline", style, node_id: str | None = None
+) -> None:
+    group_id = _preview_group_id(node_id=node_id)
+    scoped_object_id = f"{object_id}.{node_id}" if node_id else object_id
+    client = _client_for_active_document(node_id=node_id)
     client.run_action(
         ConduitAction(
-            group_id=_PREVIEW_GROUP_ID,
-            object_id=object_id,
+            group_id=group_id,
+            object_id=scoped_object_id,
             action="upsert",
             geometry=ConduitGeometry(
                 type="polyline",
@@ -112,7 +122,7 @@ def _upsert_preview_polyline(object_id, polyline: "ClosedPolyline", style) -> No
     )
 
 
-def _preview_resolved_polyline_in_rhino(output) -> None:
+def _preview_resolved_polyline_in_rhino(output, node_id=None) -> None:
     try:
         parsed_polyline = output
         if isinstance(parsed_polyline, dict):
@@ -124,12 +134,13 @@ def _preview_resolved_polyline_in_rhino(output) -> None:
             _RESOLVED_PREVIEW_OBJECT_ID,
             parsed_polyline,
             _RESOLVED_PREVIEW_STYLE,
+            node_id=node_id,
         )
     except Exception as exc:
         print(f"Warning: failed to preview resolved polyline in Rhino: {exc}")
 
 
-def _preview_buffered_polyline_in_rhino(output) -> None:
+def _preview_buffered_polyline_in_rhino(output, node_id=None) -> None:
     try:
         buffered_polyline = output
         if isinstance(buffered_polyline, dict):
@@ -141,9 +152,24 @@ def _preview_buffered_polyline_in_rhino(output) -> None:
             _BUFFERED_PREVIEW_OBJECT_ID,
             buffered_polyline,
             _BUFFERED_PREVIEW_STYLE,
+            node_id=node_id,
         )
     except Exception as exc:
         print(f"Warning: failed to preview buffered polyline in Rhino: {exc}")
+
+
+def _delete_preview_group_from_rhino(node_id) -> None:
+    try:
+        group_id = _preview_group_id(node_id=node_id)
+        client = _client_for_active_document(node_id=node_id)
+        client.run_action(
+            ConduitAction(
+                group_id=group_id,
+                action="delete",
+            )
+        )
+    except Exception as exc:
+        print(f"Warning: failed to delete polyline preview group in Rhino: {exc}")
 
 
 def _retrieve_rhino_polyline_from_rhino():
@@ -171,11 +197,13 @@ class ClosedPolyline(UserModel):
 
 
 @post_execution_hook(_preview_resolved_polyline_in_rhino)
+@delete_hook(_delete_preview_group_from_rhino)
 def rhino_polyline_to_pne(rhino_polyline: RhinoPolyline) -> ClosedPolyline:
     return ClosedPolyline(vertices=list(rhino_polyline.vertices))
 
 
 @post_execution_hook(_preview_buffered_polyline_in_rhino)
+@delete_hook(_delete_preview_group_from_rhino)
 def buffer_closed_polyline(
     polyline: ClosedPolyline, distance: float = 2.0
 ) -> ClosedPolyline:

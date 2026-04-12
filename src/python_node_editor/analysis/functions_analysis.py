@@ -59,7 +59,7 @@ def analyze_function(
 
     """
 
-    # If function is wrapped by a decorator (like @add_node_options), retrieve the original function object
+    # If function is wrapped by a third-party decorator, retrieve the original function object
     original_func = func_obj
     while hasattr(original_func, "__wrapped__"):
         original_func = getattr(original_func, "__wrapped__")

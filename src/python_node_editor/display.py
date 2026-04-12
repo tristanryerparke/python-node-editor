@@ -1,5 +1,4 @@
-from functools import wraps
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, TypeVar
 
 # Import the progress context variable for flush_output_to_frontend
 from python_node_editor.execution.context import progress_context
@@ -51,27 +50,25 @@ def add_node_options(
     cached_handlers: list | dict | None = None,
 ):
     def decorator(func: F) -> F:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        # Add the name attribute to the wrapper function if provided
         if node_name is not None:
-            wrapper.node_name = node_name  # type: ignore
+            func.node_name = node_name  # type: ignore
         if return_value_name is not None:
-            wrapper.return_value_name = return_value_name  # type: ignore
+            func.return_value_name = return_value_name  # type: ignore
         if list_inputs:
-            wrapper.list_inputs = list_inputs  # type: ignore
+            func.list_inputs = list_inputs  # type: ignore
         if dict_inputs:
-            wrapper.dict_inputs = dict_inputs  # type: ignore
+            func.dict_inputs = dict_inputs  # type: ignore
         if cached_types is not None:
-            wrapper._type_datamodel_mappings = cached_types  # type: ignore
+            func._type_datamodel_mappings = cached_types  # type: ignore
         if cached_handlers is not None:
-            existing = getattr(wrapper, "_large_data_handlers", None)
-            merged = {**_handlers_to_dict(existing), **_handlers_to_dict(cached_handlers)}
-            wrapper._large_data_handlers = merged  # type: ignore
+            existing = getattr(func, "_large_data_handlers", None)
+            merged = {
+                **_handlers_to_dict(existing),
+                **_handlers_to_dict(cached_handlers),
+            }
+            func._large_data_handlers = merged  # type: ignore
 
-        return cast(F, wrapper)
+        return func
 
     return decorator
 

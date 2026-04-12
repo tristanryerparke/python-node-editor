@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useReactFlow } from "@xyflow/react";
+import { nodeToHookAction, runHookActions } from "@/lib/hook-actions";
 import ClipboardManager from "../utils/clipboardManager";
 import { copyNodes, copyEdges, setSelected } from "../utils/paste-utils";
 
@@ -28,6 +29,11 @@ export const useCopyPaste = () => {
     // Then remove selected
     const selectedIds = new Set(
       nodes.filter((n) => n.selected).map((n) => n.id),
+    );
+    const selectedNodes = nodes.filter((n) => selectedIds.has(n.id));
+
+    await runHookActions(
+      selectedNodes.map((node) => nodeToHookAction(node, "delete")),
     );
 
     setNodes((currentNodes) =>
@@ -76,6 +82,10 @@ export const useCopyPaste = () => {
 
     // Copy edges with updated IDs
     const newEdges = copyEdges(clipboardData.edges, deriveId);
+
+    await runHookActions(
+      newNodes.map((node) => nodeToHookAction(node, "add")),
+    );
 
     // Update state: deselect all, add new nodes/edges as selected
     setNodes([

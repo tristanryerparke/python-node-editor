@@ -23,3 +23,19 @@ def post_execution_hook(hook):
         return func
 
     return decorator
+
+
+def add_hook(hook):
+    def decorator(func):
+        _append_hook(func, "_add_hooks", hook)
+        return func
+
+    return decorator
+
+
+def delete_hook(hook):
+    def decorator(func):
+        _append_hook(func, "_delete_hooks", hook)
+        return func
+
+    return decorator

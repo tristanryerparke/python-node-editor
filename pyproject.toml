@@ -46,3 +46,6 @@ rhino = [
 llm = [
     "openai>=2.30.0",
 ]
+advanced-hooks = [
+    "redis>=7.3.0",
+]

@@ -1049,6 +1049,9 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+advanced-hooks = [
+    { name = "redis" },
+]
 dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -1075,6 +1078,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+advanced-hooks = [{ name = "redis", specifier = ">=7.3.0" }]
 dev = [
     { name = "pytest", specifier = ">=9.0.0" },
     { name = "pytest-asyncio", specifier = ">=1.3.0" },
