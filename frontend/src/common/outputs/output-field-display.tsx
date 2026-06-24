@@ -38,7 +38,13 @@ function formatStructuredValue(value: unknown, itemsType: string): string {
 
   if (typeof value === "object" && value !== null) {
     const entries = Object.entries(value)
-      .map(([key]) => `${key}: ${itemsType}`)
+      .map(([key, v]) => {
+        // Show the actual value for primitives, but the type name for
+        // nested objects/arrays (mirrors how lists are formatted).
+        const valStr =
+          typeof v === "object" && v !== null ? itemsType : String(v);
+        return `${key}: ${valStr}`;
+      })
       .join(", ");
     return `{${entries}}`;
   }

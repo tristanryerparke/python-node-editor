@@ -1,5 +1,5 @@
 from python_node_editor.display import add_node_options
-from python_node_editor.runtime import post_execution_hook, pre_execution_hook, skip_node
+from python_node_editor.runtime import post_execution_hook, pre_execution_hook
 
 
 def _the_pre_hook(inputs) -> None:

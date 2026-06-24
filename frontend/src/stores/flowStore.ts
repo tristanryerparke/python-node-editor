@@ -12,7 +12,18 @@ import type {
 } from "@xyflow/react";
 import { produce } from "immer";
 import type { FrontendFieldDataWrapper, FunctionNode } from "../types/types";
-import type { EnvironmentResponse, FunctionSchemas, TypeInfo } from "@/types/environment";
+import type {
+  EnvironmentResponse,
+  FunctionSchemas,
+  TypeInfo,
+} from "@/types/environment";
+import {
+  createInputValidationState,
+  createInputValidationStateFromIssues,
+  getInputIssueKey,
+  getInvalidNodeInputIssues,
+  type InputValidationState,
+} from "@/utils/input-execution-validation";
 import {
   getConcreteType,
   isArgumentValuePath,
@@ -31,6 +42,7 @@ type FlowStoreState = {
   rfInstance: ReactFlowInstance<FunctionNode, Edge> | null;
   functionSchemas: FunctionSchemas;
   types: Record<string, TypeInfo>;
+  inputValidation: InputValidationState;
   environmentMismatchWarning: EnvironmentMismatchWarning | null;
 };
 
@@ -60,6 +72,51 @@ type FlowStoreActions = {
 
 export type FlowState = FlowStoreState & FlowStoreActions;
 
+const EMPTY_INPUT_VALIDATION = createInputValidationState([], []);
+
+const nodeChangesAffectValidation = (
+  changes: Parameters<OnNodesChange<FunctionNode>>[0],
+) =>
+  changes.some((change) =>
+    ["add", "remove", "replace"].includes(change.type),
+  );
+
+const edgeChangesAffectValidation = (changes: Parameters<OnEdgesChange>[0]) =>
+  changes.some((change) => change.type !== "select");
+
+const pathAffectsInputValidation = (path: (string | number)[]) =>
+  path.length === 1 || path[1] === "arguments";
+
+const recomputeInputValidationForNode = (
+  currentValidation: InputValidationState,
+  nodes: FunctionNode[],
+  edges: Edge[],
+  types: Record<string, TypeInfo>,
+  nodeId: string | number,
+): InputValidationState => {
+  const nodeIdString = String(nodeId);
+  const nextIssueByKey = { ...currentValidation.invalidInputIssueByKey };
+
+  for (const [issueKey, issue] of Object.entries(nextIssueByKey)) {
+    if (issue.nodeId === nodeIdString) {
+      delete nextIssueByKey[issueKey];
+    }
+  }
+
+  const node = nodes.find((candidate) => candidate.id === nodeIdString);
+  if (node) {
+    const nodeIssues = getInvalidNodeInputIssues([node], edges, {
+      requireValues: true,
+      types,
+    });
+    for (const issue of nodeIssues) {
+      nextIssueByKey[getInputIssueKey(issue.nodeId, issue.inputName)] = issue;
+    }
+  }
+
+  return createInputValidationStateFromIssues(Object.values(nextIssueByKey));
+};
+
 const useFlowStore = createWithEqualityFn<
   FlowState,
   [["zustand/persist", unknown]]
@@ -72,6 +129,7 @@ const useFlowStore = createWithEqualityFn<
       rfInstance: null,
       functionSchemas: {},
       types: {},
+      inputValidation: EMPTY_INPUT_VALIDATION,
       environmentMismatchWarning: null,
 
       onNodesChange: (changes) => {
@@ -80,6 +138,13 @@ const useFlowStore = createWithEqualityFn<
             const nodesCopy = [...state.nodes];
             const updatedNodes = applyNodeChanges(changes, nodesCopy);
             state.nodes = updatedNodes;
+            if (nodeChangesAffectValidation(changes)) {
+              state.inputValidation = createInputValidationState(
+                updatedNodes,
+                state.edges,
+                state.types,
+              );
+            }
           }),
         );
       },
@@ -90,29 +155,72 @@ const useFlowStore = createWithEqualityFn<
             const edgesCopy = [...state.edges];
             const updatedEdges = applyEdgeChanges(changes, edgesCopy);
             state.edges = updatedEdges;
+            if (edgeChangesAffectValidation(changes)) {
+              state.inputValidation = createInputValidationState(
+                state.nodes,
+                updatedEdges,
+                state.types,
+              );
+            }
           }),
         );
       },
 
       onConnect: (connection) =>
-        set({ edges: addEdge(connection, get().edges) }),
-
-      setNodes: (nodes) =>
-        set({
-          nodes: typeof nodes === "function" ? nodes(get().nodes) : nodes,
+        set((state) => {
+          const edges = addEdge(connection, state.edges);
+          return {
+            edges,
+            inputValidation: connection.target
+              ? recomputeInputValidationForNode(
+                  state.inputValidation,
+                  state.nodes,
+                  edges,
+                  state.types,
+                  connection.target,
+                )
+              : createInputValidationState(state.nodes, edges, state.types),
+          };
         }),
 
-      setEdges: (edges) => set({ edges }),
+      setNodes: (nodes) =>
+        set((state) => {
+          const nextNodes =
+            typeof nodes === "function" ? nodes(state.nodes) : nodes;
+          return {
+            nodes: nextNodes,
+            inputValidation: createInputValidationState(
+              nextNodes,
+              state.edges,
+              state.types,
+            ),
+          };
+        }),
+
+      setEdges: (edges) =>
+        set((state) => ({
+          edges,
+          inputValidation: createInputValidationState(
+            state.nodes,
+            edges,
+            state.types,
+          ),
+        })),
 
       setViewport: (viewport) => set({ viewport }),
 
       setRfInstance: (instance) => set({ rfInstance: instance }),
 
       setEnvironment: (environment) =>
-        set({
+        set((state) => ({
           functionSchemas: indexFunctionSchemas(environment.nodes),
           types: environment.types,
-        }),
+          inputValidation: createInputValidationState(
+            state.nodes,
+            state.edges,
+            environment.types,
+          ),
+        })),
 
       setEnvironmentMismatchWarning: (warning) =>
         set({ environmentMismatchWarning: warning }),
@@ -196,6 +304,16 @@ const useFlowStore = createWithEqualityFn<
                 const finalKey = pathToProperty[pathToProperty.length - 1];
                 current[finalKey] = dataToSet;
               }
+
+              if (pathAffectsInputValidation(targetPath)) {
+                state.inputValidation = recomputeInputValidationForNode(
+                  state.inputValidation,
+                  state.nodes,
+                  state.edges,
+                  state.types,
+                  targetPath[0],
+                );
+              }
             }
           }),
         );
@@ -260,6 +378,15 @@ const useFlowStore = createWithEqualityFn<
               // Delete the final property
               const finalKey = pathToProperty[pathToProperty.length - 1];
               delete current[finalKey];
+              if (pathAffectsInputValidation(path)) {
+                state.inputValidation = recomputeInputValidationForNode(
+                  state.inputValidation,
+                  state.nodes,
+                  state.edges,
+                  state.types,
+                  path[0],
+                );
+              }
               console.log("deleted data at path:", path);
             }
           }),
@@ -274,6 +401,20 @@ const useFlowStore = createWithEqualityFn<
         edges: state.edges,
         viewport: state.viewport,
       }),
+      merge: (persistedState, currentState) => {
+        const merged = {
+          ...currentState,
+          ...(persistedState as Partial<FlowState>),
+        };
+        return {
+          ...merged,
+          inputValidation: createInputValidationState(
+            merged.nodes,
+            merged.edges,
+            merged.types,
+          ),
+        };
+      },
     },
   ),
   shallow,

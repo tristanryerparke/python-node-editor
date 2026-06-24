@@ -13,8 +13,116 @@ from python_node_editor.large_data.large_files_endpoint import (
     CachedValueReference,
     LARGE_DATA_CACHE,
 )
+from python_node_editor.errors import UserFacingNodeError
 
 VERBOSE = False
+
+
+def field_name_from_handle(
+    handle: str, expected_section: str | tuple[str, ...]
+) -> str:
+    """Extract the field name from a frontend edge handle.
+
+    Handles are expected to look like ``node-id:outputs:return:handle`` or
+    ``node-id:arguments:argument_name:handle``. Older tests and saved flows may
+    use ``inputs`` instead of ``arguments``. Node IDs may themselves contain
+    colons, so the meaningful parts are read from the end.
+    """
+    expected_sections = (
+        (expected_section,) if isinstance(expected_section, str) else expected_section
+    )
+    section_description = " or ".join(expected_sections)
+
+    parts = handle.split(":")
+    if (
+        len(parts) < 4
+        or parts[-3] not in expected_sections
+        or parts[-1] != "handle"
+    ):
+        raise ValueError(
+            f"Invalid {section_description} handle '{handle}'. Expected format "
+            f"'<node_id>:<section>:<field_name>:handle'."
+        )
+    return parts[-2]
+
+
+def validate_graph_for_execution(graph: Graph) -> None:
+    """Validate graph shape before starting execution.
+
+    Errors that cannot be assigned to a currently executing node should be
+    rejected before creating an async execution task.
+    """
+    node_map: dict[str, NodeFromFrontend] = {}
+    for node in graph.nodes:
+        if node.id in node_map:
+            raise ValueError(f"Duplicate node id '{node.id}'")
+        node_map[node.id] = node
+
+    adjacency: dict[str, list[str]] = {node_id: [] for node_id in node_map}
+
+    for edge in graph.edges:
+        if edge.source not in node_map:
+            raise ValueError(
+                f"Edge '{edge.id}' references missing source node '{edge.source}'"
+            )
+        if edge.target not in node_map:
+            raise ValueError(
+                f"Edge '{edge.id}' references missing target node '{edge.target}'"
+            )
+
+        source_node = node_map[edge.source]
+        target_node = node_map[edge.target]
+
+        output_field_name = field_name_from_handle(edge.source_handle, "outputs")
+        if output_field_name not in source_node.data.outputs:
+            raise ValueError(
+                f"Edge '{edge.id}' references missing output '{output_field_name}' "
+                f"on node '{edge.source}'"
+            )
+
+        argument_name = field_name_from_handle(
+            edge.target_handle, ("inputs", "arguments")
+        )
+        if argument_name not in target_node.data.arguments:
+            raise ValueError(
+                f"Edge '{edge.id}' references missing input '{argument_name}' "
+                f"on node '{edge.target}'"
+            )
+
+        adjacency[edge.source].append(edge.target)
+
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node_id: str) -> None:
+        if node_id in visited:
+            return
+        if node_id in visiting:
+            raise ValueError("Graph contains a cycle")
+
+        visiting.add(node_id)
+        for target_id in adjacency[node_id]:
+            visit(target_id)
+        visiting.remove(node_id)
+        visited.add(node_id)
+
+    for node_id in node_map:
+        visit(node_id)
+
+
+def create_exception_node_update(node_id: str, exc: Exception):
+    """Create a node-scoped error update for unexpected executor errors."""
+    from python_node_editor.schema import NodeUpdate
+
+    formatted_tb = "".join(
+        traceback.format_exception(type(exc), exc, exc.__traceback__)
+    )
+    print(formatted_tb, end="")
+    return NodeUpdate(
+        node_id=node_id,
+        status="error",
+        terminal_output=formatted_tb,
+    )
 
 
 def get_cache_key(value: Any) -> str | None:
@@ -137,6 +245,23 @@ def execute_node(
             print(terminal_output, end="")
 
         return (True, result, terminal_output if terminal_output else "")
+
+    except UserFacingNodeError as e:
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
+        terminal_output = captured_output.getvalue()
+        user_message = str(e)
+
+        if terminal_output:
+            print(terminal_output, end="")
+        print(user_message, end="" if user_message.endswith("\n") else "\n")
+
+        combined_output = ""
+        if terminal_output:
+            combined_output += terminal_output
+        combined_output += user_message
+
+        return (False, None, combined_output)
 
     except Exception as e:
         # Keep the buffer token in scope for the finally block

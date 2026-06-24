@@ -46,3 +46,7 @@ rhino = [
 llm = [
     "openai>=2.30.0",
 ]
+
+[tool.ty.environment]
+python = ".venv"
+root = ["."]

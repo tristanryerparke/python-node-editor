@@ -1,12 +1,24 @@
 import hashlib
 import inspect
 
+from ...errors import UserFacingNodeError
+
 # from devtools import debug as d
 from ..types_analysis import get_type_repr
 
 
 def make_deconstructor(cls, type_name, field_names):
     def deconstructor(instance):
+        if instance is None:
+            raise UserFacingNodeError(
+                f"Cannot deconstruct {type_name}: input 'instance' is missing."
+            )
+        if not isinstance(instance, cls):
+            raise UserFacingNodeError(
+                f"Cannot deconstruct {type_name}: expected {type_name} instance, "
+                f"got {type(instance).__name__}."
+            )
+
         # Extract field values and return as dict
         result = {
             field_name: getattr(instance, field_name) for field_name in field_names

@@ -1,13 +1,40 @@
 import hashlib
 import inspect
 
+from pydantic import ValidationError
+
+from ...errors import UserFacingNodeError
+
 # from devtools import debug as d
 from ..types_analysis import get_type_repr
 
 
+def _model_definition_path(cls) -> str | None:
+    try:
+        return f"{inspect.getfile(cls)}:{inspect.getsourcelines(cls)[1]}"
+    except (OSError, TypeError):
+        return None
+
+
+def _format_model_validation_error(
+    action: str, cls, type_name: str, exc: ValidationError
+) -> str:
+    lines = [f"Validation error {action} {type_name}"]
+    definition_path = _model_definition_path(cls)
+    if definition_path is not None:
+        lines.append(f"Model defined at {definition_path}")
+    lines.extend(["", str(exc)])
+    return "\n".join(lines)
+
+
 def make_constructor(cls, type_name):
     def constructor(**kwargs):
-        return cls.model_validate(kwargs)
+        try:
+            return cls.model_validate(kwargs)
+        except ValidationError as exc:
+            raise UserFacingNodeError(
+                _format_model_validation_error("constructing", cls, type_name, exc)
+            ) from None
 
     constructor.__name__ = f"construct_{type_name}"
     return constructor

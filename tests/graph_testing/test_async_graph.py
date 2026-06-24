@@ -16,6 +16,9 @@ from httpx import ASGITransport
 
 import python_node_editor.server as server_module
 from python_node_editor.analysis.functions_analysis import analyze_function
+from python_node_editor.analysis.user_model_functions.user_model_nodes import (
+    create_const_deconst_models,
+)
 from python_node_editor.execution.exec_async import router as async_router
 from python_node_editor.schema import Edge, Graph
 from tests.assets.functions_with_delays import (
@@ -25,12 +28,22 @@ from tests.assets.functions_with_delays import (
     quick_power,
 )
 from tests.assets.graph_utils import node_from_schema
+from tests.assets.user_model import two_point_distance
 
 # Register test functions
 _, schema_add, _, types_add = analyze_function(quick_add)
 _, schema_multiply, _, types_multiply = analyze_function(quick_multiply)
 _, schema_divide, _, types_divide = analyze_function(quick_divide)
 _, schema_power, _, types_power = analyze_function(quick_power)
+_, user_model_schema, _, user_model_types = analyze_function(two_point_distance)
+user_model_schemas, user_model_callables = create_const_deconst_models(
+    user_model_types
+)
+construct_point_schema = next(
+    schema_item
+    for schema_item in user_model_schemas
+    if schema_item.name == "construct-Point2D"
+)
 
 server_module.CALLABLES[schema_add.callable_id] = quick_add
 server_module.FUNCTION_SCHEMAS.append(schema_add)
@@ -44,11 +57,17 @@ server_module.FUNCTION_SCHEMAS.append(schema_divide)
 server_module.CALLABLES[schema_power.callable_id] = quick_power
 server_module.FUNCTION_SCHEMAS.append(schema_power)
 
+server_module.CALLABLES[user_model_schema.callable_id] = two_point_distance
+server_module.CALLABLES.update(user_model_callables)
+server_module.FUNCTION_SCHEMAS.append(user_model_schema)
+server_module.FUNCTION_SCHEMAS.extend(user_model_schemas)
+
 # Merge types
 server_module.TYPES.update(types_add)
 server_module.TYPES.update(types_multiply)
 server_module.TYPES.update(types_divide)
 server_module.TYPES.update(types_power)
+server_module.TYPES.update(user_model_types)
 
 
 @asynccontextmanager
@@ -297,6 +316,55 @@ async def test_async_execution_with_error():
         assert node1_error["status"] == "error"
         assert "terminalOutput" in node1_error
         assert "Cannot divide by zero" in node1_error["terminalOutput"]
+
+
+@pytest.mark.asyncio
+async def test_async_user_model_construct_error_stops_before_propagation():
+    """A construct-node validation error should reach the frontend and finish."""
+    construct_node = node_from_schema("bad-point", construct_point_schema)
+
+    distance_node = node_from_schema(
+        "distance-node", user_model_schema, position={"x": 200, "y": 0}
+    )
+    distance_node.data.arguments["a"].value = None
+    distance_node.data.arguments["b"].value = None
+
+    edge = Edge(
+        id="edge1",
+        source="bad-point",
+        source_handle="bad-point:outputs:return:handle",
+        target="distance-node",
+        target_handle="distance-node:arguments:a:handle",
+    )
+
+    graph = Graph(nodes=[construct_node, distance_node], edges=[edge])
+
+    async with httpx.AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/execution_submit", json=graph.model_dump(by_alias=True)
+        )
+        assert response.status_code == 200
+        execution_id = response.json()["execution_id"]
+
+        snapshots = await poll_execution_until_complete(client, execution_id)
+
+        final_snapshot = snapshots[-1]
+        assert final_snapshot["status"] == "complete"
+
+        node_updates = final_snapshot["nodeUpdates"]
+        assert "bad-point" in node_updates
+        assert "distance-node" not in node_updates
+
+        construct_error = node_updates["bad-point"]
+        assert construct_error["status"] == "error"
+        assert "terminalOutput" in construct_error
+        terminal_output = construct_error["terminalOutput"]
+        assert "Validation error constructing Point2D" in terminal_output
+        assert "Input should be a valid number" in terminal_output
+        assert "Traceback" not in terminal_output
+        assert "construct_nodes.py" not in terminal_output
 
 
 if __name__ == "__main__":

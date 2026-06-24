@@ -9,9 +9,12 @@ from typing_extensions import Literal
 from python_node_editor.execution.context import progress_context
 from python_node_editor.execution.exec_utils import (
     VERBOSE,
+    create_exception_node_update,
     create_node_update,
     execute_node,
+    field_name_from_handle,
     topological_order,
+    validate_graph_for_execution,
 )
 from python_node_editor.schema import Graph, NodeFromFrontend, NodeUpdate
 from python_node_editor.schema_base import CamelBaseModel
@@ -35,6 +38,11 @@ EXECUTIONS: dict[str, ExecutionState] = {}
 @router.post("/execution_submit")
 async def submit_execution(graph: Graph):
     """Submit a graph for async execution and return an execution ID"""
+    try:
+        validate_graph_for_execution(graph)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     execution_id = shortuuid.uuid()
 
     EXECUTIONS[execution_id] = ExecutionState(status="running")
@@ -187,67 +195,91 @@ async def execute_graph_async(execution_id: str, graph: Graph):
     if VERBOSE:
         d(execution_list)
 
+    execution_node_map = {node.id: node for node in execution_list}
+
+    def mark_execution_complete() -> None:
+        state.status = "complete"
+        state.update_index += 1
+        asyncio.create_task(cleanup_execution(execution_id))
+
     # Iterate through and execute
     for node in execution_list:
         if VERBOSE:
             print(f"Executing node {node.id}")
 
-        # Send initial update when node starts executing
-        executing_update = NodeUpdate(
-            node_id=node.id,
-            status="executing",
-        )
+        try:
+            # Send initial update when node starts executing
+            executing_update = NodeUpdate(
+                node_id=node.id,
+                status="executing",
+            )
 
-        # Push the "executing" status update
-        push_node_update(state.node_updates, executing_update)
+            # Push the "executing" status update
+            push_node_update(state.node_updates, executing_update)
 
-        # Increment update_index so the frontend can see the "executing" status update is available
-        state.update_index += 1
+            # Increment update_index so the frontend can see the "executing" status update is available
+            state.update_index += 1
 
-        # Execute the node with incremental update support
-        node_update = await execute_and_create_update(
-            node, graph, execution_list, execution_id, state
-        )
+            # Execute the node with incremental update support
+            node_update = await execute_and_create_update(
+                node, graph, execution_list, execution_id, state
+            )
 
-        # Push the final update
-        push_node_update(state.node_updates, node_update)
+            # Push the final update
+            push_node_update(state.node_updates, node_update)
 
-        # Propagate outputs to downstream nodes and create updates for them
-        for edge in graph.edges:
-            if edge.source == node.id:
-                # Extract the output field name from the source_handle
-                output_field_name = edge.source_handle.split(":")[-2]
+            # Stop before propagation when node execution itself failed. Error
+            # updates do not contain outputs, so propagating from them would
+            # turn the original node error into an internal executor crash.
+            if node_update.status == "error":
+                mark_execution_complete()
+                return
 
-                # Extract target node ID and argument name
-                target_node_id = edge.target
-                argument_name = edge.target_handle.split(":")[-2]
-
-                # Update the execution graph so downstream nodes have inputs generated from the output in question
-                target_node = next(n for n in execution_list if n.id == target_node_id)
-                target_node.data.arguments[argument_name] = node_update.outputs[
-                    output_field_name
-                ].model_copy()
-
-                # Create an update for the downstream node so we see it's input value change in the UI
-                downstream_update = NodeUpdate(
-                    node_id=target_node_id,
-                    arguments={
-                        argument_name: node_update.outputs[
-                            output_field_name
-                        ].model_copy()
-                    },
+            if node_update.outputs is None:
+                raise RuntimeError(
+                    f"Node '{node.id}' executed successfully but produced no outputs"
                 )
 
-                # Push the downstream update
-                push_node_update(state.node_updates, downstream_update)
+            # Propagate outputs to downstream nodes and create updates for them
+            for edge in graph.edges:
+                if edge.source == node.id:
+                    # Extract the output field name from the source_handle
+                    output_field_name = field_name_from_handle(
+                        edge.source_handle, "outputs"
+                    )
+                    if output_field_name not in node_update.outputs:
+                        raise RuntimeError(
+                            f"Node '{node.id}' did not produce output "
+                            f"'{output_field_name}' required by edge '{edge.id}'"
+                        )
 
-        # Increment update_index after execution completes
-        state.update_index += 1
+                    # Extract target node ID and argument name
+                    target_node_id = edge.target
+                    argument_name = field_name_from_handle(
+                        edge.target_handle, ("inputs", "arguments")
+                    )
 
-        if node_update.status == "error":
-            state.status = "complete"
+                    output_value = node_update.outputs[output_field_name].model_copy()
+
+                    # Update the execution graph so downstream nodes have inputs generated from the output in question
+                    target_node = execution_node_map[target_node_id]
+                    target_node.data.arguments[argument_name] = output_value
+
+                    # Create an update for the downstream node so we see it's input value change in the UI
+                    downstream_update = NodeUpdate(
+                        node_id=target_node_id,
+                        arguments={argument_name: output_value.model_copy()},
+                    )
+
+                    # Push the downstream update
+                    push_node_update(state.node_updates, downstream_update)
+
+            # Increment update_index after execution completes
             state.update_index += 1
-            asyncio.create_task(cleanup_execution(execution_id))
+        except Exception as exc:
+            error_update = create_exception_node_update(node.id, exc)
+            push_node_update(state.node_updates, error_update)
+            mark_execution_complete()
             return
 
     state.status = "complete"

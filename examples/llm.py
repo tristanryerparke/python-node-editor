@@ -1,7 +1,6 @@
 import os
 from typing import Any
 
-from devtools import debug as d
 from openai import OpenAI
 from python_node_editor.display import flush_output_to_frontend
 
@@ -31,11 +30,6 @@ class _LLMHelpers:
             api_key=_LLMHelpers.get_api_key(api_key_env_name),
             base_url=base_url,
         )
-
-    @staticmethod
-    def get_chat_completions_url(base_url: str) -> str:
-        normalized_base_url = base_url.rstrip("/")
-        return f"{normalized_base_url}/chat/completions"
 
     @staticmethod
     def get_response_text(response: Any) -> str:

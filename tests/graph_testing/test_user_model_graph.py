@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
 import python_node_editor.server as server_module
-from examples.user_model import two_point_distance
 from python_node_editor.analysis.functions_analysis import analyze_function
 from python_node_editor.analysis.user_model_functions.user_model_nodes import (
     create_const_deconst_models,
@@ -13,6 +12,7 @@ from python_node_editor.analysis.user_model_functions.user_model_nodes import (
 from python_node_editor.execution.exec_sync import router as graph_router
 from python_node_editor.schema import Edge, Graph
 from tests.assets.graph_utils import node_from_schema
+from tests.assets.user_model import two_point_distance
 
 # Analyze the function to get types and schema
 _, schema, _, found_types = analyze_function(two_point_distance)
@@ -173,6 +173,66 @@ def test_direct_deconstruct_invalid_user_model_payload():
     assert response.status_code == 422
     assert "instance" in response.text
     assert "Point2D" in response.text
+
+
+def test_construct_error_stops_before_downstream_propagation():
+    """A construct-node validation error should not be followed by propagation."""
+    construct_node = node_from_schema("bad-point", construct_schema)
+
+    distance_node = node_from_schema(
+        "distance-node", schema, position={"x": 200, "y": 0}
+    )
+    distance_node.data.arguments["a"].value = None
+    distance_node.data.arguments["b"].value = None
+
+    edge = Edge(
+        id="edge1",
+        source="bad-point",
+        source_handle="bad-point:outputs:return:handle",
+        target="distance-node",
+        target_handle="distance-node:arguments:a:handle",
+    )
+
+    graph = Graph(nodes=[construct_node, distance_node], edges=[edge])
+
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
+    assert response.status_code == 200
+
+    result = response.json()
+    assert result["status"] == "success"
+    assert len(result["updates"]) == 1
+
+    construct_error = result["updates"][0]
+    assert construct_error["nodeId"] == "bad-point"
+    assert construct_error["status"] == "error"
+    terminal_output = construct_error["terminalOutput"]
+    assert "Validation error constructing Point2D" in terminal_output
+    assert "Input should be a valid number" in terminal_output
+    assert "Traceback" not in terminal_output
+    assert "construct_nodes.py" not in terminal_output
+
+
+def test_deconstruct_missing_instance_is_user_facing_error():
+    """A missing deconstruct input should not expose generated-node internals."""
+    deconstruct_node = node_from_schema("deconstruct-node-1", deconstruct_schema)
+    deconstruct_node.data.arguments["instance"].value = None
+
+    graph = Graph(nodes=[deconstruct_node], edges=[])
+
+    response = client.post("/api/graph_execute", json=graph.model_dump(by_alias=True))
+    assert response.status_code == 200
+
+    result = response.json()
+    assert result["status"] == "success"
+    assert len(result["updates"]) == 1
+
+    deconstruct_error = result["updates"][0]
+    assert deconstruct_error["nodeId"] == "deconstruct-node-1"
+    assert deconstruct_error["status"] == "error"
+    terminal_output = deconstruct_error["terminalOutput"]
+    assert "Cannot deconstruct Point2D" in terminal_output
+    assert "Traceback" not in terminal_output
+    assert "deconstruct_nodes.py" not in terminal_output
 
 
 def test_two_point_distance_calculation():
