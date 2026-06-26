@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
+import { getInputRenderer } from "@/common/inputs/input-type-registry";
+import { getOutputRenderer } from "@/common/outputs/output-type-registry";
 
 /**
  * Initializes UI-specific data for arguments and outputs:
@@ -9,11 +9,6 @@ import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-reg
  * This should be called when creating a new node (e.g., on drop).
  */
 export function initializeUIData(nodeData: any): void {
-  const inputRegistry = INPUT_TYPE_COMPONENT_REGISTRY as Record<
-    string,
-    { expandable: boolean }
-  >;
-
   // Note: _expandedComponentWidth is not initialized here
   // It will be set dynamically when the first component is resized
 
@@ -46,7 +41,7 @@ export function initializeUIData(nodeData: any): void {
       // Initialize _expanded for types based on registry
       const actualType = arg._selectedType || arg.type;
       if (typeof actualType === "string") {
-        const registryEntry = inputRegistry[actualType];
+        const registryEntry = getInputRenderer(actualType);
         if (registryEntry?.expandable && arg._expanded === undefined) {
           // Default to collapsed (false)
           arg._expanded = false;
@@ -68,7 +63,7 @@ export function initializeUIData(nodeData: any): void {
           : output.type);
 
       if (typeof actualType === "string") {
-        const registryEntry = OUTPUT_TYPE_COMPONENT_REGISTRY[actualType];
+        const registryEntry = getOutputRenderer(actualType);
         if (registryEntry?.expandable) {
           if (output._expanded === undefined) {
             // Default to collapsed (false)

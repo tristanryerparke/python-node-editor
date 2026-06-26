@@ -45,6 +45,7 @@ def test_environment_route_returns_nodes_and_types():
                     key: value.model_dump(mode="json")
                     for key, value in found_types.items()
                 },
+                "plugins": [],
             }
 
             assert client.get("/nodes").status_code == 404

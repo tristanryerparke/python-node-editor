@@ -104,7 +104,8 @@ def _run_backend(args):
 
     from python_node_editor.server import app as fastapi_app
 
-    # Mount frontend static files if requested (must be done after all routes are added)
+    # Mount plugin assets before frontend static files; the frontend mount is a catch-all.
+    server_module.mount_plugin_assets()
     if args.frontend:
         server_module.mount_frontend()
         # ANSI escape codes for blue and clickable link

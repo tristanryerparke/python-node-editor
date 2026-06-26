@@ -1,4 +1,4 @@
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { getOutputRenderer } from "./output-type-registry";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
 import { ResizableHeightProvider } from "../utility-components/resizable-height";
 import useFlowStore from "@/stores/flowStore";
@@ -125,9 +125,7 @@ export default function OutputFieldDisplay({
 
   const isExpanded = isExpandedProp ?? (fieldData._expanded ?? false);
   const registryEntry =
-    typeof actualType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getOutputRenderer(actualType) : undefined;
   const defaultExpandedHeight =
     registryEntry?.defaultExpandedHeight ?? DEFAULT_OUTPUT_HEIGHT;
   const { height, setHeight } = useResizableHeight(path, defaultExpandedHeight);

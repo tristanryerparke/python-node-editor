@@ -5,6 +5,7 @@ import useFlowStore from "@/stores/flowStore";
 import type { EnvironmentResponse } from "@/types/environment";
 import { buildEnvironmentMismatchWarningFromResponse } from "@/utils/environment-mismatch";
 import useSettingsStore from "@/stores/settingsStore";
+import { loadFrontendPlugins } from "@/plugins-runtime";
 
 function useEnvironment() {
   const setEnvironment = useFlowStore((state) => state.setEnvironment);
@@ -23,12 +24,29 @@ function useEnvironment() {
   );
 
   useEffect(() => {
-    if (data) {
+    if (!data) {
+      return;
+    }
+
+    let cancelled = false;
+    const environment = data;
+
+    async function applyEnvironment() {
+      try {
+        await loadFrontendPlugins(environment.plugins ?? []);
+      } catch (error) {
+        console.error("Failed to load frontend plugins:", error);
+      }
+
+      if (cancelled) {
+        return;
+      }
+
       const currentState = useFlowStore.getState();
       if (warnOnEnvironmentMismatch) {
         const warning = buildEnvironmentMismatchWarningFromResponse({
           source: "backend-refetch",
-          incomingEnvironment: data,
+          incomingEnvironment: environment,
           currentFunctionSchemas: currentState.functionSchemas,
           currentTypes: currentState.types,
         });
@@ -36,8 +54,14 @@ function useEnvironment() {
           setEnvironmentMismatchWarning(warning);
         }
       }
-      setEnvironment(data);
+      setEnvironment(environment);
     }
+
+    void applyEnvironment();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     data,
     warnOnEnvironmentMismatch,

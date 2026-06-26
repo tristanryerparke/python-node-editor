@@ -17,10 +17,18 @@ from python_node_editor.execution.exec_sync import router as execute_sync_router
 from python_node_editor.large_data.large_files_endpoint import (
     router as large_data_router,
 )
+from python_node_editor.plugins import (
+    PluginContext,
+    PluginRegistry,
+    load_installed_plugins,
+)
 
 FUNCTION_SCHEMAS = []
 CALLABLES = {}
 TYPES = {}
+PLUGIN_REGISTRY = PluginRegistry()
+PLUGINS_LOADED = False
+PLUGIN_ASSETS_MOUNTED = False
 VERBOSE = False
 IGNORE_UNDERSCORE_PREFIX = True
 SERVE_FRONTEND = False
@@ -43,10 +51,41 @@ def _attach_access_log_filter() -> None:
     logger.addFilter(_HealthCheckAccessFilter())
 
 
+def ensure_plugins_loaded() -> PluginRegistry:
+    """Discover installed plugins once for this backend process."""
+    global PLUGINS_LOADED
+    if not PLUGINS_LOADED:
+        plugin_context = PluginContext(PLUGIN_REGISTRY)
+        load_installed_plugins(plugin_context)
+        PLUGINS_LOADED = True
+    return PLUGIN_REGISTRY
+
+
+def mount_plugin_assets() -> None:
+    """Mount frontend assets for installed plugins.
+
+    This must run before the frontend catch-all mount.
+    """
+    global PLUGIN_ASSETS_MOUNTED
+    if PLUGIN_ASSETS_MOUNTED:
+        return
+
+    ensure_plugins_loaded()
+    for frontend_plugin in PLUGIN_REGISTRY.frontend_plugins:
+        app.mount(
+            f"/plugin-assets/{frontend_plugin.id}",
+            StaticFiles(directory=frontend_plugin.asset_dir),
+            name=f"plugin-assets-{frontend_plugin.id}",
+        )
+
+    PLUGIN_ASSETS_MOUNTED = True
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager to load functions and types from the provided path arguments"""
     global FUNCTION_SCHEMAS, CALLABLES, TYPES
+    ensure_plugins_loaded()
     args = sys.argv[1:]
     if len(args) == 0:
         print("No arguments provided")
@@ -118,6 +157,7 @@ async def get_environment():
     return {
         "nodes": _serialize_function_schemas(),
         "types": _serialize_types(),
+        "plugins": PLUGIN_REGISTRY.serialize_frontend_plugins(),
     }
 
 

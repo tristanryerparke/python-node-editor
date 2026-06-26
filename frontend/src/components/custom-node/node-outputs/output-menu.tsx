@@ -9,7 +9,7 @@ import {
 } from "../../ui/dropdown-menu";
 import useFlowStore from "../../../stores/flowStore";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
+import { getOutputRenderer } from "@/common/outputs/output-type-registry";
 
 interface OutputMenuProps {
   path: (string | number)[];
@@ -31,9 +31,7 @@ export default function OutputMenu({ path, fieldData }: OutputMenuProps) {
   }
 
   const registryEntry =
-    typeof actualType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getOutputRenderer(actualType) : undefined;
   const hasExpandable = registryEntry?.expandable ?? false;
   const isExpanded = fieldData._expanded ?? false;
 

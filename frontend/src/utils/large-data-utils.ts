@@ -3,6 +3,10 @@ import type {
   FrontendFieldDataWrapper,
 } from "../types/types";
 import { buildApiPath } from "@/lib/fetcher";
+import {
+  registerLargeDataSerializer,
+  serializeLargeData,
+} from "./large-data-serializer-registry";
 
 export const isArgumentValuePath = (path: (string | number)[]) =>
   path.length >= 4 && path[1] === "arguments" && path[3] === "value";
@@ -81,6 +85,19 @@ const readFileAsDataURL = (file: Blob): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
+registerLargeDataSerializer("Image", async (value: unknown) => {
+  if (!(value instanceof File || value instanceof Blob)) {
+    return { value };
+  }
+
+  const dataUrl = await readFileAsDataURL(value);
+  const base64Data = dataUrl.split(",")[1] || "";
+  return {
+    img_base64: base64Data,
+    filename: value instanceof File ? value.name : null,
+  };
+});
+
 export const getConcreteType = (wrapper: FrontendFieldDataWrapper | undefined) => {
   if (!wrapper) return undefined;
   if (typeof wrapper._selectedType === "string") return wrapper._selectedType;
@@ -93,18 +110,7 @@ export const uploadLargeData = async (
   value: unknown,
   callableId: string,
 ): Promise<FrontendFieldDataWrapper> => {
-  let payload: Record<string, unknown> = {};
-
-  if (value instanceof File || value instanceof Blob) {
-    const dataUrl = await readFileAsDataURL(value);
-    const base64Data = dataUrl.split(",")[1] || "";
-    payload = {
-      img_base64: base64Data,
-      filename: value instanceof File ? value.name : null,
-    };
-  } else {
-    payload = { value };
-  }
+  const payload = await serializeLargeData(typeName, value);
 
   const response = await fetch(buildApiPath("/data/cache"), {
     method: "POST",

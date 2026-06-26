@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import { getInputRenderer } from "./input-type-registry";
 import GenericSchemaInput from "./generic-schema-input";
 import useFlowStore from "@/stores/flowStore";
 import { useInputField } from "@/hooks/useInputField";
@@ -57,9 +57,7 @@ export default memo(function InputFieldDisplay({
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
   const typeName = formatTypeForDisplay(actualType);
   const registryEntry =
-    typeof actualType === "string"
-      ? INPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getInputRenderer(actualType) : undefined;
   const usesGenericRenderer = !registryEntry && !isUserModel;
 
   const controlledProps = {

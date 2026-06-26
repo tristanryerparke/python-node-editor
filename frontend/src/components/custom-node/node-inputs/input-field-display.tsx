@@ -2,7 +2,7 @@ import { memo } from "react";
 import EditableKey from "./dynamic/editable-key";
 import InputMenu from "./input-menu";
 import { useNodeData } from "../../../stores/flowStore";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
+import { getInputRenderer } from "@/common/inputs/input-type-registry";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
 import GenericSchemaInput from "@/common/inputs/generic-schema-input";
@@ -65,9 +65,7 @@ export default memo(function InputFieldDisplay({
 
   const isExpanded = fieldData._expanded ?? false;
   const registryEntry =
-    typeof actualType === "string"
-      ? INPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getInputRenderer(actualType) : undefined;
   const typeInfo =
     typeof actualType === "string" ? types[actualType] : undefined;
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");

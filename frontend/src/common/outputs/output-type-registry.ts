@@ -22,3 +22,18 @@ export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<string, OutputRegistryEntry>
       defaultExpandedHeight: 30,
     },
   };
+
+export function registerOutputRenderer(
+  typeName: string,
+  entry: OutputRegistryEntry,
+) {
+  OUTPUT_TYPE_COMPONENT_REGISTRY[typeName] = entry;
+}
+
+export function getOutputRenderer(typeName: string) {
+  return OUTPUT_TYPE_COMPONENT_REGISTRY[typeName];
+}
+
+export function hasOutputRenderer(typeName: string) {
+  return typeName in OUTPUT_TYPE_COMPONENT_REGISTRY;
+}

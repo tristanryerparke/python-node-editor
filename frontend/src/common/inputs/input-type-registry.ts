@@ -26,3 +26,18 @@ export const INPUT_TYPE_COMPONENT_REGISTRY: Record<string, InputRegistryEntry> =
       expandable: false,
     },
   };
+
+export function registerInputRenderer(
+  typeName: string,
+  entry: InputRegistryEntry,
+) {
+  INPUT_TYPE_COMPONENT_REGISTRY[typeName] = entry;
+}
+
+export function getInputRenderer(typeName: string) {
+  return INPUT_TYPE_COMPONENT_REGISTRY[typeName];
+}
+
+export function hasInputRenderer(typeName: string) {
+  return typeName in INPUT_TYPE_COMPONENT_REGISTRY;
+}

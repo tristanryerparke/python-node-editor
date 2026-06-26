@@ -11,9 +11,16 @@ export interface TypeInfo {
   [key: string]: unknown;
 }
 
+export interface FrontendPluginAsset {
+  id: string;
+  js: string;
+  css?: string;
+}
+
 export interface EnvironmentResponse {
   nodes: FrontendNodeData[];
   types: Record<string, TypeInfo>;
+  plugins?: FrontendPluginAsset[];
 }
 
 export type FunctionSchemas = Record<string, FrontendNodeData>;
