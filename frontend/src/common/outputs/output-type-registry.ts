@@ -5,8 +5,10 @@ import type { ControlledOutputProps } from "@/components/custom-node/node-output
 
 export interface OutputRegistryEntry {
   component: ComponentType<ControlledOutputProps>;
+  expandedComponent?: ComponentType<ControlledOutputProps>;
   expandable: boolean;
   defaultExpandedHeight?: number;
+  hostResizable?: boolean;
 }
 
 export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<string, OutputRegistryEntry> =

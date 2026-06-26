@@ -8,7 +8,9 @@ import type { ControlledInputProps } from "@/components/custom-node/node-inputs/
 
 export interface InputRegistryEntry {
   component: ComponentType<ControlledInputProps>;
+  expandedComponent?: ComponentType<ControlledInputProps>;
   expandable: boolean;
+  hostResizable?: boolean;
 }
 
 export const INPUT_TYPE_COMPONENT_REGISTRY: Record<string, InputRegistryEntry> =

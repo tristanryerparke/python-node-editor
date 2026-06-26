@@ -1,4 +1,5 @@
 import { getOutputRenderer } from "./output-type-registry";
+import { HostResizableRendererFrame } from "../utility-components/host-resizable-renderer-frame";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
 import { ResizableHeightProvider } from "../utility-components/resizable-height";
 import useFlowStore from "@/stores/flowStore";
@@ -137,13 +138,18 @@ export default function OutputFieldDisplay({
 
   // Function to render the main output component
   const renderMainOutput = () => {
-    if (registryEntry?.expandable && isExpanded) {
+    if (registryEntry?.expandable && isExpanded && !registryEntry.hostResizable) {
       return <div className="flex flex-1 min-h-8" />;
     }
 
     if (registryEntry) {
       const Component = registryEntry.component;
-      return <Component {...controlledProps} />;
+      return (
+        <Component
+          {...controlledProps}
+          expanded={registryEntry.hostResizable ? false : controlledProps.expanded}
+        />
+      );
     }
 
     return (
@@ -157,12 +163,18 @@ export default function OutputFieldDisplay({
   const renderExpandedContent = () => {
     if (!registryEntry?.expandable || !isExpanded) return null;
 
-    const Component = registryEntry.component;
-    return (
-      <div className="flex-1">
-        <Component {...controlledProps} />
-      </div>
-    );
+    const Component = registryEntry.expandedComponent ?? registryEntry.component;
+    const expandedRenderer = <Component {...controlledProps} expanded={true} />;
+
+    if (registryEntry.hostResizable) {
+      return (
+        <HostResizableRendererFrame minSize={height}>
+          {expandedRenderer}
+        </HostResizableRendererFrame>
+      );
+    }
+
+    return <div className="flex-1">{expandedRenderer}</div>;
   };
 
   const content = (

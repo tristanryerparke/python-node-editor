@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { HostResizableRendererFrame } from "@/common/utility-components/host-resizable-renderer-frame";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
 import { getInputRenderer } from "./input-type-registry";
@@ -87,12 +88,17 @@ export default memo(function InputFieldDisplay({
     }
 
     if (registryEntry) {
-      if (isExpanded && registryEntry.expandable) {
+      if (isExpanded && registryEntry.expandable && !registryEntry.hostResizable) {
         return <div className="flex flex-1 min-h-8" />;
       }
 
       const Component = registryEntry.component;
-      return <Component {...controlledProps} />;
+      return (
+        <Component
+          {...controlledProps}
+          expanded={registryEntry.hostResizable ? false : controlledProps.expanded}
+        />
+      );
     }
 
     if (usesGenericRenderer && isExpanded) {
@@ -124,12 +130,18 @@ export default memo(function InputFieldDisplay({
     }
 
     if (registryEntry?.expandable && isExpanded) {
-      const Component = registryEntry.component;
-      return (
-        <div className="flex-1">
-          <Component {...controlledProps} />
-        </div>
-      );
+      const Component = registryEntry.expandedComponent ?? registryEntry.component;
+      const expandedRenderer = <Component {...controlledProps} expanded={true} />;
+
+      if (registryEntry.hostResizable) {
+        return (
+          <HostResizableRendererFrame minSize={height}>
+            {expandedRenderer}
+          </HostResizableRendererFrame>
+        );
+      }
+
+      return <div className="flex-1">{expandedRenderer}</div>;
     }
 
     if (!usesGenericRenderer || !isExpanded) {

@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   type ReactNode,
+  type RefObject,
 } from "react";
 import useFlowStore from "@/stores/flowStore";
 import { useFieldRenderContext } from "@/common/utility-components/field-render-context";
@@ -105,12 +106,16 @@ interface SyncedWidthHandleProps {
   children?: ReactNode;
   className?: string;
   dragMultiplier?: number;
+  minWidth?: number;
+  minWidthTargetRef?: RefObject<HTMLElement | null>;
 }
 
 export function SyncedWidthHandle({
   children,
   className = "",
   dragMultiplier,
+  minWidth = 0,
+  minWidthTargetRef,
 }: SyncedWidthHandleProps) {
   const fieldCtx = useFieldRenderContext();
   // Use useContext directly (not the throwing wrapper) so we can handle
@@ -135,6 +140,7 @@ export function SyncedWidthHandle({
   const disabled = parentWidth === null;
 
   // Convert to pixels if using Tailwind scale
+  const minWidthPx = useTailwindScale ? minWidth * TAILWIND_UNIT : minWidth;
   const maxWidthPx =
     useTailwindScale && maxWidth !== undefined && maxWidth !== Infinity
       ? maxWidth * TAILWIND_UNIT
@@ -151,16 +157,53 @@ export function SyncedWidthHandle({
     return safeZoom === 0 ? 1 : 1 / safeZoom;
   }, [dragMultiplier, viewportZoom]);
 
+  const getMinParentWidthPx = () => {
+    if (!parentRef?.current || !minWidthTargetRef?.current) {
+      return minWidthPx;
+    }
+
+    const parentWidthPx = parentRef.current.getBoundingClientRect().width;
+    const targetWidthPx = minWidthTargetRef.current.getBoundingClientRect().width;
+    const surroundingChromePx = Math.max(0, parentWidthPx - targetWidthPx);
+    return minWidthPx + surroundingChromePx;
+  };
+
+  useEffect(() => {
+    if (isInspector || !syncCtx || parentWidth === null) {
+      return;
+    }
+
+    const minParentWidthPx = getMinParentWidthPx();
+    if (currentWidthPx >= minParentWidthPx) {
+      return;
+    }
+
+    setParentWidth(
+      useTailwindScale ? minParentWidthPx / TAILWIND_UNIT : minParentWidthPx,
+    );
+  }, [
+    currentWidthPx,
+    isInspector,
+    minWidthPx,
+    minWidthTargetRef,
+    parentRef,
+    parentWidth,
+    setParentWidth,
+    syncCtx,
+    useTailwindScale,
+  ]);
+
   useEffect(() => {
     if (!isDragging || isInspector || !syncCtx) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = (e.clientX - startXRef.current) * resolvedDragMultiplier;
       const newWidthPx = startWidthRef.current + deltaX;
-      const clampedWidthPx =
-        maxWidthPx !== undefined
-          ? Math.min(newWidthPx, maxWidthPx)
-          : newWidthPx;
+      const minParentWidthPx = getMinParentWidthPx();
+      const clampedWidthPx = Math.max(
+        minParentWidthPx,
+        maxWidthPx !== undefined ? Math.min(newWidthPx, maxWidthPx) : newWidthPx,
+      );
 
       const valueToReport = useTailwindScale
         ? clampedWidthPx / TAILWIND_UNIT
@@ -215,11 +258,13 @@ export function SyncedWidthHandle({
     isDragging,
     isInspector,
     syncCtx,
+    minWidthPx,
+    minWidthTargetRef,
+    parentRef,
     maxWidthPx,
     resolvedDragMultiplier,
     setParentWidth,
     useTailwindScale,
-    parentRef,
   ]);
 
   const handleMouseDown = (e: React.MouseEvent) => {

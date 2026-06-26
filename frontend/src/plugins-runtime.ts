@@ -1,9 +1,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import {
-  registerInputRenderer,
+  registerInputRenderer as registerInputRendererBase,
   registerLargeDataSerializer,
-  registerOutputRenderer,
+  registerOutputRenderer as registerOutputRendererBase,
 } from "./plugin-api";
 import type { ComponentType } from "react";
 import type { TypeSchema } from "./types/backend-schema";
@@ -36,6 +36,7 @@ export interface FrontendPluginContext {
     typeName: string,
     entry: {
       component: ComponentType<PluginControlledInputProps>;
+      expandedComponent?: ComponentType<PluginControlledInputProps>;
       expandable: boolean;
     },
   ) => void;
@@ -43,6 +44,7 @@ export interface FrontendPluginContext {
     typeName: string,
     entry: {
       component: ComponentType<PluginControlledOutputProps>;
+      expandedComponent?: ComponentType<PluginControlledOutputProps>;
       expandable: boolean;
       defaultExpandedHeight?: number;
     },
@@ -76,8 +78,12 @@ const activatedPluginIds = new Set<string>();
 
 const pluginContext: FrontendPluginContext = {
   React,
-  registerInputRenderer,
-  registerOutputRenderer,
+  registerInputRenderer(typeName, entry) {
+    registerInputRendererBase(typeName, { ...entry, hostResizable: true });
+  },
+  registerOutputRenderer(typeName, entry) {
+    registerOutputRendererBase(typeName, { ...entry, hostResizable: true });
+  },
   registerLargeDataSerializer,
 };
 
