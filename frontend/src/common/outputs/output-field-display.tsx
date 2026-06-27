@@ -1,5 +1,6 @@
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { getOutputRenderer } from "./output-type-registry";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import HostResizableRendererFrame from "../utility-components/host-resizable-renderer-frame";
 import { ResizableHeightProvider } from "../utility-components/resizable-height";
 import useFlowStore from "@/stores/flowStore";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
@@ -125,9 +126,7 @@ export default function OutputFieldDisplay({
 
   const isExpanded = isExpandedProp ?? (fieldData._expanded ?? false);
   const registryEntry =
-    typeof actualType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getOutputRenderer(actualType) : undefined;
   const defaultExpandedHeight =
     registryEntry?.defaultExpandedHeight ?? DEFAULT_OUTPUT_HEIGHT;
   const { height, setHeight } = useResizableHeight(path, defaultExpandedHeight);
@@ -139,7 +138,15 @@ export default function OutputFieldDisplay({
 
   // Function to render the main output component
   const renderMainOutput = () => {
-    if (registryEntry?.expandable && isExpanded) {
+    // When expanded, hide the base component only when a single component
+    // renders both states. If a dedicated expandedComponent is registered,
+    // keep the base (minimized) component visible above the expanded content
+    // instead of blanking it out.
+    if (
+      registryEntry?.expandable &&
+      isExpanded &&
+      !registryEntry.expandedComponent
+    ) {
       return <div className="flex flex-1 min-h-8" />;
     }
 
@@ -159,12 +166,24 @@ export default function OutputFieldDisplay({
   const renderExpandedContent = () => {
     if (!registryEntry?.expandable || !isExpanded) return null;
 
-    const Component = registryEntry.component;
-    return (
-      <div className="flex-1">
-        <Component {...controlledProps} />
-      </div>
+    const ExpandedComponent =
+      registryEntry.expandedComponent ?? registryEntry.component;
+    const expandedContent = (
+      <ExpandedComponent {...controlledProps} expanded={true} />
     );
+
+    if (registryEntry.expandedComponent) {
+      return (
+        <HostResizableRendererFrame
+          minHeight={registryEntry.minExpandedHeight}
+          maxHeight={registryEntry.maxExpandedHeight}
+        >
+          {expandedContent}
+        </HostResizableRendererFrame>
+      );
+    }
+
+    return <div className="flex-1">{expandedContent}</div>;
   };
 
   const content = (

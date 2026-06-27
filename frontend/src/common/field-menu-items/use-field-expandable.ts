@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
+import { getInputRenderer } from "@/common/inputs/input-type-registry";
+import { getOutputRenderer } from "@/common/outputs/output-type-registry";
 import useFlowStore from "@/stores/flowStore";
 import type { FrontendFieldDataWrapper } from "@/types/types";
 
@@ -25,7 +25,7 @@ export function useInputFieldExpandable(
 
   const registryEntry =
     typeof effectiveType === "string"
-      ? INPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
+      ? getInputRenderer(effectiveType)
       : undefined;
 
   const hasRegistryExpandable = Boolean(
@@ -57,7 +57,7 @@ export function useOutputFieldExpandable(
 
   const registryEntry =
     typeof effectiveType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[effectiveType]
+      ? getOutputRenderer(effectiveType)
       : undefined;
 
   return Boolean(

@@ -254,8 +254,8 @@ def analyze_file_structure(
         else list(base_dirs)[0]
     )
 
-    # Keep repo-root style absolute imports (e.g. `from extensions...`) working
-    # when analyzing files inside nested folders.
+    # Keep repo-root style absolute imports working when analyzing files inside
+    # nested folders.
     cwd = os.path.abspath(os.getcwd())
     if cwd not in sys.path:
         sys.path.insert(0, cwd)

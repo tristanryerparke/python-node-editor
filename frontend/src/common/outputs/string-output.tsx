@@ -1,7 +1,7 @@
 import { memo } from "react";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
 import { StringArea } from "../utility-components/string-area";
-import type { ControlledOutputProps } from "../../components/custom-node/node-outputs/output-field-display";
+import type { ControlledOutputProps } from "@/common/renderers/types";
 
 export default memo(function StringOutput({
   value,

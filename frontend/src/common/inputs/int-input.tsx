@@ -1,6 +1,6 @@
 import { memo, useEffect } from "react";
 import IntegerInput from "../../components/ui/integer-input";
-import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
+import type { ControlledInputProps } from "@/common/renderers/types";
 
 export interface IntInputProps extends ControlledInputProps {
   placeholder?: string;

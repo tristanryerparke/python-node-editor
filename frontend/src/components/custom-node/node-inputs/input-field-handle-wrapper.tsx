@@ -1,8 +1,12 @@
 import { Handle, Position, useNodeConnections } from "@xyflow/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip";
-import InputFieldDisplay from "./input-field-display";
+import InputFieldDisplay from "@/common/inputs/input-field-display";
+import InputMenu from "./input-menu";
+import EditableKey from "./dynamic/editable-key";
+import { useNodeData } from "../../../stores/flowStore";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
+import type { StructDescr } from "@/types/backend-schema";
 import InspectableFieldWrapper from "../../inspector-sidebar/inspectable-field-wrapper";
 
 interface NodeInputFieldProps {
@@ -24,6 +28,16 @@ export default function InputFieldHandleWrapper({
     (connection) => connection.targetHandle === handleId,
   );
   const disabled = edgeConnected;
+
+  // Dynamic dict inputs have editable field names on the canvas
+  const nodeId = path[0];
+  const dynamicInputType = useNodeData([nodeId, "dynamicInputType"]) as
+    | StructDescr
+    | null
+    | undefined;
+  const isDynamicDictInput =
+    fieldData?._dynamicInputType === "dict" &&
+    dynamicInputType?.structureType === "dict";
 
   if (!fieldData) {
     return <div>No field data</div>;
@@ -50,6 +64,15 @@ export default function InputFieldHandleWrapper({
                 path={path}
                 disabled={disabled}
                 edgeConnected={edgeConnected}
+                className="gap-2"
+                menu={<InputMenu path={path} fieldData={fieldData} />}
+                renderFieldName={
+                  isDynamicDictInput
+                    ? (fieldName) => (
+                        <EditableKey fieldName={fieldName} path={path} />
+                      )
+                    : undefined
+                }
               />
             </div>
           </TooltipTrigger>

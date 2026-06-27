@@ -4,7 +4,7 @@ import { buildApiPath } from "@/lib/fetcher";
 import { ErrorDialog } from "../utility-components/error-dialog";
 import UserModelDisplay from "../utility-components/user-model-display";
 import { Crosshair, Loader2 } from "lucide-react";
-import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
+import type { ControlledInputProps } from "@/common/renderers/types";
 
 export interface Point2DFromBackendInputProps extends ControlledInputProps {}
 

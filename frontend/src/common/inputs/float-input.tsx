@@ -1,6 +1,6 @@
 import { memo, useEffect } from "react";
 import NumberInput from "../../components/ui/number-input";
-import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
+import type { ControlledInputProps } from "@/common/renderers/types";
 
 export interface FloatInputProps extends ControlledInputProps {
   placeholder?: string;

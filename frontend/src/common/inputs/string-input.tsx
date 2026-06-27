@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { StringArea } from "../utility-components/string-area";
-import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
+import type { ControlledInputProps } from "@/common/renderers/types";
 import { Input } from "@/components/ui/input";
 
 export interface StringInputProps extends ControlledInputProps {

@@ -8,7 +8,6 @@ dependencies = [
     "devtools>=0.12.2",
     "fastapi[standard]>=0.121.0",
     "httpx>=0.28.1",
-    "pillow>=12.0.0",
     "pydantic>=2.11.7",
     "requests>=2.32.4",
     "shortuuid>=1.0.13",

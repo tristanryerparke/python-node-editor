@@ -21,52 +21,72 @@ import { EnvironmentMismatchDialog } from "./common/utility-components/environme
 
 function App() {
   const { showInspector, showNodePicker } = usePanelsStore();
-  useEnvironment();
+  const { isPending, error } = useEnvironment();
+
+  if (error) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="flex h-screen w-screen items-center justify-center bg-background p-6 text-foreground">
+          <div className="max-w-xl rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+            Failed to load environment: {error.message}
+          </div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="flex h-screen w-screen items-center justify-center bg-background text-sm text-muted-foreground">
+          Loading environment...
+        </div>
+      </ThemeProvider>
+    );
+  }
 
   return (
-    <>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <ReactFlowProvider>
-            <div className="relative min-h-full flex h-screen w-screen flex-row overflow-hidden bg-background text-foreground isolate">
-              <GraphToolbar />
-              {showNodePicker && (
-                <div className="relative z-0 flex h-full shrink-0">
-                  <NodesTypesSidebar />
-                  <Separator orientation="vertical" />
-                </div>
-              )}
-              <ResizablePanelGroup
-                direction="horizontal"
-                autoSaveId="panel-width-save"
-              >
-                <ResizablePanel
-                  id="node-graph"
-                  order={1}
-                  className="relative z-30 overflow-visible"
-                >
-                  <NodeGraph />
-                </ResizablePanel>
-                {showInspector && (
-                  <>
-                    <ResizableHandle />
-                    <ResizablePanel
-                      id="inspector"
-                      order={2}
-                      defaultSize={25}
-                      minSize={15}
-                      maxSize={75}
-                      className="relative z-0 min-w-60 max-w-[800px]"
-                    >
-                      <Inspector />
-                    </ResizablePanel>
-                  </>
-                )}
-              </ResizablePanelGroup>
-              <EnvironmentMismatchDialog />
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <ReactFlowProvider>
+        <div className="relative min-h-full flex h-screen w-screen flex-row overflow-hidden bg-background text-foreground isolate">
+          <GraphToolbar />
+          {showNodePicker && (
+            <div className="relative z-0 flex h-full shrink-0">
+              <NodesTypesSidebar />
+              <Separator orientation="vertical" />
             </div>
-          </ReactFlowProvider>
-      </ThemeProvider>
-    </>
+          )}
+          <ResizablePanelGroup
+            direction="horizontal"
+            autoSaveId="panel-width-save"
+          >
+            <ResizablePanel
+              id="node-graph"
+              order={1}
+              className="relative z-30 overflow-visible"
+            >
+              <NodeGraph />
+            </ResizablePanel>
+            {showInspector && (
+              <>
+                <ResizableHandle />
+                <ResizablePanel
+                  id="inspector"
+                  order={2}
+                  defaultSize={25}
+                  minSize={15}
+                  maxSize={75}
+                  className="relative z-0 min-w-60 max-w-[800px]"
+                >
+                  <Inspector />
+                </ResizablePanel>
+              </>
+            )}
+          </ResizablePanelGroup>
+          <EnvironmentMismatchDialog />
+        </div>
+      </ReactFlowProvider>
+    </ThemeProvider>
   );
 }
 

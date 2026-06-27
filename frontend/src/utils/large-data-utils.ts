@@ -73,13 +73,29 @@ const normalizeCachedValueReference = (value: unknown): CachedValueReference => 
   };
 };
 
-const readFileAsDataURL = (file: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+export type LargeDataSerializer = (
+  value: unknown,
+) => Promise<Record<string, unknown>> | Record<string, unknown>;
+
+const largeDataSerializers: Record<string, LargeDataSerializer> = {};
+
+export function registerLargeDataSerializer(
+  typeName: string,
+  serializer: LargeDataSerializer,
+): void {
+  largeDataSerializers[typeName] = serializer;
+}
+
+export async function serializeLargeData(
+  typeName: string,
+  value: unknown,
+): Promise<Record<string, unknown>> {
+  const serializer = largeDataSerializers[typeName];
+  if (serializer) {
+    return await serializer(value);
+  }
+  return { value };
+}
 
 export const getConcreteType = (wrapper: FrontendFieldDataWrapper | undefined) => {
   if (!wrapper) return undefined;
@@ -93,18 +109,7 @@ export const uploadLargeData = async (
   value: unknown,
   callableId: string,
 ): Promise<FrontendFieldDataWrapper> => {
-  let payload: Record<string, unknown> = {};
-
-  if (value instanceof File || value instanceof Blob) {
-    const dataUrl = await readFileAsDataURL(value);
-    const base64Data = dataUrl.split(",")[1] || "";
-    payload = {
-      img_base64: base64Data,
-      filename: value instanceof File ? value.name : null,
-    };
-  } else {
-    payload = { value };
-  }
+  const payload = await serializeLargeData(typeName, value);
 
   const response = await fetch(buildApiPath("/data/cache"), {
     method: "POST",

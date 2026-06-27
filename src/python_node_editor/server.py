@@ -17,13 +17,21 @@ from python_node_editor.execution.exec_sync import router as execute_sync_router
 from python_node_editor.large_data.large_files_endpoint import (
     router as large_data_router,
 )
+from python_node_editor.plugins import (
+    PluginContext,
+    PluginRegistry,
+    load_installed_plugins,
+)
 
 FUNCTION_SCHEMAS = []
 CALLABLES = {}
 TYPES = {}
+PLUGIN_REGISTRY = PluginRegistry()
 VERBOSE = False
 IGNORE_UNDERSCORE_PREFIX = True
 SERVE_FRONTEND = False
+_PLUGINS_LOADED = False
+_MOUNTED_PLUGIN_ASSETS: set[str] = set()
 
 
 class _HealthCheckAccessFilter(logging.Filter):
@@ -43,6 +51,31 @@ def _attach_access_log_filter() -> None:
     logger.addFilter(_HealthCheckAccessFilter())
 
 
+def load_plugins_once() -> None:
+    global _PLUGINS_LOADED
+    if _PLUGINS_LOADED:
+        return
+
+    context = PluginContext(PLUGIN_REGISTRY)
+    load_installed_plugins(context)
+    _PLUGINS_LOADED = True
+
+
+def mount_plugin_assets(app_instance: FastAPI | None = None) -> None:
+    target_app = app_instance or app
+    for plugin in PLUGIN_REGISTRY.frontend_plugins:
+        frontend = plugin.frontend
+        if frontend is None or plugin.id in _MOUNTED_PLUGIN_ASSETS:
+            continue
+
+        target_app.mount(
+            f"/plugin-assets/{plugin.id}",
+            StaticFiles(directory=str(frontend.asset_dir)),
+            name=f"plugin-assets-{plugin.id}",
+        )
+        _MOUNTED_PLUGIN_ASSETS.add(plugin.id)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager to load functions and types from the provided path arguments"""
@@ -60,6 +93,9 @@ async def lifespan(app: FastAPI):
         if not os.path.exists(path_part):
             print(f"The path {path_part} does not exist")
             sys.exit(1)
+
+    load_plugins_once()
+    mount_plugin_assets(app)
 
     function_schemas, callables, types = analyze_file_structure(
         search_paths, ignore_underscore_prefix=IGNORE_UNDERSCORE_PREFIX
@@ -118,6 +154,7 @@ async def get_environment():
     return {
         "nodes": _serialize_function_schemas(),
         "types": _serialize_types(),
+        "plugins": PLUGIN_REGISTRY.serialize_frontend_plugins(),
     }
 
 
@@ -134,6 +171,8 @@ app.add_middleware(
 def mount_frontend():
     """Mount frontend static files. Called from CLI after setting SERVE_FRONTEND flag."""
     if SERVE_FRONTEND:
+        load_plugins_once()
+        mount_plugin_assets(app)
         frontend_prebuilt = get_frontend_prebuilt_dir()
         if frontend_prebuilt:
             app.mount(
