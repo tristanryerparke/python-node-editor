@@ -11,6 +11,7 @@ export interface InputRegistryEntry {
   defaultExpandedHeight?: number;
   minExpandedHeight?: number;
   maxExpandedHeight?: number;
+  minWidth?: number | string;
 }
 
 export const INPUT_TYPE_COMPONENT_REGISTRY: Record<string, InputRegistryEntry> =

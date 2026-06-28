@@ -68,6 +68,16 @@ export default memo(function InputFieldDisplay({
     typeSchema: actualType as TypeSchema,
   };
 
+  const inputContainerStyle =
+    registryEntry?.minWidth !== undefined
+      ? {
+          minWidth:
+            typeof registryEntry.minWidth === "number"
+              ? `${registryEntry.minWidth}px`
+              : registryEntry.minWidth,
+        }
+      : undefined;
+
   const renderMainInput = () => {
     if (isUserModel && edgeConnected) {
       if (isExpanded) {
@@ -177,7 +187,9 @@ export default memo(function InputFieldDisplay({
             <span className="shrink-0">{fieldName}</span>
           )}
           <span className="shrink-0">:</span>
-          <div className="flex-1 min-w-0">{renderMainInput()}</div>
+          <div className="flex-1 min-w-0" style={inputContainerStyle}>
+            {renderMainInput()}
+          </div>
           {menu}
         </div>
         {renderExpandedContent()}
