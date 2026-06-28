@@ -18,6 +18,7 @@ import usePanelsStore from "./stores/panelsStore";
 import NodesTypesSidebar from "./components/node-types-sidebar/nodes-types-sidebar";
 import useEnvironment from "./hooks/useEnvironment";
 import { EnvironmentMismatchDialog } from "./common/utility-components/environment-mismatch-dialog";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
   const { showInspector, showNodePicker } = usePanelsStore();
@@ -84,6 +85,7 @@ function App() {
             )}
           </ResizablePanelGroup>
           <EnvironmentMismatchDialog />
+          <Toaster />
         </div>
       </ReactFlowProvider>
     </ThemeProvider>

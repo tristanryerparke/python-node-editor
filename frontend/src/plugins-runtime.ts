@@ -1,10 +1,20 @@
 import * as React from "react";
 import * as ReactDOMClient from "react-dom/client";
+import { toast } from "sonner";
 import {
   ResizableHeight,
   ResizableHeightHandle,
 } from "./common/utility-components/resizable-height";
 import { SyncedWidthHandle } from "./common/utility-components/synced-width-resizable";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog";
+import { Button } from "./components/ui/button";
 import {
   registerInputRenderer,
   registerLargeDataSerializer,
@@ -28,10 +38,18 @@ interface PluginContext {
   registerInputRenderer: typeof registerInputRenderer;
   registerOutputRenderer: typeof registerOutputRenderer;
   registerLargeDataSerializer: typeof registerLargeDataSerializer;
+  toast: typeof toast;
   components: {
     ResizableHeight: typeof ResizableHeight;
     ResizableHeightHandle: typeof ResizableHeightHandle;
     SyncedWidthHandle: typeof SyncedWidthHandle;
+    Dialog: typeof Dialog;
+    DialogContent: typeof DialogContent;
+    DialogDescription: typeof DialogDescription;
+    DialogFooter: typeof DialogFooter;
+    DialogHeader: typeof DialogHeader;
+    DialogTitle: typeof DialogTitle;
+    Button: typeof Button;
   };
 }
 
@@ -56,10 +74,18 @@ const pluginContext: PluginContext = {
   registerInputRenderer,
   registerOutputRenderer,
   registerLargeDataSerializer,
+  toast,
   components: {
     ResizableHeight,
     ResizableHeightHandle,
     SyncedWidthHandle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    Button,
   },
 };
 
