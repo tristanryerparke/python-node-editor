@@ -6,6 +6,8 @@ import sys
 from types import ModuleType
 from typing import Any
 
+from python_node_editor.plugins import missing_plugin_error_from_module_not_found
+
 from .functions_analysis import analyze_function
 from .types_analysis import merge_types_dict
 from .user_model_functions import create_const_deconst_models
@@ -121,6 +123,13 @@ def analyze_file(
         # Add to sys.modules to handle potential circular imports
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
+    except ModuleNotFoundError as e:
+        plugin_error = missing_plugin_error_from_module_not_found(e)
+        if plugin_error is not None:
+            print(f"Module '{file_path}' could not be imported: {plugin_error}")
+        else:
+            print(f"Module '{file_path}' could not be imported: {e}")
+        return [], {}, {}
     except Exception as e:
         print(f"Module '{file_path}' could not be imported: {e}")
         return [], {}, {}

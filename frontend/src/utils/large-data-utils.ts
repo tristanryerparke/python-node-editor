@@ -18,19 +18,6 @@ export const isCachedValueReference = (
   return typeof cacheKey === "string" && cacheKey.length > 0;
 };
 
-export const getCacheKeyFromValue = (value: unknown): string | undefined => {
-  if (!isCachedValueReference(value)) {
-    return undefined;
-  }
-
-  const cacheKey = value.cacheKey;
-  if (typeof cacheKey !== "string" || cacheKey.length == 0) {
-    return undefined;
-  }
-
-  return cacheKey;
-};
-
 const normalizeCachedValueReference = (value: unknown): CachedValueReference => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error("Invalid cached reference response: expected object");

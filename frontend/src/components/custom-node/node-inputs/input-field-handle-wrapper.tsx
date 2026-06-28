@@ -64,7 +64,6 @@ export default function InputFieldHandleWrapper({
                 path={path}
                 disabled={disabled}
                 edgeConnected={edgeConnected}
-                className="gap-2"
                 menu={<InputMenu path={path} fieldData={fieldData} />}
                 renderFieldName={
                   isDynamicDictInput

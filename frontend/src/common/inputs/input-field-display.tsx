@@ -19,7 +19,6 @@ interface InputFieldDisplayProps {
   disabled?: boolean;
   edgeConnected?: boolean;
   isExpanded?: boolean;
-  className?: string;
   menu?: ReactNode;
   renderFieldName?: (fieldName: string | number) => ReactNode;
 }
@@ -30,7 +29,6 @@ export default memo(function InputFieldDisplay({
   disabled = false,
   edgeConnected = false,
   isExpanded: isExpandedProp,
-  className,
   menu,
   renderFieldName,
 }: InputFieldDisplayProps) {
@@ -171,7 +169,7 @@ export default memo(function InputFieldDisplay({
 
   return (
     <ResizableHeightProvider height={height} setHeight={setHeight}>
-      <div className={`flex flex-col flex-1 ${className ?? ""}`}>
+      <div className={`flex flex-col flex-1 ${isExpanded ? "gap-2" : ""}`}>
         <div className="flex flex-1 items-center gap-1">
           {renderFieldName ? (
             renderFieldName(fieldName)

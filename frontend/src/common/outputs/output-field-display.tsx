@@ -187,7 +187,7 @@ export default function OutputFieldDisplay({
   };
 
   const content = (
-    <div className="flex flex-col flex-1">
+    <div className={`flex flex-col flex-1 ${isExpanded ? "gap-2" : ""}`}>
       <div className="flex flex-1 items-center gap-1">
         <span className="shrink-0">{fieldName}</span>
         <span className="shrink-0">:</span>

@@ -60,7 +60,7 @@ Rich frontend display for a cached type is now supplied by plugins. For example,
 ```python
 from PIL import ImageFilter
 from PIL.Image import Image
-from python_node_editor.plugins.image import image_cached_datatype
+from pne_image import image_cached_datatype
 
 
 @image_cached_datatype
