@@ -252,6 +252,10 @@ def load_pending_cluster(file_path: str, base_dir: str) -> PendingCluster | None
 
 def _make_cluster_callable(cluster: PendingCluster) -> Callable[..., Any]:
     def execute_cluster(**kwargs: Any) -> Any:
+        from python_node_editor.execution.context import (
+            execution_mode_context,
+            progress_context,
+        )
         from python_node_editor.execution.exec_sync import execute_graph_to_updates
 
         graph = Graph.model_validate(copy.deepcopy(cluster.graph_payload))
@@ -269,7 +273,13 @@ def _make_cluster_callable(cluster: PendingCluster) -> Callable[..., Any]:
                 ) from exc
             target_wrapper.value = kwargs.get(endpoint.public_name)
 
-        updates = execute_graph_to_updates(graph)
+        execution_mode = execution_mode_context.get()
+        progress_dict = progress_context.get() if execution_mode == "async" else None
+        updates = execute_graph_to_updates(
+            graph,
+            context_dict=progress_dict,
+            execution_mode=execution_mode,
+        )
 
         final_outputs: dict[tuple[str, str], DataWrapper] = {}
         for update in updates:

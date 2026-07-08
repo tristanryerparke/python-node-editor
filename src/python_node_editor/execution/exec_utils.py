@@ -207,8 +207,14 @@ def execute_node(
     sys.stderr = captured_output
 
     # Store buffer reference in context dict so progress callbacks can read it
+    previous_context_buffer = None
     if context_dict is not None:
+        previous_context_buffer = context_dict.get("buffer")
         context_dict["buffer"] = captured_output
+
+    def restore_context_buffer() -> None:
+        if context_dict is not None:
+            context_dict["buffer"] = previous_context_buffer
 
     try:
         args = {}
@@ -244,6 +250,7 @@ def execute_node(
         if terminal_output:
             print(terminal_output, end="")
 
+        restore_context_buffer()
         return (True, result, terminal_output if terminal_output else "")
 
     except UserFacingNodeError as e:
@@ -261,6 +268,7 @@ def execute_node(
             combined_output += terminal_output
         combined_output += user_message
 
+        restore_context_buffer()
         return (False, None, combined_output)
 
     except Exception as e:
@@ -284,6 +292,7 @@ def execute_node(
             combined_output += terminal_output
         combined_output += formatted_tb
 
+        restore_context_buffer()
         return (False, None, combined_output)
 
 
