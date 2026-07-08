@@ -8,6 +8,7 @@ from typing import Any
 
 from python_node_editor.plugins import missing_plugin_error_from_module_not_found
 
+from .cluster_analysis import analyze_pnejson_clusters, find_pnejson_files
 from .functions_analysis import analyze_function
 from .types_analysis import merge_types_dict
 from .user_model_functions import create_const_deconst_models
@@ -97,7 +98,7 @@ def find_python_files(
                     if ignore_underscore_prefix and file.startswith("_"):
                         continue
                     py_files.append(os.path.join(root, file))
-    else:
+    elif target_path.endswith(".py"):
         # Single file
         py_files = [target_path]
 
@@ -176,8 +177,9 @@ def analyze_files(
     py_files_with_function_filters: list[tuple[str, set[str] | None]],
     base_dir: str,
     ignore_underscore_prefix: bool = True,
+    pnejson_files: list[str] | None = None,
 ):
-    """Takes in a flat list of python files and analyzes the functions in them"""
+    """Takes in files and analyzes node functions plus .pnejson clusters."""
     # Initialize accumulation structures
     all_function_schemas = []
     all_callables = {}
@@ -211,9 +213,19 @@ def analyze_files(
         all_types
     )
 
-    # Merge the constructor/deconstructor schemas and callables
+    # Merge the constructor/deconstructor schemas and callables before clusters,
+    # so saved flows can depend on generated user-model helper nodes too.
     all_function_schemas.extend(const_deconst_model_schemas)
     all_callables.update(const_deconst_callables)
+
+    if pnejson_files:
+        cluster_schemas, cluster_callables = analyze_pnejson_clusters(
+            pnejson_files,
+            base_dir=base_dir,
+            available_callables=all_callables,
+        )
+        all_function_schemas.extend(cluster_schemas)
+        all_callables.update(cluster_callables)
 
     # Check for duplicate callable_ids
     check_for_duplicate_callable_ids(all_function_schemas)
@@ -228,16 +240,20 @@ def analyze_file_structure(
         search_paths = [search_paths]
 
     py_files_with_function_filters = {}
+    pnejson_files = []
     base_dirs = set()
 
     for search_path in search_paths:
         path_part, function_name = split_search_path_and_function(search_path)
 
         py_files = find_python_files(path_part, ignore_underscore_prefix)
+        found_pnejson_files = find_pnejson_files(path_part, ignore_underscore_prefix)
         if function_name is not None and len(py_files) != 1:
             raise ValueError(
                 "Function selectors are only supported for a single Python file path"
             )
+        if function_name is not None and found_pnejson_files:
+            raise ValueError("Function selectors are not supported for .pnejson files")
 
         for py_file in py_files:
             current_filter = py_files_with_function_filters.get(py_file)
@@ -250,6 +266,10 @@ def analyze_file_structure(
                 py_files_with_function_filters[py_file] = {function_name}
             else:
                 current_filter.add(function_name)
+
+        for pnejson_file in found_pnejson_files:
+            if pnejson_file not in pnejson_files:
+                pnejson_files.append(pnejson_file)
 
         if os.path.isdir(path_part):
             base_dirs.add(os.path.dirname(path_part))
@@ -273,4 +293,5 @@ def analyze_file_structure(
         list(py_files_with_function_filters.items()),
         base_dir,
         ignore_underscore_prefix=ignore_underscore_prefix,
+        pnejson_files=pnejson_files,
     )

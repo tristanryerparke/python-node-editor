@@ -16,23 +16,25 @@ from python_node_editor.schema import Graph, NodeUpdate
 router = APIRouter(prefix="/api")
 
 
-@router.post("/graph_execute")
-async def execute_graph_sync(graph: Graph):
-    """Execute a graph containing nodes and edges synchronously"""
+def execute_graph_to_updates(
+    graph: Graph, execution_id: str | None = None
+) -> list[NodeUpdate]:
+    """Execute a graph synchronously and return backend node updates.
 
-    try:
-        validate_graph_for_execution(graph)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    This is shared by the HTTP route and compiled .pnejson clusters, so nested
+    graph execution follows the same propagation/error behavior as normal graph
+    execution.
+    """
+    validate_graph_for_execution(graph)
 
-    execution_id = shortuuid.uuid()
+    execution_id = execution_id or shortuuid.uuid()
     execution_list = topological_order(graph)
 
     if VERBOSE:
         d(execution_list)
 
     execution_node_map = {node.id: node for node in execution_list}
-    updates = []
+    updates: list[NodeUpdate] = []
 
     for node in execution_list:
         if VERBOSE:
@@ -99,6 +101,18 @@ async def execute_graph_sync(graph: Graph):
             else:
                 updates.append(error_update)
             break
+
+    return updates
+
+
+@router.post("/graph_execute")
+async def execute_graph_sync(graph: Graph):
+    """Execute a graph containing nodes and edges synchronously"""
+
+    try:
+        updates = execute_graph_to_updates(graph)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     update_message = {
         "status": "success",
