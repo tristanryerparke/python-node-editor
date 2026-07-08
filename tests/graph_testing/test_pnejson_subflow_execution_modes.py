@@ -36,10 +36,10 @@ def _node_payload(node):
     return node.model_dump(by_alias=True, mode="json")
 
 
-def _write_mode_cluster(path: Path, schema) -> None:
+def _write_mode_subflow(path: Path, schema) -> None:
     node = node_from_schema("mode1", schema, position={"x": 0, "y": 0})
     flow = {
-        "name": "mode_cluster",
+        "name": "mode_subflow",
         "nodes": [_node_payload(node)],
         "edges": [],
         "viewport": {"x": 0, "y": 0, "zoom": 1},
@@ -74,22 +74,22 @@ def _write_mode_cluster(path: Path, schema) -> None:
     path.write_text(json.dumps(flow), encoding="utf-8")
 
 
-def _build_mode_cluster(tmp_path: Path):
+def _build_mode_subflow(tmp_path: Path):
     functions_path = tmp_path / "mode_nodes.py"
-    cluster_path = tmp_path / "mode_cluster.pnejson"
+    subflow_path = tmp_path / "mode_subflow.pnejson"
     _write_mode_function(functions_path)
 
     function_schemas, _, _ = analyze_file_structure(str(functions_path))
     function_schema = next(schema for schema in function_schemas if schema.name == "report_mode")
-    _write_mode_cluster(cluster_path, function_schema)
+    _write_mode_subflow(subflow_path, function_schema)
 
     schemas, callables, types = analyze_file_structure(
-        [str(functions_path), str(cluster_path)]
+        [str(functions_path), str(subflow_path)]
     )
-    cluster_schema = next(schema for schema in schemas if schema.name == "mode_cluster")
-    cluster_node = node_from_schema("cluster1", cluster_schema)
-    cluster_node.data.arguments["label"].value = "hello"
-    graph = Graph(nodes=[cluster_node], edges=[])
+    subflow_schema = next(schema for schema in schemas if schema.name == "mode_subflow")
+    subflow_node = node_from_schema("subflow1", subflow_schema)
+    subflow_node.data.arguments["label"].value = "hello"
+    graph = Graph(nodes=[subflow_node], edges=[])
     return graph, callables, types
 
 
@@ -110,12 +110,12 @@ async def _poll_until_complete(client: httpx.AsyncClient, execution_id: str):
     raise TimeoutError("execution did not complete")
 
 
-def test_cluster_internals_use_sync_mode_on_sync_route(tmp_path, monkeypatch):
-    graph, callables, types = _build_mode_cluster(tmp_path)
+def test_subflow_internals_use_sync_mode_on_sync_route(tmp_path, monkeypatch):
+    graph, callables, types = _build_mode_subflow(tmp_path)
     monkeypatch.setattr(server_module, "CALLABLES", dict(callables))
     monkeypatch.setattr(server_module, "TYPES", dict(types))
 
-    app = FastAPI(title="sync cluster mode test")
+    app = FastAPI(title="sync subflow mode test")
     app.include_router(sync_router)
     client = TestClient(app)
 
@@ -128,13 +128,13 @@ def test_cluster_internals_use_sync_mode_on_sync_route(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_cluster_internals_use_async_mode_on_async_route(tmp_path, monkeypatch):
-    graph, callables, types = _build_mode_cluster(tmp_path)
+async def test_subflow_internals_use_async_mode_on_async_route(tmp_path, monkeypatch):
+    graph, callables, types = _build_mode_subflow(tmp_path)
     monkeypatch.setattr(server_module, "CALLABLES", dict(callables))
     monkeypatch.setattr(server_module, "TYPES", dict(types))
     EXECUTIONS.clear()
 
-    app = FastAPI(title="async cluster mode test")
+    app = FastAPI(title="async subflow mode test")
     app.include_router(async_router)
 
     async with httpx.AsyncClient(
@@ -146,12 +146,12 @@ async def test_cluster_internals_use_async_mode_on_async_route(tmp_path, monkeyp
         assert response.status_code == 200
         snapshots = await _poll_until_complete(client, response.json()["execution_id"])
 
-    final_update = snapshots[-1]["nodeUpdates"]["cluster1"]
+    final_update = snapshots[-1]["nodeUpdates"]["subflow1"]
     assert final_update["outputs"]["mode"]["value"] == "async"
     assert "mode:async" in final_update["terminalOutput"]
 
     terminal_snapshots = [
-        snapshot.get("nodeUpdates", {}).get("cluster1", {}).get("terminalOutput", "")
+        snapshot.get("nodeUpdates", {}).get("subflow1", {}).get("terminalOutput", "")
         for snapshot in snapshots
     ]
     assert any("mode:async" in terminal for terminal in terminal_snapshots[:-1])

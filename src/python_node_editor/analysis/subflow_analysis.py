@@ -12,7 +12,7 @@ from python_node_editor.schema import DataWrapper, FunctionSchema, Graph
 
 
 @dataclass(frozen=True)
-class ClusterEndpoint:
+class SubflowEndpoint:
     public_name: str
     node_id: str
     field_name: str
@@ -20,21 +20,21 @@ class ClusterEndpoint:
 
 
 @dataclass(frozen=True)
-class PendingCluster:
+class PendingSubflow:
     path: str
     callable_id: str
     name: str
     category: list[str]
     graph_payload: dict[str, Any]
-    inputs: list[ClusterEndpoint]
-    outputs: list[ClusterEndpoint]
+    inputs: list[SubflowEndpoint]
+    outputs: list[SubflowEndpoint]
     dependencies: set[str]
 
 
 def find_pnejson_files(
     target_path: str, ignore_underscore_prefix: bool = True
 ) -> list[str]:
-    """Find .pnejson files to analyze as saved flows / possible clusters."""
+    """Find .pnejson files to analyze as saved flows / possible sub-flows."""
     pnejson_files: list[str] = []
 
     if os.path.isdir(target_path):
@@ -57,7 +57,7 @@ def find_pnejson_files(
 def callable_id_for_pnejson(file_path: str) -> str:
     with open(file_path, "rb") as f:
         digest = hashlib.sha256(f.read()).hexdigest()
-    return f"cluster:{digest[:16]}"
+    return f"subflow:{digest[:16]}"
 
 
 def _load_pnejson(file_path: str) -> dict[str, Any] | None:
@@ -65,11 +65,11 @@ def _load_pnejson(file_path: str) -> dict[str, Any] | None:
         with open(file_path, encoding="utf-8") as f:
             data = json.load(f)
     except Exception as exc:
-        print(f"Cluster '{file_path}' could not be loaded: {exc}")
+        print(f"Sub-flow '{file_path}' could not be loaded: {exc}")
         return None
 
     if not isinstance(data, dict):
-        print(f"Cluster '{file_path}' is not a JSON object")
+        print(f"Sub-flow '{file_path}' is not a JSON object")
         return None
     return data
 
@@ -90,10 +90,13 @@ def _section_and_field(path: Any) -> tuple[str, str] | None:
     for index, segment in enumerate(path):
         if segment not in ("arguments", "inputs", "outputs"):
             continue
-        if index + 1 >= len(path) or not isinstance(path[index + 1], str):
+        if index + 1 >= len(path):
             return None
-        section = "arguments" if segment == "inputs" else segment
-        return section, path[index + 1]
+        field_name = path[index + 1]
+        if not isinstance(field_name, str):
+            return None
+        section = "arguments" if segment == "inputs" else str(segment)
+        return section, field_name
 
     return None
 
@@ -112,6 +115,7 @@ def _entry_target(entry: dict[str, Any]) -> tuple[str, str, str] | None:
         node_id, section, field_name = target[0], target[1], target[2]
         if (
             isinstance(node_id, str)
+            and isinstance(section, str)
             and section in ("arguments", "inputs", "outputs")
             and isinstance(field_name, str)
         ):
@@ -153,15 +157,15 @@ def _wrapper_for_target(
 
 def _extract_interface(
     file_path: str, graph_payload: dict[str, Any]
-) -> tuple[list[ClusterEndpoint], list[ClusterEndpoint]]:
+) -> tuple[list[SubflowEndpoint], list[SubflowEndpoint]]:
     inspector = graph_payload.get("inspector")
     entries = inspector.get("entries") if isinstance(inspector, dict) else None
     if not isinstance(entries, list):
         return [], []
 
     nodes_by_id = _node_map(graph_payload)
-    inputs: list[ClusterEndpoint] = []
-    outputs: list[ClusterEndpoint] = []
+    inputs: list[SubflowEndpoint] = []
+    outputs: list[SubflowEndpoint] = []
 
     for entry in entries:
         if not isinstance(entry, dict):
@@ -174,12 +178,12 @@ def _extract_interface(
         wrapper = _wrapper_for_target(nodes_by_id, node_id, section, field_name)
         if wrapper is None:
             print(
-                f"Cluster '{file_path}' inspector target "
+                f"Sub-flow '{file_path}' inspector target "
                 f"{node_id}:{section}:{field_name} does not exist"
             )
             continue
 
-        endpoint = ClusterEndpoint(
+        endpoint = SubflowEndpoint(
             public_name=_public_name(entry, field_name),
             node_id=node_id,
             field_name=field_name,
@@ -193,7 +197,7 @@ def _extract_interface(
     return inputs, outputs
 
 
-def _cluster_dependencies(graph_payload: dict[str, Any]) -> set[str]:
+def _subflow_dependencies(graph_payload: dict[str, Any]) -> set[str]:
     dependencies: set[str] = set()
     for node in graph_payload.get("nodes", []):
         if not isinstance(node, dict):
@@ -207,7 +211,7 @@ def _cluster_dependencies(graph_payload: dict[str, Any]) -> set[str]:
     return dependencies
 
 
-def load_pending_cluster(file_path: str, base_dir: str) -> PendingCluster | None:
+def load_pending_subflow(file_path: str, base_dir: str) -> PendingSubflow | None:
     graph_payload = _load_pnejson(file_path)
     if graph_payload is None:
         return None
@@ -215,7 +219,7 @@ def load_pending_cluster(file_path: str, base_dir: str) -> PendingCluster | None
     inputs, outputs = _extract_interface(file_path, graph_payload)
     if not inputs or not outputs:
         print(
-            f"Flow '{file_path}' has no cluster interface; "
+            f"Flow '{file_path}' has no sub-flow interface; "
             "at least one inspector input and one inspector output are required"
         )
         return None
@@ -223,10 +227,10 @@ def load_pending_cluster(file_path: str, base_dir: str) -> PendingCluster | None
     input_names = [endpoint.public_name for endpoint in inputs]
     output_names = [endpoint.public_name for endpoint in outputs]
     if len(input_names) != len(set(input_names)):
-        print(f"Cluster '{file_path}' has duplicate public input names")
+        print(f"Sub-flow '{file_path}' has duplicate public input names")
         return None
     if len(output_names) != len(set(output_names)):
-        print(f"Cluster '{file_path}' has duplicate public output names")
+        print(f"Sub-flow '{file_path}' has duplicate public output names")
         return None
 
     abs_file_path = os.path.abspath(file_path)
@@ -238,7 +242,7 @@ def load_pending_cluster(file_path: str, base_dir: str) -> PendingCluster | None
     category_root = os.path.splitext(os.path.relpath(abs_file_path, base_dir))[0]
     category = category_root.replace(os.sep, "/").split("/")
 
-    return PendingCluster(
+    return PendingSubflow(
         path=abs_file_path,
         callable_id=callable_id_for_pnejson(file_path),
         name=name,
@@ -246,29 +250,29 @@ def load_pending_cluster(file_path: str, base_dir: str) -> PendingCluster | None
         graph_payload=graph_payload,
         inputs=inputs,
         outputs=outputs,
-        dependencies=_cluster_dependencies(graph_payload),
+        dependencies=_subflow_dependencies(graph_payload),
     )
 
 
-def _make_cluster_callable(cluster: PendingCluster) -> Callable[..., Any]:
-    def execute_cluster(**kwargs: Any) -> Any:
+def _make_subflow_callable(subflow: PendingSubflow) -> Callable[..., Any]:
+    def execute_subflow(**kwargs: Any) -> Any:
         from python_node_editor.execution.context import (
             execution_mode_context,
             progress_context,
         )
         from python_node_editor.execution.exec_sync import execute_graph_to_updates
 
-        graph = Graph.model_validate(copy.deepcopy(cluster.graph_payload))
+        graph = Graph.model_validate(copy.deepcopy(subflow.graph_payload))
         nodes_by_id = {node.id: node for node in graph.nodes}
 
-        for endpoint in cluster.inputs:
+        for endpoint in subflow.inputs:
             try:
                 target_wrapper = nodes_by_id[endpoint.node_id].data.arguments[
                     endpoint.field_name
                 ]
             except KeyError as exc:
                 raise RuntimeError(
-                    f"Cluster input target missing: "
+                    f"Sub-flow input target missing: "
                     f"{endpoint.node_id}.arguments.{endpoint.field_name}"
                 ) from exc
             target_wrapper.value = kwargs.get(endpoint.public_name)
@@ -284,50 +288,50 @@ def _make_cluster_callable(cluster: PendingCluster) -> Callable[..., Any]:
         final_outputs: dict[tuple[str, str], DataWrapper] = {}
         for update in updates:
             if update.status == "error":
-                raise RuntimeError(update.terminal_output or "Cluster execution failed")
+                raise RuntimeError(update.terminal_output or "Sub-flow execution failed")
             if not update.outputs:
                 continue
             for output_name, wrapper in update.outputs.items():
                 final_outputs[(update.node_id, output_name)] = wrapper
 
         result: dict[str, Any] = {}
-        for endpoint in cluster.outputs:
+        for endpoint in subflow.outputs:
             key = (endpoint.node_id, endpoint.field_name)
             if key not in final_outputs:
                 raise RuntimeError(
-                    f"Cluster output target was not produced: "
+                    f"Sub-flow output target was not produced: "
                     f"{endpoint.node_id}.outputs.{endpoint.field_name}"
                 )
             result[endpoint.public_name] = final_outputs[key].value
 
-        if len(cluster.outputs) == 1:
-            return result[cluster.outputs[0].public_name]
+        if len(subflow.outputs) == 1:
+            return result[subflow.outputs[0].public_name]
         return result
 
-    execute_cluster.__name__ = cluster.name.replace(" ", "_")
-    execute_cluster.__doc__ = f"Compiled cluster from {cluster.path}"
-    return execute_cluster
+    execute_subflow.__name__ = subflow.name.replace(" ", "_")
+    execute_subflow.__doc__ = None
+    return execute_subflow
 
 
-def _schema_for_cluster(cluster: PendingCluster) -> FunctionSchema:
+def _schema_for_subflow(subflow: PendingSubflow) -> FunctionSchema:
     arguments = {
         endpoint.public_name: endpoint.wrapper.model_copy(deep=True)
-        for endpoint in cluster.inputs
+        for endpoint in subflow.inputs
     }
     outputs = {
         endpoint.public_name: DataWrapper(
             type=endpoint.wrapper.type,
             value=None,
         )
-        for endpoint in cluster.outputs
+        for endpoint in subflow.outputs
     }
 
     return FunctionSchema(
-        name=cluster.name,
-        callable_id=cluster.callable_id,
-        category=cluster.category,
-        definition_path=cluster.path,
-        doc=f"Compiled cluster from {cluster.path}",
+        name=subflow.name,
+        callable_id=subflow.callable_id,
+        category=subflow.category,
+        definition_path=subflow.path,
+        doc=None,
         arguments=arguments,
         output_style="single" if len(outputs) == 1 else "multiple",
         outputs=outputs,
@@ -335,24 +339,24 @@ def _schema_for_cluster(cluster: PendingCluster) -> FunctionSchema:
     )
 
 
-def analyze_pnejson_clusters(
+def analyze_pnejson_subflows(
     pnejson_files: list[str],
     base_dir: str,
     available_callables: dict[str, Callable[..., Any]],
 ) -> tuple[list[FunctionSchema], dict[str, Callable[..., Any]]]:
-    """Register .pnejson files with inspector-defined cluster interfaces.
+    """Register .pnejson files with inspector-defined sub-flow interfaces.
 
-    Missing dependencies make a cluster unavailable. Nested clusters work when
-    their callable IDs are present and acyclic; cyclic or missing nested clusters
+    Missing dependencies make a sub-flow unavailable. Nested sub-flows work when
+    their callable IDs are present and acyclic; cyclic or missing nested sub-flows
     are skipped with a warning instead of using stale embedded copies.
     """
     pending = [
-        cluster
+        subflow
         for file_path in pnejson_files
-        if (cluster := load_pending_cluster(file_path, base_dir)) is not None
+        if (subflow := load_pending_subflow(file_path, base_dir)) is not None
     ]
 
-    pending_by_id = {cluster.callable_id: cluster for cluster in pending}
+    pending_by_id = {subflow.callable_id: subflow for subflow in pending}
     registered_ids = set(available_callables)
     schemas: list[FunctionSchema] = []
     callables: dict[str, Callable[..., Any]] = {}
@@ -360,37 +364,37 @@ def analyze_pnejson_clusters(
     progressed = True
     while progressed:
         progressed = False
-        for cluster in list(pending):
-            missing = cluster.dependencies.difference(registered_ids)
+        for subflow in list(pending):
+            missing = subflow.dependencies.difference(registered_ids)
             # Self-reference is always a cycle and can never make progress.
-            if cluster.callable_id in cluster.dependencies:
+            if subflow.callable_id in subflow.dependencies:
                 continue
             if missing:
                 continue
 
-            schema = _schema_for_cluster(cluster)
-            callable_obj = _make_cluster_callable(cluster)
+            schema = _schema_for_subflow(subflow)
+            callable_obj = _make_subflow_callable(subflow)
             schemas.append(schema)
-            callables[cluster.callable_id] = callable_obj
-            registered_ids.add(cluster.callable_id)
-            pending.remove(cluster)
+            callables[subflow.callable_id] = callable_obj
+            registered_ids.add(subflow.callable_id)
+            pending.remove(subflow)
             progressed = True
 
-    for cluster in pending:
-        missing = cluster.dependencies.difference(registered_ids)
+    for subflow in pending:
+        missing = subflow.dependencies.difference(registered_ids)
         nested_missing = missing.intersection(pending_by_id)
-        if cluster.callable_id in cluster.dependencies or nested_missing:
+        if subflow.callable_id in subflow.dependencies or nested_missing:
             print(
-                f"Cluster '{cluster.path}' was not registered because nested "
-                "cluster dependencies are unavailable or cyclic"
+                f"Sub-flow '{subflow.path}' was not registered because nested "
+                "sub-flow dependencies are unavailable or cyclic"
             )
         elif missing:
             missing_sorted = ", ".join(sorted(missing))
             print(
-                f"Cluster '{cluster.path}' was not registered because required "
+                f"Sub-flow '{subflow.path}' was not registered because required "
                 f"callables are missing: {missing_sorted}"
             )
         else:
-            print(f"Cluster '{cluster.path}' was not registered")
+            print(f"Sub-flow '{subflow.path}' was not registered")
 
     return schemas, callables

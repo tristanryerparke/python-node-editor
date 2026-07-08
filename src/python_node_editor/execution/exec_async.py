@@ -158,7 +158,7 @@ async def execute_and_create_update(
     context_dict["callback"] = on_progress
 
     # Set context variables before asyncio.to_thread so they propagate into
-    # the worker thread and any nested cluster execution.
+    # the worker thread and any nested subflow execution.
     token = progress_context.set(context_dict)
     mode_token = execution_mode_context.set("async")
 

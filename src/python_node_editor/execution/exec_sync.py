@@ -26,7 +26,7 @@ def execute_graph_to_updates(
 ) -> list[NodeUpdate]:
     """Execute a graph synchronously and return backend node updates.
 
-    This is shared by the HTTP route and compiled .pnejson clusters, so nested
+    This is shared by the HTTP route and compiled .pnejson sub-flows, so nested
     graph execution follows the same propagation/error behavior as normal graph
     execution.
     """

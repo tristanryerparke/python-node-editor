@@ -9,6 +9,9 @@ import type { FrontendNodeData } from "@/types/types";
 
 type FunctionSchemaWithGroup = FrontendNodeData & { group: string };
 
+const fileNameFromDefinitionPath = (definitionPath: string) =>
+  definitionPath.replace(/:\d+$/, "").split(/[\\/]/).pop();
+
 interface NodeCategories {
   [category: string]: FunctionSchemaWithGroup[];
 }
@@ -27,8 +30,10 @@ function NodePicker() {
     Object.entries(data).forEach(([, functionSchema]) => {
       // Use the first element of category array as the main category
       const mainCategory = functionSchema.category[0] || "Uncategorized";
-      // Use the second element as the group (file name)
-      const group = functionSchema.category[1] || "Default";
+      const group =
+        fileNameFromDefinitionPath(functionSchema.definitionPath) ||
+        functionSchema.category[1] ||
+        "Default";
 
       const nodeData: FunctionSchemaWithGroup = {
         ...functionSchema,

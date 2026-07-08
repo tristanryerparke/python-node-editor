@@ -20,21 +20,34 @@ export interface EnvironmentMismatchWarning {
   missingTypes: string[];
 }
 
+type FunctionSchemaReferences = FunctionSchemas | string[];
+
 interface EnvironmentMismatchCheckInput {
   source: EnvironmentMismatchSource;
-  incomingFunctionSchemas: FunctionSchemas;
+  incomingFunctionSchemas: FunctionSchemaReferences;
   incomingTypes: Record<string, TypeInfo>;
-  currentFunctionSchemas: FunctionSchemas;
+  currentFunctionSchemas: FunctionSchemaReferences;
   currentTypes: Record<string, TypeInfo>;
 }
 
+const callableIds = (functionSchemas: FunctionSchemaReferences) =>
+  Array.isArray(functionSchemas)
+    ? functionSchemas
+    : Object.keys(functionSchemas);
+
+const functionName = (
+  functionSchemas: FunctionSchemaReferences,
+  callableId: string,
+) =>
+  Array.isArray(functionSchemas)
+    ? "Unknown function"
+    : (functionSchemas[callableId]?.name ?? "Unknown function");
+
 const hasExistingEnvironment = (
-  functionSchemas: FunctionSchemas,
+  functionSchemas: FunctionSchemaReferences,
   types: Record<string, TypeInfo>,
 ) => {
-  return (
-    Object.keys(functionSchemas).length > 0 || Object.keys(types).length > 0
-  );
+  return callableIds(functionSchemas).length > 0 || Object.keys(types).length > 0;
 };
 
 export const buildEnvironmentMismatchWarning = ({
@@ -51,11 +64,11 @@ export const buildEnvironmentMismatchWarning = ({
   const isBackendRefetch = source === "backend-refetch";
   const missingCallableIds = (
     isBackendRefetch
-      ? Object.keys(currentFunctionSchemas).filter(
-          (callableId) => !(callableId in incomingFunctionSchemas),
+      ? callableIds(currentFunctionSchemas).filter(
+          (callableId) => !callableIds(incomingFunctionSchemas).includes(callableId),
         )
-      : Object.keys(incomingFunctionSchemas).filter(
-          (callableId) => !(callableId in currentFunctionSchemas),
+      : callableIds(incomingFunctionSchemas).filter(
+          (callableId) => !callableIds(currentFunctionSchemas).includes(callableId),
         )
   );
   const missingTypes = (
@@ -78,8 +91,7 @@ export const buildEnvironmentMismatchWarning = ({
 
   const missingFunctions = missingCallableIds.map((callableId) => ({
     callableId,
-    functionName:
-      referenceFunctionSchemas[callableId]?.name ?? "Unknown function",
+    functionName: functionName(referenceFunctionSchemas, callableId),
   }));
 
   const paths = [

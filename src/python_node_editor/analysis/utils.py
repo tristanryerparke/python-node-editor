@@ -8,7 +8,7 @@ from typing import Any
 
 from python_node_editor.plugins import missing_plugin_error_from_module_not_found
 
-from .cluster_analysis import analyze_pnejson_clusters, find_pnejson_files
+from .subflow_analysis import analyze_pnejson_subflows, find_pnejson_files
 from .functions_analysis import analyze_function
 from .types_analysis import merge_types_dict
 from .user_model_functions import create_const_deconst_models
@@ -179,7 +179,7 @@ def analyze_files(
     ignore_underscore_prefix: bool = True,
     pnejson_files: list[str] | None = None,
 ):
-    """Takes in files and analyzes node functions plus .pnejson clusters."""
+    """Takes in files and analyzes node functions plus .pnejson sub-flows."""
     # Initialize accumulation structures
     all_function_schemas = []
     all_callables = {}
@@ -213,19 +213,19 @@ def analyze_files(
         all_types
     )
 
-    # Merge the constructor/deconstructor schemas and callables before clusters,
+    # Merge the constructor/deconstructor schemas and callables before sub-flows,
     # so saved flows can depend on generated user-model helper nodes too.
     all_function_schemas.extend(const_deconst_model_schemas)
     all_callables.update(const_deconst_callables)
 
     if pnejson_files:
-        cluster_schemas, cluster_callables = analyze_pnejson_clusters(
+        subflow_schemas, subflow_callables = analyze_pnejson_subflows(
             pnejson_files,
             base_dir=base_dir,
             available_callables=all_callables,
         )
-        all_function_schemas.extend(cluster_schemas)
-        all_callables.update(cluster_callables)
+        all_function_schemas.extend(subflow_schemas)
+        all_callables.update(subflow_callables)
 
     # Check for duplicate callable_ids
     check_for_duplicate_callable_ids(all_function_schemas)
