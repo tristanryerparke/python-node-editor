@@ -6,7 +6,6 @@ import useInspectorStore, {
   type InspectorTarget,
 } from "../../stores/inspectorStore";
 import { useReactFlow, type Edge } from "@xyflow/react";
-import { useRef } from "react";
 import type { TypeInfo } from "@/types/environment";
 import type { FunctionNode } from "@/types/types";
 import { buildEnvironmentMismatchWarning } from "@/utils/environment-mismatch";
@@ -124,16 +123,8 @@ export const LoadButton = () => {
     (state) => state.warnOnEnvironmentMismatch,
   );
   const { setViewport } = useReactFlow();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const onLoad = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const loadFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -190,24 +181,22 @@ export const LoadButton = () => {
     };
 
     reader.readAsText(file);
+  };
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const onLoad = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pnejson,.json";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) loadFile(file);
+    };
+    input.click();
   };
 
   return (
-    <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".pnejson,.json"
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
-      <Button className="flex-1" onClick={onLoad} size="sm" variant="outline">
-        Load
-      </Button>
-    </>
+    <Button className="flex-1" onClick={onLoad} size="sm" variant="outline">
+      Load
+    </Button>
   );
 };
