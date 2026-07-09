@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu";
+} from "t-components/dropdown-menu";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
 import { useInputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
 import UnionTypeMenuItems from "@/common/field-menu-items/union-type-menu-items";

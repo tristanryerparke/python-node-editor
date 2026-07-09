@@ -6,7 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu";
+} from "t-components/dropdown-menu";
 import useFlowStore from "../../../stores/flowStore";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 import { getOutputRenderer } from "@/common/outputs/output-type-registry";

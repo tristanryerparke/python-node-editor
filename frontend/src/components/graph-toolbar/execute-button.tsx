@@ -139,7 +139,7 @@ export default function ExecuteMenu() {
     <Button
       className={buttonClass}
       variant="outline"
-      size="sm"
+      size="xs"
       onClick={execute}
       disabled={isDisabled}
     >

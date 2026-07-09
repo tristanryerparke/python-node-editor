@@ -58,7 +58,7 @@ export default memo(function NodeStatus({
             onClick={handleClick}
             variant="ghost"
             size="icon"
-            className={`nodrag relative h-6 w-6 ${!isClickable ? "cursor-default pointer-events-auto" : ""}`}
+            className={`nodrag relative !size-6 ${!isClickable ? "cursor-default pointer-events-auto" : ""}`}
             disabled={!isClickable}
             asChild={!isClickable}
           >

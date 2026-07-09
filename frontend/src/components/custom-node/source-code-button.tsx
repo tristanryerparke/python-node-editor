@@ -31,7 +31,7 @@ export default memo(function SourceCodeButton({
             onClick={handleClick}
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="!size-6"
           >
             <Code size={16} />
           </Button>

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { inputVariants } from "t-components/input";
 
 type Path = (string | number)[];
 type RightButtonProps = { path?: Path };
@@ -22,13 +23,16 @@ export default function SingleLineTextDisplay({
     <div className="flex flex-1 min-w-35 nodrag nopan nowheel">
       <div
         className={cn(
-          "flex flex-1 w-0 text-sm gap-1",
-          "h-8 rounded-md border dark:bg-input/30 pl-2 pr-0.75 py-1 shadow-xs border-input items-center",
-          disabled && "opacity-50",
+          inputVariants({ size: "xs" }),
+          "flex flex-1 w-0 items-center gap-1",
+          disabled && "cursor-not-allowed opacity-30",
         )}
       >
         <span
-          className={cn("truncate min-w-0 flex-1", dimmed && "text-gray-400")}
+          className={cn(
+            "truncate min-w-0 flex-1",
+            dimmed && "text-muted-foreground",
+          )}
         >
           {content}
         </span>

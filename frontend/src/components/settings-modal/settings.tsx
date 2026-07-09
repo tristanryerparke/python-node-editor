@@ -57,8 +57,8 @@ export function SettingsModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="icon-sm" variant="outline" aria-label="Open settings">
-          <Settings className="h-[1.2rem] w-[1.2rem]" />
+        <Button size="icon-xs" variant="outline" aria-label="Open settings">
+          <Settings className="size-3" />
           <span className="sr-only">Open settings</span>
         </Button>
       </DialogTrigger>

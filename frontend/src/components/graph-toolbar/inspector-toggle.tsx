@@ -8,13 +8,14 @@ export function InspectorToggle() {
 
   return (
     <Button
-      size="icon-sm"
+      size="icon-xs"
       onClick={toggleInspector}
       aria-label="Toggle inspector"
       variant={showInspector ? "outline" : "secondary"}
       disabled={inspectorDisabled}
+      className="hover:border-ring"
     >
-      <PanelRight className="h-[1.2rem] w-[1.2rem]" />
+      <PanelRight className="size-3" />
       <span className="sr-only">Toggle inspector</span>
     </Button>
   );

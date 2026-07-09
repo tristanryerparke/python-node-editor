@@ -33,7 +33,7 @@ export default function SaveButton() {
   };
 
   return (
-    <Button className="flex-1" onClick={onSave} variant="outline" size="sm">
+    <Button className="flex-1" onClick={onSave} variant="outline" size="xs">
       Save
     </Button>
   );

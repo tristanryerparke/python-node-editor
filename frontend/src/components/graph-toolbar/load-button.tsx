@@ -195,7 +195,7 @@ export const LoadButton = () => {
   };
 
   return (
-    <Button className="flex-1" onClick={onLoad} size="sm" variant="outline">
+    <Button className="flex-1" onClick={onLoad} size="xs" variant="outline">
       Load
     </Button>
   );
