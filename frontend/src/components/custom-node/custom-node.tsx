@@ -55,9 +55,9 @@ export default memo(function CustomNode({
                 <NodeHeader data={data} nodeId={id} />
               </div>
             </InspectableFieldWrapper>
-            <Separator />
+            <Separator className="border-input" />
             <Inputs arguments={data.arguments} path={[...path, "arguments"]} />
-            <Separator />
+            <Separator className="border-input" />
             <Outputs outputs={data.outputs} path={path} />
           </div>
           {/*<div className="px-2">*/}

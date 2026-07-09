@@ -62,7 +62,7 @@ const createInspectorEntry = (
   isExpanded: true,
   customName: null,
   selectedTarget,
-  viewMode: "json",
+  viewMode: "rich",
 });
 
 function findInspectorEntryIndexById(
@@ -229,7 +229,7 @@ const useInspectorStore = createWithEqualityFn<
             ...state,
             entries: (state.entries ?? []).map((entry) => ({
               ...entry,
-              viewMode: entry.viewMode ?? "json",
+              viewMode: entry.viewMode ?? "rich",
             })),
           };
         }

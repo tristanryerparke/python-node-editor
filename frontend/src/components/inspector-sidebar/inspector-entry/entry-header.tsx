@@ -1,5 +1,5 @@
 import { SquareMousePointer } from "lucide-react";
-import { Toggle } from "@/components/ui/toggle";
+import { Toggle } from "t-components/toggle";
 import {
   setActiveSelectingEntryId,
   type InspectorPathSegment,

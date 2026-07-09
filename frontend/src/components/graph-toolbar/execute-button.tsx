@@ -16,13 +16,23 @@ import {
 } from "@/components/ui/tooltip";
 import { LoaderIcon } from "lucide-react";
 import useSettingsStore from "../../stores/settingsStore";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { type Graph } from "../../utils/strip-graph";
 import { useBackendConnection } from "../../hooks/useBackendConnection";
 import { useExecuteFlowSync } from "../../hooks/useExecuteFlowSync";
 import { useExecuteFlowAsync } from "../../hooks/useExecuteFlowAsync";
 import { clearOutputsAndConnectedInputs } from "../../utils/clear-outputs";
 import useFlowStore from "@/stores/flowStore";
+
+function isTextEditable(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return Boolean(
+    target.closest(
+      'input, textarea, select, [contenteditable="true"], [role="textbox"]',
+    ),
+  );
+}
 
 function formatTimeout(seconds: number) {
   if (seconds >= 60 && seconds % 60 === 0) {
@@ -128,6 +138,31 @@ export default function ExecuteMenu() {
     );
   }
   const isDisabled = disabledReasons.length > 0;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
+      if (
+        !cmdOrCtrl ||
+        event.key.toLowerCase() !== "e" ||
+        event.repeat ||
+        isDisabled ||
+        isTextEditable(event.target) ||
+        isTextEditable(document.activeElement)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      void execute();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [execute, isDisabled]);
+
   const buttonClass =
     isConnected &&
     !isChecking &&

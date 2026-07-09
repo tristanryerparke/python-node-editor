@@ -29,7 +29,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <div className="flex h-screen w-screen items-center justify-center bg-background p-6 text-foreground">
           <div className="max-w-xl rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
-            Failed to load environment: {error.message}
+            Cannot connect to backend, failed to load environment
           </div>
         </div>
       </ThemeProvider>

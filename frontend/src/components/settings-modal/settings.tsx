@@ -1,7 +1,8 @@
-import { Settings } from "lucide-react";
+import { Settings, XIcon } from "lucide-react";
 import { Button } from "t-components/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -11,7 +12,6 @@ import { Checkbox } from "t-components/checkbox";
 import { Input } from "t-components/input";
 import { Tabs, TabsList, TabsTrigger } from "t-components/tabs";
 import { ThemeSelect } from "./theme-select";
-import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore, {
   DEFAULT_ASYNC_EXECUTION_TIMEOUT_SECONDS,
   MIN_ASYNC_EXECUTION_TIMEOUT_SECONDS,
@@ -62,7 +62,14 @@ export function SettingsModal() {
           <span className="sr-only">Open settings</span>
         </Button>
       </DialogTrigger>
-      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent
+        showCloseButton={false}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogClose className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:cursor-not-allowed data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+          <XIcon />
+          <span className="sr-only">Close</span>
+        </DialogClose>
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
@@ -200,12 +207,6 @@ export function SettingsModal() {
                 }
               }}
             />
-          </div>
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Backend API</label>
-            <div className="text-sm text-muted-foreground font-mono bg-muted px-3 py-2 rounded-md">
-              {API_PREFIX}
-            </div>
           </div>
         </div>
       </DialogContent>
