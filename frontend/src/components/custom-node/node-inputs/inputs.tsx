@@ -1,5 +1,5 @@
 import InputFieldHandleWrapper from "./input-field-handle-wrapper";
-import { Separator } from "../../ui/separator";
+import { Separator } from "t-components/separator";
 import AddListInput from "./dynamic/add-list-input";
 import AddDictInput from "./dynamic/add-dict-input";
 import { useNodeData } from "../../../stores/flowStore";

@@ -7,7 +7,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,

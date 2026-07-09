@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import * as ReactDOMClient from "react-dom/client";
 import { toast } from "sonner";
 import {
@@ -13,8 +14,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./components/ui/dialog";
-import { Button } from "./components/ui/button";
+} from "t-components/dialog";
+import { Button } from "t-components/button";
 import {
   registerInputRenderer,
   registerLargeDataSerializer,
@@ -32,9 +33,14 @@ interface FrontendPluginRegistration {
   activate(ctx: PluginContext): void | Promise<void>;
 }
 
+const pluginReactDOM = {
+  ...ReactDOM,
+  ...ReactDOMClient,
+};
+
 interface PluginContext {
   React: typeof React;
-  ReactDOM: typeof ReactDOMClient;
+  ReactDOM: typeof pluginReactDOM;
   registerInputRenderer: typeof registerInputRenderer;
   registerOutputRenderer: typeof registerOutputRenderer;
   registerLargeDataSerializer: typeof registerLargeDataSerializer;
@@ -55,7 +61,7 @@ interface PluginContext {
 
 interface PythonNodeEditorGlobal {
   React: typeof React;
-  ReactDOM: typeof ReactDOMClient;
+  ReactDOM: typeof pluginReactDOM;
   registerPlugin(plugin: FrontendPluginRegistration): void;
   activatePlugin(id: string): Promise<void>;
 }
@@ -63,16 +69,38 @@ interface PythonNodeEditorGlobal {
 declare global {
   interface Window {
     React: typeof React;
-    ReactDOM: typeof ReactDOMClient;
+    ReactDOM: typeof pluginReactDOM;
     PythonNodeEditor: PythonNodeEditorGlobal;
   }
 }
 
+function getActivePluginMetadata() {
+  if (!activePluginId) {
+    return {};
+  }
+
+  const descriptor = pluginDescriptors.get(activePluginId);
+  return {
+    pluginId: activePluginId,
+    pluginCssHref: descriptor?.css ?? null,
+  };
+}
+
 const pluginContext: PluginContext = {
   React,
-  ReactDOM: ReactDOMClient,
-  registerInputRenderer,
-  registerOutputRenderer,
+  ReactDOM: pluginReactDOM,
+  registerInputRenderer(typeName, entry) {
+    registerInputRenderer(typeName, {
+      ...entry,
+      ...getActivePluginMetadata(),
+    });
+  },
+  registerOutputRenderer(typeName, entry) {
+    registerOutputRenderer(typeName, {
+      ...entry,
+      ...getActivePluginMetadata(),
+    });
+  },
   registerLargeDataSerializer,
   toast,
   components: {
@@ -92,15 +120,16 @@ const pluginContext: PluginContext = {
 const registeredPlugins = new Map<string, FrontendPluginRegistration>();
 const activatedPluginIds = new Set<string>();
 const scriptLoadPromises = new Map<string, Promise<void>>();
-const loadedCssHrefs = new Set<string>();
+const pluginDescriptors = new Map<string, FrontendPluginDescriptor>();
+let activePluginId: string | null = null;
 
 export function setupPluginRuntime(): void {
   window.React = React;
-  window.ReactDOM = ReactDOMClient;
+  window.ReactDOM = pluginReactDOM;
 
   window.PythonNodeEditor = {
     React,
-    ReactDOM: ReactDOMClient,
+    ReactDOM: pluginReactDOM,
     registerPlugin(plugin) {
       registeredPlugins.set(plugin.id, plugin);
     },
@@ -114,23 +143,15 @@ export function setupPluginRuntime(): void {
         throw new Error(`Plugin ${id} did not register itself`);
       }
 
-      await plugin.activate(pluginContext);
-      activatedPluginIds.add(id);
+      activePluginId = id;
+      try {
+        await plugin.activate(pluginContext);
+        activatedPluginIds.add(id);
+      } finally {
+        activePluginId = null;
+      }
     },
   };
-}
-
-function loadPluginCss(plugin: FrontendPluginDescriptor): void {
-  if (!plugin.css || loadedCssHrefs.has(plugin.css)) {
-    return;
-  }
-
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = plugin.css;
-  link.dataset.pnePluginId = plugin.id;
-  document.head.appendChild(link);
-  loadedCssHrefs.add(plugin.css);
 }
 
 function loadPluginScript(plugin: FrontendPluginDescriptor): Promise<void> {
@@ -158,7 +179,7 @@ export async function loadFrontendPlugin(
   plugin: FrontendPluginDescriptor,
 ): Promise<void> {
   setupPluginRuntime();
-  loadPluginCss(plugin);
+  pluginDescriptors.set(plugin.id, plugin);
   await loadPluginScript(plugin);
   await window.PythonNodeEditor.activatePlugin(plugin.id);
 }

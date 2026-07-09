@@ -1,4 +1,4 @@
-import { Button } from "../../../ui/button";
+import { Button } from "t-components/button";
 import { Plus } from "lucide-react";
 import useFlowStore, { useNodeData } from "../../../../stores/flowStore";
 import type { FrontendFieldDataWrapper } from "../../../../types/types";

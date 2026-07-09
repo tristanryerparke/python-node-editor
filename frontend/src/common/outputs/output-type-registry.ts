@@ -9,6 +9,8 @@ export interface OutputRegistryEntry {
   defaultExpandedHeight?: number;
   minExpandedHeight?: number;
   maxExpandedHeight?: number;
+  pluginId?: string;
+  pluginCssHref?: string | null;
 }
 
 export const OUTPUT_TYPE_COMPONENT_REGISTRY: Record<string, OutputRegistryEntry> =

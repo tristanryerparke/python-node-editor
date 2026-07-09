@@ -1,6 +1,7 @@
 import { memo, type ReactNode } from "react";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
+import PluginStyleBoundary from "@/common/renderers/plugin-style-boundary";
 import { getInputRenderer } from "./input-type-registry";
 import HostResizableRendererFrame from "@/common/utility-components/host-resizable-renderer-frame";
 import GenericSchemaInput from "./generic-schema-input";
@@ -78,6 +79,21 @@ export default memo(function InputFieldDisplay({
         }
       : undefined;
 
+  const wrapPluginRenderer = (content: ReactNode) => {
+    if (!registryEntry?.pluginId) {
+      return content;
+    }
+
+    return (
+      <PluginStyleBoundary
+        pluginId={registryEntry.pluginId}
+        cssHref={registryEntry.pluginCssHref}
+      >
+        {content}
+      </PluginStyleBoundary>
+    );
+  };
+
   const renderMainInput = () => {
     if (isUserModel && edgeConnected) {
       if (isExpanded) {
@@ -111,7 +127,7 @@ export default memo(function InputFieldDisplay({
       }
 
       const Component = registryEntry.component;
-      return <Component {...controlledProps} />;
+      return wrapPluginRenderer(<Component {...controlledProps} />);
     }
 
     if (usesGenericRenderer && isExpanded) {
@@ -155,12 +171,12 @@ export default memo(function InputFieldDisplay({
             minHeight={registryEntry.minExpandedHeight}
             maxHeight={registryEntry.maxExpandedHeight}
           >
-            {expandedContent}
+            {wrapPluginRenderer(expandedContent)}
           </HostResizableRendererFrame>
         );
       }
 
-      return <div className="flex-1">{expandedContent}</div>;
+      return <div className="flex-1">{wrapPluginRenderer(expandedContent)}</div>;
     }
 
     if (!usesGenericRenderer || !isExpanded) {

@@ -3,7 +3,7 @@ import NodeHeader from "./node-header";
 import Inputs from "./node-inputs/inputs";
 import Outputs from "./node-outputs/outputs";
 import NodeDrawer from "./node-drawer";
-import { Separator } from "../ui/separator";
+import { Separator } from "t-components/separator";
 import type { FrontendNodeData } from "../../types/types";
 import InspectableFieldWrapper from "../inspector-sidebar/inspectable-field-wrapper";
 import { useNodeData } from "@/stores/flowStore";

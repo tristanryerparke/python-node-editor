@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "t-components/dialog";
+import { Input } from "t-components/input";
 import {
   updateInspectorData,
   type InspectorPathSegment,

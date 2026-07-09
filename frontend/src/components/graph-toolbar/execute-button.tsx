@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   Dialog,
   DialogClose,
@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "t-components/dialog";
 import {
   Tooltip,
   TooltipContent,

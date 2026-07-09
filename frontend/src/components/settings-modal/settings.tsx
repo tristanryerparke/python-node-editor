@@ -1,15 +1,15 @@
 import { Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "t-components/dialog";
+import { Checkbox } from "t-components/checkbox";
+import { Input } from "t-components/input";
+import { Tabs, TabsList, TabsTrigger } from "t-components/tabs";
 import { ThemeSelect } from "./theme-select";
 import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore, {
@@ -79,7 +79,7 @@ export function SettingsModal() {
                 setExecutionMode(value as "sync" | "async")
               }
             >
-              <TabsList className="min-w-30 max-w-30 min-h-9">
+              <TabsList className="min-w-30 max-w-30">
                 <TabsTrigger value="sync">Sync</TabsTrigger>
                 <TabsTrigger value="async">Async</TabsTrigger>
               </TabsList>
@@ -113,7 +113,7 @@ export function SettingsModal() {
                       : DEFAULT_ASYNC_EXECUTION_TIMEOUT_SECONDS,
                   );
                 }}
-                className="min-w-24 max-w-24 min-h-9"
+                className="min-w-24 max-w-24"
               />
               <span className="text-sm text-muted-foreground">sec</span>
             </div>
@@ -173,7 +173,7 @@ export function SettingsModal() {
               placeholder="e.g., zed, vscode"
               value={openInEditorName || ""}
               onChange={(e) => setOpenInEditorName(e.target.value || null)}
-              className="min-w-30 max-w-30 min-h-9"
+              className="min-w-30 max-w-30"
             />
           </div>
           <div className="flex items-center justify-between">

@@ -1,4 +1,4 @@
-import { Separator } from "../../ui/separator";
+import { Separator } from "t-components/separator";
 import { DraggableNode } from "./draggable-node";
 import type { FrontendNodeData } from "@/types/types";
 

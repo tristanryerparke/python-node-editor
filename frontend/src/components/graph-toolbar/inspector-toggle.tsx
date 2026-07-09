@@ -1,5 +1,5 @@
 import { PanelRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import usePanelsStore from "@/stores/panelsStore";
 
 export function InspectorToggle() {

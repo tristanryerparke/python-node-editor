@@ -1,4 +1,5 @@
 import { getOutputRenderer } from "./output-type-registry";
+import PluginStyleBoundary from "@/common/renderers/plugin-style-boundary";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
 import HostResizableRendererFrame from "../utility-components/host-resizable-renderer-frame";
 import { ResizableHeightProvider } from "../utility-components/resizable-height";
@@ -136,6 +137,21 @@ export default function OutputFieldDisplay({
     typeSchema: actualType as TypeSchema,
   };
 
+  const wrapPluginRenderer = (content: React.ReactNode) => {
+    if (!registryEntry?.pluginId) {
+      return content;
+    }
+
+    return (
+      <PluginStyleBoundary
+        pluginId={registryEntry.pluginId}
+        cssHref={registryEntry.pluginCssHref}
+      >
+        {content}
+      </PluginStyleBoundary>
+    );
+  };
+
   // Function to render the main output component
   const renderMainOutput = () => {
     // When expanded, hide the base component only when a single component
@@ -152,7 +168,7 @@ export default function OutputFieldDisplay({
 
     if (registryEntry) {
       const Component = registryEntry.component;
-      return <Component {...controlledProps} />;
+      return wrapPluginRenderer(<Component {...controlledProps} />);
     }
 
     return (
@@ -178,12 +194,12 @@ export default function OutputFieldDisplay({
           minHeight={registryEntry.minExpandedHeight}
           maxHeight={registryEntry.maxExpandedHeight}
         >
-          {expandedContent}
+          {wrapPluginRenderer(expandedContent)}
         </HostResizableRendererFrame>
       );
     }
 
-    return <div className="flex-1">{expandedContent}</div>;
+    return <div className="flex-1">{wrapPluginRenderer(expandedContent)}</div>;
   };
 
   const content = (

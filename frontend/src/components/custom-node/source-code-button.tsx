@@ -1,6 +1,6 @@
 import { Code } from "lucide-react";
 import { memo } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   Tooltip,
   TooltipContent,

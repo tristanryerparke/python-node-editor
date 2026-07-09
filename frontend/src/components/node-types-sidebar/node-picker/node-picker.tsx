@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { SearchBar } from "@/common/utility-components/search-bar";
 import { CategoryGroup } from "./category-group";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "t-components/checkbox";
 import useEnvironment from "@/hooks/useEnvironment";
 import useFlowStore from "@/stores/flowStore";
 import type { FunctionSchemas } from "@/types/environment";

@@ -12,6 +12,8 @@ export interface InputRegistryEntry {
   minExpandedHeight?: number;
   maxExpandedHeight?: number;
   minWidth?: number | string;
+  pluginId?: string;
+  pluginCssHref?: string | null;
 }
 
 export const INPUT_TYPE_COMPONENT_REGISTRY: Record<string, InputRegistryEntry> =

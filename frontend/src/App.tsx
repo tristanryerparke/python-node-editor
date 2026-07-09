@@ -7,7 +7,7 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 
-import { Separator } from "./components/ui/separator";
+import { Separator } from "t-components/separator";
 
 import { ThemeProvider } from "./components/theme-provider";
 

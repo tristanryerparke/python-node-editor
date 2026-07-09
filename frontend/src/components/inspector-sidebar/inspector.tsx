@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Plus, Eye, EyeOff } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Separator } from "../../components/ui/separator";
+import { Button } from "t-components/button";
+import { Separator } from "t-components/separator";
 import useInspectorStore from "../../stores/inspectorStore";
 import useFlowStore from "../../stores/flowStore";
 import InspectorEntry from "./inspector-entry";

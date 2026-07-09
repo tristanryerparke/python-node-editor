@@ -1,5 +1,5 @@
 import OutputFieldHandleWrapper from "./output-field-handle-wrapper";
-import { Separator } from "../../ui/separator";
+import { Separator } from "t-components/separator";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 
 interface OutputsProps {

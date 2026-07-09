@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MoreVertical, Trash2, Maximize2, Minimize2 } from "lucide-react";
-import { Button } from "../../ui/button";
+import { Button } from "t-components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,

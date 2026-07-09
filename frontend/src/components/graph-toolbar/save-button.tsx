@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import useFlowStore from "../../stores/flowStore";
 import useInspectorStore from "../../stores/inspectorStore";
 
