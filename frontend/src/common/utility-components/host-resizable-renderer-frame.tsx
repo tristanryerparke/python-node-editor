@@ -20,7 +20,7 @@ export default function HostResizableRendererFrame({
   return (
     <ResizableHeight minHeight={minHeight} maxHeight={maxHeight}>
       <div className="nodrag nopan nowheel relative flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
-        <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
+        <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-md border border-input">
           {children}
         </div>
         <ResizableHeightHandle>
