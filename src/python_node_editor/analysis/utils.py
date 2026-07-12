@@ -7,10 +7,11 @@ from types import ModuleType
 from typing import Any
 
 from python_node_editor.plugins import missing_plugin_error_from_module_not_found
+from python_node_editor.schema_base import UserModel
 
 from .subflow_analysis import analyze_pnejson_subflows, find_pnejson_files
 from .functions_analysis import analyze_function
-from .types_analysis import merge_types_dict
+from .types_analysis import analyze_type, merge_types_dict
 from .user_model_functions import create_const_deconst_models
 
 
@@ -169,6 +170,20 @@ def analyze_file(
 
         # Merge the types found in this function into the file's types_dict
         merge_types_dict(types_dict, func_types)
+
+    module_ns = vars(module)
+    for _, cls in inspect.getmembers(module, inspect.isclass):
+        if cls.__module__ not in (module_name, module.__name__):
+            continue
+        if (
+            issubclass(cls, UserModel)
+            and cls is not UserModel
+            and (
+                cls.__dict__.get("_construct_node", False)
+                or cls.__dict__.get("_deconstruct_node", False)
+            )
+        ):
+            merge_types_dict(types_dict, analyze_type(cls, file_path, module_ns))
 
     return functions_schemas_list, callables_dict, types_dict
 

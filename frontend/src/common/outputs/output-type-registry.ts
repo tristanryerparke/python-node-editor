@@ -3,7 +3,7 @@ import StringOutput from "./string-output";
 import type { ControlledOutputProps } from "@/common/renderers/types";
 
 export interface OutputRegistryEntry {
-  component: ComponentType<ControlledOutputProps>;
+  component?: ComponentType<ControlledOutputProps>;
   expandedComponent?: ComponentType<ControlledOutputProps>;
   expandable: boolean;
   defaultExpandedHeight?: number;

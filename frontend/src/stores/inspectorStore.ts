@@ -48,11 +48,6 @@ type InspectorStoreActions = {
 
 export type InspectorState = InspectorStoreState & InspectorStoreActions;
 
-type LegacyInspectorStoreState = {
-  selectedTarget?: InspectorTarget | null;
-  showBorders?: boolean;
-};
-
 const createEntryId = () => crypto.randomUUID();
 
 const createInspectorEntry = (
@@ -211,31 +206,6 @@ const useInspectorStore = createWithEqualityFn<
       name: "inspector-storage",
       version: 3,
       storage: createJSONStorage(() => localStorage),
-      migrate: (persistedState, version) => {
-        if (version < 2) {
-          const legacyState = persistedState as LegacyInspectorStoreState;
-          const selectedTarget = legacyState.selectedTarget ?? null;
-
-          return {
-            entries: selectedTarget ? [createInspectorEntry(selectedTarget)] : [],
-            activeSelectingEntryId: null,
-            showBorders: legacyState.showBorders ?? true,
-          };
-        }
-
-        if (version < 3) {
-          const state = persistedState as { entries?: InspectorEntryState[] };
-          return {
-            ...state,
-            entries: (state.entries ?? []).map((entry) => ({
-              ...entry,
-              viewMode: entry.viewMode ?? "rich",
-            })),
-          };
-        }
-
-        return persistedState;
-      },
       partialize: (state) => ({
         entries: state.entries,
         showBorders: state.showBorders,

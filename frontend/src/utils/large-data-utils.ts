@@ -24,12 +24,7 @@ const normalizeCachedValueReference = (value: unknown): CachedValueReference => 
   }
 
   const raw = value as Record<string, unknown>;
-  const cacheKey =
-    typeof raw.cacheKey === "string"
-      ? raw.cacheKey
-      : typeof raw.cache_key === "string"
-        ? raw.cache_key
-        : undefined;
+  const cacheKey = typeof raw.cacheKey === "string" ? raw.cacheKey : undefined;
   if (!cacheKey || cacheKey.length === 0) {
     throw new Error(
       "Invalid cached reference response: missing required cacheKey",
@@ -37,17 +32,9 @@ const normalizeCachedValueReference = (value: unknown): CachedValueReference => 
   }
 
   const instanceType =
-    typeof raw.instanceType === "string"
-      ? raw.instanceType
-      : typeof raw.instance_type === "string"
-        ? raw.instance_type
-        : undefined;
+    typeof raw.instanceType === "string" ? raw.instanceType : undefined;
   const displayName =
-    typeof raw.displayName === "string"
-      ? raw.displayName
-      : typeof raw.display_name === "string"
-        ? raw.display_name
-        : undefined;
+    typeof raw.displayName === "string" ? raw.displayName : undefined;
   const filename = typeof raw.filename === "string" ? raw.filename : undefined;
   const preview = typeof raw.preview === "string" ? raw.preview : undefined;
 

@@ -159,14 +159,15 @@ export default function OutputFieldDisplay({
     // keep the base (minimized) component visible above the expanded content
     // instead of blanking it out.
     if (
-      registryEntry?.expandable &&
+      registryEntry?.component &&
+      registryEntry.expandable &&
       isExpanded &&
       !registryEntry.expandedComponent
     ) {
       return <div className="flex flex-1 min-h-8" />;
     }
 
-    if (registryEntry) {
+    if (registryEntry?.component) {
       const Component = registryEntry.component;
       return wrapPluginRenderer(<Component {...controlledProps} />);
     }
@@ -184,6 +185,8 @@ export default function OutputFieldDisplay({
 
     const ExpandedComponent =
       registryEntry.expandedComponent ?? registryEntry.component;
+    if (!ExpandedComponent) return null;
+
     const expandedContent = (
       <ExpandedComponent {...controlledProps} expanded={true} />
     );

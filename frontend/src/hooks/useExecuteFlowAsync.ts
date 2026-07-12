@@ -17,7 +17,7 @@ type UseExecuteFlowAsyncOptions = {
 type ExecutionStatusResponse = {
   updateIndex: number;
   status?: "running" | "complete";
-  nodeUpdates?: NodeUpdate[] | Record<string, NodeUpdate>;
+  nodeUpdates?: Record<string, NodeUpdate>;
 };
 
 export function useExecuteFlowAsync(options: UseExecuteFlowAsyncOptions = {}) {
@@ -143,11 +143,7 @@ export function useExecuteFlowAsync(options: UseExecuteFlowAsyncOptions = {}) {
 
         // Process updates if present
         if (result.nodeUpdates) {
-          const updates: NodeUpdate[] = Array.isArray(result.nodeUpdates)
-            ? result.nodeUpdates
-            : Object.values(result.nodeUpdates);
-
-          for (const update of updates) {
+          for (const update of Object.values(result.nodeUpdates)) {
             const nodeId = update.nodeId;
 
             // Get existing node data and merge while preserving ui only-data
