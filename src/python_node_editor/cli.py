@@ -32,10 +32,32 @@ def _parse_backend_args(builds_frontend):
     return args
 
 
+def _build_frontend_package(frontend_dir, label="Frontend"):
+    import subprocess
+    import sys
+
+    # Run bun i
+    print(f"{label}: Installing dependencies...", end="", flush=True)
+    result = subprocess.run(["bun", "i"], cwd=frontend_dir, capture_output=True)
+    if result.returncode != 0:
+        print(f"\nError installing dependencies for {label}: {result.stderr.decode()}")
+        sys.exit(1)
+
+    # Run bun run build
+    print(f"\r{label}: Building...                          ", end="", flush=True)
+    result = subprocess.run(
+        ["bun", "run", "build"], cwd=frontend_dir, capture_output=True
+    )
+    if result.returncode != 0:
+        print(f"\nError building {label}: {result.stderr.decode()}")
+        sys.exit(1)
+
+    print(f"\r{label}: Build complete!                      ")
+
+
 def _build_frontend(frontend_dir=None):
     import os
     import shutil
-    import subprocess
     import sys
 
     if frontend_dir is None:
@@ -43,21 +65,7 @@ def _build_frontend(frontend_dir=None):
     frontend_dist_dir = os.path.join(frontend_dir, "dist")
     frontend_prebuilt_dir = os.path.join(os.path.dirname(__file__), "prebuilt_frontend")
 
-    # Run bun i
-    print("Frontend: Installing dependencies...", end="", flush=True)
-    result = subprocess.run(["bun", "i"], cwd=frontend_dir, capture_output=True)
-    if result.returncode != 0:
-        print(f"\nError installing dependencies: {result.stderr.decode()}")
-        sys.exit(1)
-
-    # Run bun run build
-    print("\rFrontend: Building...                          ", end="", flush=True)
-    result = subprocess.run(
-        ["bun", "run", "build"], cwd=frontend_dir, capture_output=True
-    )
-    if result.returncode != 0:
-        print(f"\nError building frontend: {result.stderr.decode()}")
-        sys.exit(1)
+    _build_frontend_package(frontend_dir)
 
     if not os.path.isdir(frontend_dist_dir):
         print("\nError building frontend: dist folder not found.")
@@ -65,7 +73,68 @@ def _build_frontend(frontend_dir=None):
 
     shutil.rmtree(frontend_prebuilt_dir, ignore_errors=True)
     shutil.copytree(frontend_dist_dir, frontend_prebuilt_dir)
-    print("\rFrontend: Build complete!                      ")
+
+
+def _has_frontend_build_script(frontend_dir):
+    import json
+
+    package_json_path = frontend_dir / "package.json"
+    if not package_json_path.is_file():
+        return False
+
+    try:
+        package_json = json.loads(package_json_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    scripts = package_json.get("scripts")
+    return isinstance(scripts, dict) and "build" in scripts
+
+
+def _find_plugin_frontend_source_dir(asset_dir):
+    from pathlib import Path
+
+    asset_path = Path(asset_dir).resolve()
+    candidates = []
+    for parent in (asset_path, *asset_path.parents):
+        if parent.name == "frontend":
+            candidates.append(parent)
+        candidates.append(parent / "frontend")
+        candidates.append(parent)
+
+    seen = set()
+    for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        if _has_frontend_build_script(candidate):
+            return candidate
+
+    return None
+
+
+def _build_detected_plugin_frontends(plugin_registry):
+    seen_frontend_dirs = set()
+
+    for plugin in plugin_registry.frontend_plugins:
+        if plugin.frontend is None:
+            continue
+
+        frontend_source_dir = _find_plugin_frontend_source_dir(
+            plugin.frontend.asset_dir
+        )
+        if frontend_source_dir is None:
+            print(
+                f"Plugin {plugin.id}: frontend source folder not found; "
+                "skipping plugin frontend build."
+            )
+            continue
+
+        if frontend_source_dir in seen_frontend_dirs:
+            continue
+
+        seen_frontend_dirs.add(frontend_source_dir)
+        _build_frontend_package(frontend_source_dir, label=f"Plugin {plugin.id}")
 
 
 def _run_backend(args):
@@ -88,7 +157,9 @@ def _run_backend(args):
                     "Reinstall from source or use a dev checkout."
                 )
                 sys.exit(1)
+            server_module.load_plugins_once()
             _build_frontend(frontend_source_dir)
+            _build_detected_plugin_frontends(server_module.PLUGIN_REGISTRY)
         elif not server_module.get_frontend_prebuilt_dir():
             print("Frontend: prebuilt folder not found. Run with -bf to build it.")
             sys.exit(1)

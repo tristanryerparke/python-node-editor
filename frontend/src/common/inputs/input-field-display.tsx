@@ -1,7 +1,9 @@
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import { ResizableHeightProvider } from "@/common/utility-components/resizable-height";
 import UserModelDisplay from "@/common/utility-components/user-model-display";
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "./input-type-registry";
+import PluginStyleBoundary from "@/common/renderers/plugin-style-boundary";
+import { getInputRenderer } from "./input-type-registry";
+import HostResizableRendererFrame from "@/common/utility-components/host-resizable-renderer-frame";
 import GenericSchemaInput from "./generic-schema-input";
 import useFlowStore from "@/stores/flowStore";
 import { useInputField } from "@/hooks/useInputField";
@@ -18,8 +20,8 @@ interface InputFieldDisplayProps {
   disabled?: boolean;
   edgeConnected?: boolean;
   isExpanded?: boolean;
-  menu?: React.ReactNode;
-  renderFieldName?: (fieldName: string | number) => React.ReactNode;
+  menu?: ReactNode;
+  renderFieldName?: (fieldName: string | number) => ReactNode;
 }
 
 export default memo(function InputFieldDisplay({
@@ -33,12 +35,7 @@ export default memo(function InputFieldDisplay({
 }: InputFieldDisplayProps) {
   const { value, setValue } = useInputField(fieldData, path);
   const types = useFlowStore((state) => state.types);
-  const { height, setHeight } = useResizableHeight(path, DEFAULT_INPUT_HEIGHT);
   const fieldName = path[path.length - 1];
-
-  if (!fieldData) {
-    return <div>No data</div>;
-  }
 
   // Handle union types - check if type is an object with anyOf
   let actualType = fieldData.type;
@@ -57,9 +54,11 @@ export default memo(function InputFieldDisplay({
   const isUserModel = Boolean(typeInfo && typeInfo.kind === "user_model");
   const typeName = formatTypeForDisplay(actualType);
   const registryEntry =
-    typeof actualType === "string"
-      ? INPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getInputRenderer(actualType) : undefined;
+  const { height, setHeight } = useResizableHeight(
+    path,
+    registryEntry?.defaultExpandedHeight ?? DEFAULT_INPUT_HEIGHT,
+  );
   const usesGenericRenderer = !registryEntry && !isUserModel;
 
   const controlledProps = {
@@ -68,6 +67,31 @@ export default memo(function InputFieldDisplay({
     disabled,
     expanded: isExpanded,
     typeSchema: actualType as TypeSchema,
+  };
+
+  const inputContainerStyle =
+    registryEntry?.minWidth !== undefined
+      ? {
+          minWidth:
+            typeof registryEntry.minWidth === "number"
+              ? `${registryEntry.minWidth}px`
+              : registryEntry.minWidth,
+        }
+      : undefined;
+
+  const wrapPluginRenderer = (content: ReactNode) => {
+    if (!registryEntry?.pluginId) {
+      return content;
+    }
+
+    return (
+      <PluginStyleBoundary
+        pluginId={registryEntry.pluginId}
+        cssHref={registryEntry.pluginCssHref}
+      >
+        {content}
+      </PluginStyleBoundary>
+    );
   };
 
   const renderMainInput = () => {
@@ -89,12 +113,21 @@ export default memo(function InputFieldDisplay({
     }
 
     if (registryEntry) {
-      if (isExpanded && registryEntry.expandable) {
+      // When expanded, hide the base component only when a single component
+      // renders both states (it draws its own minimized form inside the
+      // expanded content). If a dedicated expandedComponent is registered,
+      // keep the base (minimized) component visible above the expanded content
+      // instead of blanking it out.
+      if (
+        isExpanded &&
+        registryEntry.expandable &&
+        !registryEntry.expandedComponent
+      ) {
         return <div className="flex flex-1 min-h-8" />;
       }
 
       const Component = registryEntry.component;
-      return <Component {...controlledProps} />;
+      return wrapPluginRenderer(<Component {...controlledProps} />);
     }
 
     if (usesGenericRenderer && isExpanded) {
@@ -126,12 +159,24 @@ export default memo(function InputFieldDisplay({
     }
 
     if (registryEntry?.expandable && isExpanded) {
-      const Component = registryEntry.component;
-      return (
-        <div className="flex-1">
-          <Component {...controlledProps} />
-        </div>
+      const ExpandedComponent =
+        registryEntry.expandedComponent ?? registryEntry.component;
+      const expandedContent = (
+        <ExpandedComponent {...controlledProps} expanded={true} />
       );
+
+      if (registryEntry.expandedComponent) {
+        return (
+          <HostResizableRendererFrame
+            minHeight={registryEntry.minExpandedHeight}
+            maxHeight={registryEntry.maxExpandedHeight}
+          >
+            {wrapPluginRenderer(expandedContent)}
+          </HostResizableRendererFrame>
+        );
+      }
+
+      return <div className="flex-1">{wrapPluginRenderer(expandedContent)}</div>;
     }
 
     if (!usesGenericRenderer || !isExpanded) {
@@ -150,7 +195,7 @@ export default memo(function InputFieldDisplay({
 
   return (
     <ResizableHeightProvider height={height} setHeight={setHeight}>
-      <div className="flex flex-col flex-1">
+      <div className={`flex flex-col flex-1 ${isExpanded ? "gap-2" : ""}`}>
         <div className="flex flex-1 items-center gap-1">
           {renderFieldName ? (
             renderFieldName(fieldName)
@@ -158,7 +203,9 @@ export default memo(function InputFieldDisplay({
             <span className="shrink-0">{fieldName}</span>
           )}
           <span className="shrink-0">:</span>
-          <div className="flex-1 min-w-0">{renderMainInput()}</div>
+          <div className="flex-1 min-w-0" style={inputContainerStyle}>
+            {renderMainInput()}
+          </div>
           {menu}
         </div>
         {renderExpandedContent()}

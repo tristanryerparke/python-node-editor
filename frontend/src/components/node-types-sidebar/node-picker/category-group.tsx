@@ -1,4 +1,4 @@
-import { Separator } from "../../ui/separator";
+import { Separator } from "t-components/separator";
 import { DraggableNode } from "./draggable-node";
 import type { FrontendNodeData } from "@/types/types";
 
@@ -32,9 +32,7 @@ export function CategoryGroup({
             className="flex flex-col pb-2 gap-1"
           >
             <div className="flex flex-col shrink">
-              <i className="text-xs text-muted-foreground capitalize">
-                {group.replace(/_/g, " ")}
-              </i>
+              <i className="text-xs text-muted-foreground">{group}</i>
             </div>
             <div className="flex flex-col gap-1">
               {nodes.map((node, index) => (

@@ -1,5 +1,5 @@
 import OutputFieldHandleWrapper from "./output-field-handle-wrapper";
-import { Separator } from "../../ui/separator";
+import { Separator } from "t-components/separator";
 import type { FrontendFieldDataWrapper } from "../../../types/types";
 
 interface OutputsProps {
@@ -16,7 +16,7 @@ export default function Outputs({ outputs, path }: OutputsProps) {
           index,
         ) => (
           <div key={outputName} className="flex-1">
-            {index > 0 && <Separator className="w-full" />}
+            {index > 0 && <Separator className="w-full border-input" />}
             <OutputFieldHandleWrapper
               fieldData={outputDef}
               path={[...path, "outputs", outputName]}

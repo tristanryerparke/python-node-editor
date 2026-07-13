@@ -1,0 +1,272 @@
+{
+  "nodes": [
+    {
+      "id": "610d3d2c-49c3-4470-87bf-c7dd5d7da61b",
+      "position": {
+        "x": 452.49985659553187,
+        "y": 70.72574188164782
+      },
+      "type": "customNode",
+      "data": {
+        "name": "power",
+        "callableId": "dbe414e6e09c1e01",
+        "category": [
+          "examples",
+          "integer_math"
+        ],
+        "definitionPath": "/Users/tristanryerparke/projects-local/pne/python-node-editor/examples/integer_math.py:18",
+        "arguments": {
+          "a": {
+            "type": "int",
+            "value": 40
+          },
+          "b": {
+            "type": "int",
+            "value": 2
+          }
+        },
+        "outputs": {
+          "return": {
+            "type": "int",
+            "value": 1600
+          }
+        },
+        "group": "integer_math.py",
+        "status": "executed",
+        "_terminal_drawer": {
+          "_expanded": false
+        },
+        "_nodeWidth": 54,
+        "terminalOutput": ""
+      },
+      "measured": {
+        "width": 216,
+        "height": 185
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "25f7c951-0233-4a00-99d9-65733f5dbfb5",
+      "position": {
+        "x": -85.5710687728127,
+        "y": 57.10219539669106
+      },
+      "type": "customNode",
+      "data": {
+        "name": "percentage",
+        "callableId": "92c2f0938b171074",
+        "category": [
+          "examples",
+          "basic_percentage"
+        ],
+        "definitionPath": "/Users/tristanryerparke/projects-local/pne/python-node-editor/examples/basic_percentage.py:1",
+        "arguments": {
+          "x": {
+            "type": "float"
+          },
+          "percentage": {
+            "type": "int",
+            "value": 50
+          }
+        },
+        "outputs": {
+          "return": {
+            "type": "float"
+          }
+        },
+        "group": "basic_percentage.py",
+        "status": "not-executed",
+        "_terminal_drawer": {
+          "_expanded": false
+        },
+        "_nodeWidth": 63
+      },
+      "measured": {
+        "width": 252,
+        "height": 185
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "50c126e1-cbb2-4454-b321-bda109636a5f",
+      "position": {
+        "x": 253.57391612803485,
+        "y": 216.69983535003107
+      },
+      "type": "customNode",
+      "data": {
+        "name": "slow_add_with_update",
+        "callableId": "28a80a7170f75a3d",
+        "category": [
+          "examples",
+          "long_running_functions"
+        ],
+        "definitionPath": "/Users/tristanryerparke/projects-local/pne/python-node-editor/examples/long_running_functions.py:15",
+        "arguments": {
+          "a": {
+            "type": "int"
+          },
+          "b": {
+            "type": "int",
+            "value": 100
+          }
+        },
+        "outputs": {
+          "return": {
+            "type": "int"
+          }
+        },
+        "group": "long_running_functions.py",
+        "status": "not-executed",
+        "_terminal_drawer": {
+          "_expanded": false
+        },
+        "_nodeWidth": 58
+      },
+      "measured": {
+        "width": 232,
+        "height": 185
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "style": {
+        "strokeWidth": 2
+      },
+      "source": "25f7c951-0233-4a00-99d9-65733f5dbfb5",
+      "sourceHandle": "25f7c951-0233-4a00-99d9-65733f5dbfb5:outputs:return:handle",
+      "target": "50c126e1-cbb2-4454-b321-bda109636a5f",
+      "targetHandle": "50c126e1-cbb2-4454-b321-bda109636a5f:arguments:a:handle",
+      "id": "xy-edge__25f7c951-0233-4a00-99d9-65733f5dbfb525f7c951-0233-4a00-99d9-65733f5dbfb5:outputs:return:handle-50c126e1-cbb2-4454-b321-bda109636a5f50c126e1-cbb2-4454-b321-bda109636a5f:arguments:a:handle"
+    }
+  ],
+  "viewport": {
+    "x": 84.91798811414486,
+    "y": 94.58798005949359,
+    "zoom": 0.5325893291708487
+  },
+  "functionSchemaCallableIds": [
+    "92c2f0938b171074",
+    "6d4006045fd380aa",
+    "5de931aa637ef530",
+    "e0c22ffb40f17de2",
+    "990d8e5d5d8b94e0",
+    "c8d6b1a22c077033",
+    "1c7c677eb066dcd7",
+    "b74a23c7920a2a01",
+    "6a446e14e798a1bf",
+    "fba38ab8a06e074b",
+    "396560ab5f7e4e4c",
+    "8ec44af4f93d505f",
+    "071c47ae0f737bf6",
+    "8a594dae4a9c7a50",
+    "3bc1bebea218cd8b",
+    "685a34971455a67c",
+    "6efd08c3c21bf4f5",
+    "28a80a7170f75a3d",
+    "5a01db262e21bbbc",
+    "ac60bf5a414fde69",
+    "a242333c7eab622c",
+    "dbe414e6e09c1e01",
+    "bb13e58bd25b7acc",
+    "055e924e2062b985",
+    "8f9c0ac6bf1b6f97",
+    "14314d5d521fb355",
+    "a5900c0538f27858",
+    "11b416fe51dc5e49",
+    "c8ff3923bfb07880",
+    "28a5da78f32ba391",
+    "49fb1c00d7f57c33",
+    "5b5fce8ed7dbeb7f",
+    "acbd53bd6b8b2efb",
+    "construct_c01e7d2b47b52edc",
+    "deconstruct_c01e7d2b47b52edc",
+    "construct_16d84114bb5e4e16",
+    "deconstruct_16d84114bb5e4e16",
+    "deconstruct_0e974695a0c7b108"
+  ],
+  "types": {
+    "float": {
+      "kind": "builtin"
+    },
+    "int": {
+      "kind": "builtin"
+    },
+    "str": {
+      "kind": "builtin"
+    },
+    "Point2D": {
+      "kind": "user_model",
+      "category": [
+        "examples",
+        "user_model"
+      ],
+      "properties": {
+        "x": "float",
+        "y": "float"
+      }
+    },
+    "Polygon": {
+      "kind": "user_model",
+      "category": [
+        "examples",
+        "basic_nested_model"
+      ],
+      "properties": {
+        "vertices": {
+          "structureType": "list",
+          "itemsType": "Point2D"
+        }
+      }
+    },
+    "Point2DFromBackend": {
+      "kind": "user_model",
+      "category": [
+        "examples",
+        "point2d_from_backend"
+      ],
+      "properties": {
+        "x": "float",
+        "y": "float"
+      }
+    }
+  },
+  "inspector": {
+    "entries": [
+      {
+        "id": "5d2a7f9d-2bca-43ce-a747-72a4b5d6845d",
+        "isExpanded": true,
+        "customName": "num",
+        "selectedTarget": {
+          "nodeId": "25f7c951-0233-4a00-99d9-65733f5dbfb5",
+          "path": [
+            "25f7c951-0233-4a00-99d9-65733f5dbfb5",
+            "arguments",
+            "x"
+          ]
+        },
+        "viewMode": "rich"
+      },
+      {
+        "id": "cad91ee4-c26b-423c-a9fd-dc9502d2b8c3",
+        "isExpanded": true,
+        "customName": "result",
+        "selectedTarget": {
+          "nodeId": "50c126e1-cbb2-4454-b321-bda109636a5f",
+          "path": [
+            "50c126e1-cbb2-4454-b321-bda109636a5f",
+            "outputs",
+            "return"
+          ]
+        },
+        "viewMode": "rich"
+      }
+    ],
+    "showBorders": true
+  }
+}

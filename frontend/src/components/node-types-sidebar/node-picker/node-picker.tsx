@@ -1,13 +1,16 @@
 import { useState, useMemo } from "react";
 import { SearchBar } from "@/common/utility-components/search-bar";
 import { CategoryGroup } from "./category-group";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "t-components/checkbox";
 import useEnvironment from "@/hooks/useEnvironment";
 import useFlowStore from "@/stores/flowStore";
 import type { FunctionSchemas } from "@/types/environment";
 import type { FrontendNodeData } from "@/types/types";
 
 type FunctionSchemaWithGroup = FrontendNodeData & { group: string };
+
+const fileNameFromDefinitionPath = (definitionPath: string) =>
+  definitionPath.replace(/:\d+$/, "").split(/[\\/]/).pop();
 
 interface NodeCategories {
   [category: string]: FunctionSchemaWithGroup[];
@@ -27,8 +30,10 @@ function NodePicker() {
     Object.entries(data).forEach(([, functionSchema]) => {
       // Use the first element of category array as the main category
       const mainCategory = functionSchema.category[0] || "Uncategorized";
-      // Use the second element as the group (file name)
-      const group = functionSchema.category[1] || "Default";
+      const group =
+        fileNameFromDefinitionPath(functionSchema.definitionPath) ||
+        functionSchema.category[1] ||
+        "Default";
 
       const nodeData: FunctionSchemaWithGroup = {
         ...functionSchema,

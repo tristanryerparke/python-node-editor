@@ -1,5 +1,5 @@
 import { PanelLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import usePanelsStore from "@/stores/panelsStore";
 
 export function NodePickerToggle() {
@@ -8,13 +8,14 @@ export function NodePickerToggle() {
 
   return (
     <Button
-      size="icon-sm"
+      size="icon-xs"
       onClick={toggleNodePicker}
       aria-label="Toggle node picker"
       variant={showNodePicker ? "outline" : "secondary"}
       disabled={nodePickerDisabled}
+      className="hover:border-ring"
     >
-      <PanelLeft className="h-[1.2rem] w-[1.2rem]" />
+      <PanelLeft className="size-3" />
       <span className="sr-only">Toggle node picker</span>
     </Button>
   );

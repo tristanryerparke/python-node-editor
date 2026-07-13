@@ -23,12 +23,22 @@ export default defineConfig({
         target: "http://localhost:8000",
         changeOrigin: true,
       },
+      "/plugin-assets": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
     },
   },
   resolve: {
     alias: {
-      "@": path.resolve(dirname, "./src")
-    }
+      "@": path.resolve(dirname, "./src"),
+      react: path.resolve(dirname, "./node_modules/react"),
+      "react/jsx-runtime": path.resolve(dirname, "./node_modules/react/jsx-runtime"),
+      "react/jsx-dev-runtime": path.resolve(dirname, "./node_modules/react/jsx-dev-runtime"),
+      "react-dom": path.resolve(dirname, "./node_modules/react-dom"),
+      "react-dom/client": path.resolve(dirname, "./node_modules/react-dom/client"),
+    },
+    dedupe: ["react", "react-dom"],
   },
   test: {
     projects: [{

@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "t-components/select";
 
 const modes = ["system", "light", "dark"] as const;
 
@@ -21,7 +21,7 @@ export function ThemeSelect() {
 
   return (
     <Select value={theme} onValueChange={setTheme}>
-      <SelectTrigger className="min-w-30 max-w-30 min-h-9">
+      <SelectTrigger className="min-w-30 max-w-30">
         <SelectValue placeholder="Select theme" />
       </SelectTrigger>
       <SelectContent>

@@ -1,6 +1,6 @@
 import { Code } from "lucide-react";
 import { memo } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +31,7 @@ export default memo(function SourceCodeButton({
             onClick={handleClick}
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="!size-6"
           >
             <Code size={16} />
           </Button>

@@ -3,11 +3,8 @@ import {
   ItemContent,
   ItemDescription,
   ItemTitle,
-  ItemActions,
 } from "@/components/ui/item";
-import useFlowStore from "@/stores/flowStore";
 import type { TypeInfo } from "@/types/environment";
-import { hasDisplayComponent } from "./has-display-component";
 import { formatTypeForDisplay } from "@/utils/type-formatting";
 
 interface TypeDisplayProps {
@@ -16,9 +13,6 @@ interface TypeDisplayProps {
 }
 
 export function TypeDisplay({ typeName, typeInfo }: TypeDisplayProps) {
-  const types = useFlowStore((state) => state.types);
-  const hasComponent = hasDisplayComponent(typeName, types);
-
   return (
     <Item variant="outline" className="p-2 h-fit-content flex">
       <ItemContent className="gap-0 min-w-0">
@@ -39,13 +33,6 @@ export function TypeDisplay({ typeName, typeInfo }: TypeDisplayProps) {
           )}
         </ItemDescription>
       </ItemContent>
-      <ItemActions className="shrink-0">
-        <div
-          className={`w-2 h-2 rounded-full ${
-            hasComponent ? "bg-green-500" : "bg-red-500"
-          }`}
-        />
-      </ItemActions>
     </Item>
   );
 }

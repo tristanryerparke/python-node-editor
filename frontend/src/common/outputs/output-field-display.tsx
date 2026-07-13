@@ -1,5 +1,7 @@
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "./output-type-registry";
+import { getOutputRenderer } from "./output-type-registry";
+import PluginStyleBoundary from "@/common/renderers/plugin-style-boundary";
 import SingleLineTextDisplay from "../utility-components/single-line-text-display";
+import HostResizableRendererFrame from "../utility-components/host-resizable-renderer-frame";
 import { ResizableHeightProvider } from "../utility-components/resizable-height";
 import useFlowStore from "@/stores/flowStore";
 import { useResizableHeight } from "@/hooks/useResizableHeight";
@@ -125,9 +127,7 @@ export default function OutputFieldDisplay({
 
   const isExpanded = isExpandedProp ?? (fieldData._expanded ?? false);
   const registryEntry =
-    typeof actualType === "string"
-      ? OUTPUT_TYPE_COMPONENT_REGISTRY[actualType]
-      : undefined;
+    typeof actualType === "string" ? getOutputRenderer(actualType) : undefined;
   const defaultExpandedHeight =
     registryEntry?.defaultExpandedHeight ?? DEFAULT_OUTPUT_HEIGHT;
   const { height, setHeight } = useResizableHeight(path, defaultExpandedHeight);
@@ -137,15 +137,39 @@ export default function OutputFieldDisplay({
     typeSchema: actualType as TypeSchema,
   };
 
+  const wrapPluginRenderer = (content: React.ReactNode) => {
+    if (!registryEntry?.pluginId) {
+      return content;
+    }
+
+    return (
+      <PluginStyleBoundary
+        pluginId={registryEntry.pluginId}
+        cssHref={registryEntry.pluginCssHref}
+      >
+        {content}
+      </PluginStyleBoundary>
+    );
+  };
+
   // Function to render the main output component
   const renderMainOutput = () => {
-    if (registryEntry?.expandable && isExpanded) {
+    // When expanded, hide the base component only when a single component
+    // renders both states. If a dedicated expandedComponent is registered,
+    // keep the base (minimized) component visible above the expanded content
+    // instead of blanking it out.
+    if (
+      registryEntry?.component &&
+      registryEntry.expandable &&
+      isExpanded &&
+      !registryEntry.expandedComponent
+    ) {
       return <div className="flex flex-1 min-h-8" />;
     }
 
-    if (registryEntry) {
+    if (registryEntry?.component) {
       const Component = registryEntry.component;
-      return <Component {...controlledProps} />;
+      return wrapPluginRenderer(<Component {...controlledProps} />);
     }
 
     return (
@@ -159,16 +183,30 @@ export default function OutputFieldDisplay({
   const renderExpandedContent = () => {
     if (!registryEntry?.expandable || !isExpanded) return null;
 
-    const Component = registryEntry.component;
-    return (
-      <div className="flex-1">
-        <Component {...controlledProps} />
-      </div>
+    const ExpandedComponent =
+      registryEntry.expandedComponent ?? registryEntry.component;
+    if (!ExpandedComponent) return null;
+
+    const expandedContent = (
+      <ExpandedComponent {...controlledProps} expanded={true} />
     );
+
+    if (registryEntry.expandedComponent) {
+      return (
+        <HostResizableRendererFrame
+          minHeight={registryEntry.minExpandedHeight}
+          maxHeight={registryEntry.maxExpandedHeight}
+        >
+          {wrapPluginRenderer(expandedContent)}
+        </HostResizableRendererFrame>
+      );
+    }
+
+    return <div className="flex-1">{wrapPluginRenderer(expandedContent)}</div>;
   };
 
   const content = (
-    <div className="flex flex-col flex-1">
+    <div className={`flex flex-col flex-1 ${isExpanded ? "gap-2" : ""}`}>
       <div className="flex flex-1 items-center gap-1">
         <span className="shrink-0">{fieldName}</span>
         <span className="shrink-0">:</span>

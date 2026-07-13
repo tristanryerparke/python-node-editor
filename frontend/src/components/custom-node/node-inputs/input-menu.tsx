@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { MoreVertical, Trash2, Maximize2, Minimize2 } from "lucide-react";
-import { Button } from "../../ui/button";
+import { Button } from "t-components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../ui/dropdown-menu";
+} from "t-components/dropdown-menu";
 import useFlowStore, { useNodeData } from "../../../stores/flowStore";
 import { useInputFieldExpandable } from "@/common/field-menu-items/use-field-expandable";
 import UnionTypeMenuItems from "@/common/field-menu-items/union-type-menu-items";

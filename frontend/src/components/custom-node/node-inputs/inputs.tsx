@@ -1,5 +1,5 @@
 import InputFieldHandleWrapper from "./input-field-handle-wrapper";
-import { Separator } from "../../ui/separator";
+import { Separator } from "t-components/separator";
 import AddListInput from "./dynamic/add-list-input";
 import AddDictInput from "./dynamic/add-dict-input";
 import { useNodeData } from "../../../stores/flowStore";
@@ -50,7 +50,7 @@ export default function Inputs({ arguments: args, path }: InputsProps) {
       {sortedArguments.map(([argName, argData], index) => {
         return (
           <div key={argName} className="flex-1">
-            {index > 0 && <Separator className="w-full" />}
+            {index > 0 && <Separator className="w-full border-input" />}
             <InputFieldHandleWrapper
               fieldData={argData}
               path={[...path, argName]}
@@ -60,13 +60,13 @@ export default function Inputs({ arguments: args, path }: InputsProps) {
       })}
       {dynamicInputType?.structureType === "list" && (
         <>
-          {hasExistingArguments && <Separator />}
+          {hasExistingArguments && <Separator className="border-input" />}
           <AddListInput path={path} />
         </>
       )}
       {dynamicInputType?.structureType === "dict" && (
         <>
-          {hasExistingArguments && <Separator />}
+          {hasExistingArguments && <Separator className="border-input" />}
           <AddDictInput path={path} />
         </>
       )}

@@ -18,31 +18,13 @@ export const isCachedValueReference = (
   return typeof cacheKey === "string" && cacheKey.length > 0;
 };
 
-export const getCacheKeyFromValue = (value: unknown): string | undefined => {
-  if (!isCachedValueReference(value)) {
-    return undefined;
-  }
-
-  const cacheKey = value.cacheKey;
-  if (typeof cacheKey !== "string" || cacheKey.length == 0) {
-    return undefined;
-  }
-
-  return cacheKey;
-};
-
 const normalizeCachedValueReference = (value: unknown): CachedValueReference => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error("Invalid cached reference response: expected object");
   }
 
   const raw = value as Record<string, unknown>;
-  const cacheKey =
-    typeof raw.cacheKey === "string"
-      ? raw.cacheKey
-      : typeof raw.cache_key === "string"
-        ? raw.cache_key
-        : undefined;
+  const cacheKey = typeof raw.cacheKey === "string" ? raw.cacheKey : undefined;
   if (!cacheKey || cacheKey.length === 0) {
     throw new Error(
       "Invalid cached reference response: missing required cacheKey",
@@ -50,17 +32,9 @@ const normalizeCachedValueReference = (value: unknown): CachedValueReference => 
   }
 
   const instanceType =
-    typeof raw.instanceType === "string"
-      ? raw.instanceType
-      : typeof raw.instance_type === "string"
-        ? raw.instance_type
-        : undefined;
+    typeof raw.instanceType === "string" ? raw.instanceType : undefined;
   const displayName =
-    typeof raw.displayName === "string"
-      ? raw.displayName
-      : typeof raw.display_name === "string"
-        ? raw.display_name
-        : undefined;
+    typeof raw.displayName === "string" ? raw.displayName : undefined;
   const filename = typeof raw.filename === "string" ? raw.filename : undefined;
   const preview = typeof raw.preview === "string" ? raw.preview : undefined;
 
@@ -73,13 +47,29 @@ const normalizeCachedValueReference = (value: unknown): CachedValueReference => 
   };
 };
 
-const readFileAsDataURL = (file: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
+export type LargeDataSerializer = (
+  value: unknown,
+) => Promise<Record<string, unknown>> | Record<string, unknown>;
+
+const largeDataSerializers: Record<string, LargeDataSerializer> = {};
+
+export function registerLargeDataSerializer(
+  typeName: string,
+  serializer: LargeDataSerializer,
+): void {
+  largeDataSerializers[typeName] = serializer;
+}
+
+export async function serializeLargeData(
+  typeName: string,
+  value: unknown,
+): Promise<Record<string, unknown>> {
+  const serializer = largeDataSerializers[typeName];
+  if (serializer) {
+    return await serializer(value);
+  }
+  return { value };
+}
 
 export const getConcreteType = (wrapper: FrontendFieldDataWrapper | undefined) => {
   if (!wrapper) return undefined;
@@ -93,18 +83,7 @@ export const uploadLargeData = async (
   value: unknown,
   callableId: string,
 ): Promise<FrontendFieldDataWrapper> => {
-  let payload: Record<string, unknown> = {};
-
-  if (value instanceof File || value instanceof Blob) {
-    const dataUrl = await readFileAsDataURL(value);
-    const base64Data = dataUrl.split(",")[1] || "";
-    payload = {
-      img_base64: base64Data,
-      filename: value instanceof File ? value.name : null,
-    };
-  } else {
-    payload = { value };
-  }
+  const payload = await serializeLargeData(typeName, value);
 
   const response = await fetch(buildApiPath("/data/cache"), {
     method: "POST",

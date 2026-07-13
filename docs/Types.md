@@ -47,69 +47,25 @@ To help with this PNE provides some utilities for caching data in the backend an
 
 To enable this from the your python function you can use the `add_node_options` decorator whose other functions are described in [Node-Customization](https://github.com/tristanryerparke/python-node-editor/wiki/Node-Customization). 
 
-Let's use blurring an image as an example. Uploading an image requires a special input on the frontend. Development of custom inputs is described in [Development](https://github.com/tristanryerparke/python-node-editor/wiki/Development), but for images, this input is built into PNE already. 
-
 The large data will still be uploaded to the backend via the frontend, but cached data is designed so that upload only happens once and later graph execution passes cache-key references.
 
-The backend expects two extension hooks for each cached type:
+The core backend expects cached-type handlers such as:
+
 - `deserializer(payload: dict) -> tuple[value, metadata_dict]`
 - `metadata_generator(value) -> dict` (optional, used to attach preview/display metadata)
+- `reference_model`, a small Pydantic model sent back to the frontend
 
-You can see in [input-type-registry.ts](../frontend/src/components/custom-node/inputs/input-type-registry.ts) that the registry key for the built-in image input is `"Image"`. The extension setup should match that key:
-
-```python
-import base64
-import io
-
-from typing import Any
-from PIL import Image
-from PIL import ImageOps
-
-from python_node_editor.display import add_node_options
-from python_node_editor.large_data.types import LargeDataHandlerSpec
-
-
-def _decode_image_base64(img_base64: str) -> Image.Image:
-    img_data = base64.b64decode(img_base64)
-    img = Image.open(io.BytesIO(img_data))
-    return img
-
-
-def deserialize_image_from_frontend(payload: dict) -> tuple[Any, dict]:
-    data = payload.get("data") or {}
-    if not isinstance(data, dict):
-        raise ValueError("Image upload data must be a dict")
-    if "img_base64" not in data:
-        raise ValueError("Missing required field for Image upload: img_base64")
-    img = _decode_image_base64(data["img_base64"])
-    return img, {"filename": payload.get("filename")}
-
-
-def generate_metadata(value: Image.Image) -> dict:
-    return {
-        "preview": "...",
-        "display_name": f"Image({value.width}x{value.height}, {value.mode})",
-    }
-
-
-image_cached_datatype = add_node_options(
-    cached_handlers=[
-        LargeDataHandlerSpec(
-            type_name="Image",
-            type_def=Image.Image,
-            deserializer=deserialize_image_from_frontend,
-            metadata_generator=generate_metadata,
-        )
-    ]
-)
-```
-
-Then apply the prebuilt decorator on your node function:
+Rich frontend display for a cached type is now supplied by plugins. For example, `pne-plugin-image` owns Pillow support, the `Image` cached handler, and the Image input/output renderers. A user project can install it and use:
 
 ```python
+from PIL import ImageFilter
+from PIL.Image import Image
+from pne_image import image_cached_datatype
+
+
 @image_cached_datatype
-def blur_image(image: Image.Image, radius: int = 40) -> Image.Image:
-    ...
+def blur_image(image: Image, radius: int = 40) -> Image:
+    return image.filter(ImageFilter.GaussianBlur((radius, radius)))
 ```
 
-to be continued
+The core package remains generic; plugin packages register any type-specific serializers, renderers, and backend cached-data handlers.

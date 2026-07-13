@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "t-components/input";
+import { Button } from "t-components/button";
 import { RefreshCw, Search } from "lucide-react";
 
 interface SearchBarProps {
@@ -20,27 +20,30 @@ export function SearchBar({
   ariaLabel = "Search",
 }: SearchBarProps) {
   return (
-    <div className="flex flex-row gap-2 w-full">
-      <div className="relative flex-1">
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="flex h-6 w-full flex-row items-center gap-2">
+      <div className="relative flex h-6 flex-1 items-center">
+        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center">
+          <Search className="size-3 text-muted-foreground" />
+        </span>
         <Input
           value={searchTerm}
           onChange={(event) => onSearchChange(event.currentTarget.value)}
           placeholder={placeholder}
-          className="pl-8 w-full min-h-9"
+          className="!h-6 !pl-7 w-full"
           aria-label={ariaLabel}
         />
       </div>
       <Button
-        size="icon"
+        size="icon-xs"
         variant="outline"
         onClick={() => {
           void onRefresh();
         }}
         title={refreshTitle}
         aria-label={refreshTitle}
+        className="!size-6"
       >
-        <RefreshCw className="h-4 w-4" />
+        <RefreshCw className="size-3" />
       </Button>
     </div>
   );

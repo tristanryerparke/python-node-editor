@@ -1,17 +1,17 @@
-import { Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Settings, XIcon } from "lucide-react";
+import { Button } from "t-components/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "t-components/dialog";
+import { Checkbox } from "t-components/checkbox";
+import { Input } from "t-components/input";
+import { Tabs, TabsList, TabsTrigger } from "t-components/tabs";
 import { ThemeSelect } from "./theme-select";
-import { API_PREFIX } from "@/lib/fetcher";
 import useSettingsStore, {
   DEFAULT_ASYNC_EXECUTION_TIMEOUT_SECONDS,
   MIN_ASYNC_EXECUTION_TIMEOUT_SECONDS,
@@ -57,12 +57,19 @@ export function SettingsModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="icon-sm" variant="outline" aria-label="Open settings">
-          <Settings className="h-[1.2rem] w-[1.2rem]" />
+        <Button size="icon-xs" variant="outline" aria-label="Open settings">
+          <Settings className="size-3" />
           <span className="sr-only">Open settings</span>
         </Button>
       </DialogTrigger>
-      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent
+        showCloseButton={false}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogClose className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:cursor-not-allowed data-[state=open]:bg-accent data-[state=open]:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+          <XIcon />
+          <span className="sr-only">Close</span>
+        </DialogClose>
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
@@ -79,7 +86,7 @@ export function SettingsModal() {
                 setExecutionMode(value as "sync" | "async")
               }
             >
-              <TabsList className="min-w-30 max-w-30 min-h-9">
+              <TabsList className="min-w-30 max-w-30">
                 <TabsTrigger value="sync">Sync</TabsTrigger>
                 <TabsTrigger value="async">Async</TabsTrigger>
               </TabsList>
@@ -113,7 +120,7 @@ export function SettingsModal() {
                       : DEFAULT_ASYNC_EXECUTION_TIMEOUT_SECONDS,
                   );
                 }}
-                className="min-w-24 max-w-24 min-h-9"
+                className="min-w-24 max-w-24"
               />
               <span className="text-sm text-muted-foreground">sec</span>
             </div>
@@ -173,7 +180,7 @@ export function SettingsModal() {
               placeholder="e.g., zed, vscode"
               value={openInEditorName || ""}
               onChange={(e) => setOpenInEditorName(e.target.value || null)}
-              className="min-w-30 max-w-30 min-h-9"
+              className="min-w-30 max-w-30"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -200,12 +207,6 @@ export function SettingsModal() {
                 }
               }}
             />
-          </div>
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Backend API</label>
-            <div className="text-sm text-muted-foreground font-mono bg-muted px-3 py-2 rounded-md">
-              {API_PREFIX}
-            </div>
           </div>
         </div>
       </DialogContent>

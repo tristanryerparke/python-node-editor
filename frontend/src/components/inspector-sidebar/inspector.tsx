@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Plus, Eye, EyeOff } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Separator } from "../../components/ui/separator";
+import { Button } from "t-components/button";
+import { Separator } from "t-components/separator";
 import useInspectorStore from "../../stores/inspectorStore";
 import useFlowStore from "../../stores/flowStore";
 import InspectorEntry from "./inspector-entry";
@@ -69,11 +69,11 @@ export default function Inspector() {
   return (
     <div className="min-w-60 w-full h-full flex flex-col overflow-hidden">
       <div className="w-full flex flex-row gap-2 p-1 items-center justify-between shrink-0">
-        <Button size="icon-sm" variant="ghost" onClick={addEntry}>
+        <Button size="xs" variant="ghost" onClick={addEntry}>
           <Plus />
         </Button>
         <h5>Inspector</h5>
-        <Button size="icon-sm" variant="ghost" onClick={handleToggleBorders}>
+        <Button size="xs" variant="ghost" onClick={handleToggleBorders}>
           {showBorders ? <Eye /> : <EyeOff />}
         </Button>
       </div>

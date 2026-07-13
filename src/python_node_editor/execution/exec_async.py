@@ -6,7 +6,10 @@ from devtools import debug as d
 from fastapi import APIRouter, HTTPException
 from typing_extensions import Literal
 
-from python_node_editor.execution.context import progress_context
+from python_node_editor.execution.context import (
+    execution_mode_context,
+    progress_context,
+)
 from python_node_editor.execution.exec_utils import (
     VERBOSE,
     create_exception_node_update,
@@ -154,8 +157,10 @@ async def execute_and_create_update(
     # Store callback in dict
     context_dict["callback"] = on_progress
 
-    # Set the entire dict as a single context variable
+    # Set context variables before asyncio.to_thread so they propagate into
+    # the worker thread and any nested subflow execution.
     token = progress_context.set(context_dict)
+    mode_token = execution_mode_context.set("async")
 
     try:
         # Execute node (will run in thread, with context_dict passed to store buffer)
@@ -167,7 +172,8 @@ async def execute_and_create_update(
             execution_id,
         )
     finally:
-        # Always clean up the context variable
+        # Always clean up the context variables
+        execution_mode_context.reset(mode_token)
         progress_context.reset(token)
 
     return create_node_update(

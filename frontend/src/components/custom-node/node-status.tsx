@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 
 type NodeStatusProps = {
   status: "not-executed" | "executed" | "error" | "executing";
@@ -58,7 +58,7 @@ export default memo(function NodeStatus({
             onClick={handleClick}
             variant="ghost"
             size="icon"
-            className={`nodrag relative h-6 w-6 ${!isClickable ? "cursor-default pointer-events-auto" : ""}`}
+            className={`nodrag relative !size-6 ${!isClickable ? "cursor-default pointer-events-auto" : ""}`}
             disabled={!isClickable}
             asChild={!isClickable}
           >

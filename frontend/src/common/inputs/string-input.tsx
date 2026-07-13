@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { StringArea } from "../utility-components/string-area";
-import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
-import { Input } from "@/components/ui/input";
+import type { ControlledInputProps } from "@/common/renderers/types";
+import { Input } from "t-components/input";
 
 export interface StringInputProps extends ControlledInputProps {
   placeholder?: string;
@@ -33,7 +33,7 @@ const StringInput = memo(function StringInput({
         value={value as string}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="nodrag nopan nowheel"
+        className="flex flex-1 w-0 nodrag nopan nowheel"
         placeholder={placeholder}
       />
     </div>

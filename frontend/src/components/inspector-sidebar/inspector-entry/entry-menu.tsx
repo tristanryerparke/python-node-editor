@@ -7,14 +7,14 @@ import {
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "t-components/dropdown-menu";
 import {
   updateInspectorData,
   type InspectorPathSegment,
@@ -92,7 +92,7 @@ export default function EntryMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-xs" className="shrink-0">
+        <Button variant="ghost" size="xs" className="shrink-0">
           <MoreVertical className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>

@@ -1,7 +1,7 @@
 import { memo, useEffect } from "react";
 import { StringArea } from "../utility-components/string-area";
-import type { ControlledInputProps } from "../../components/custom-node/node-inputs/input-field-display";
-import { Input } from "@/components/ui/input";
+import type { ControlledInputProps } from "@/common/renderers/types";
+import { Input } from "t-components/input";
 import useFlowStore from "@/stores/flowStore";
 import type { TypeSchema } from "@/types/backend-schema";
 import { validateInputAgainstSchema } from "@/utils/schema-input-validator";

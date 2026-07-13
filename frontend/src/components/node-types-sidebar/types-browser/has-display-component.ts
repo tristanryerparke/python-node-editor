@@ -1,5 +1,5 @@
-import { INPUT_TYPE_COMPONENT_REGISTRY } from "@/common/inputs/input-type-registry";
-import { OUTPUT_TYPE_COMPONENT_REGISTRY } from "@/common/outputs/output-type-registry";
+import { getInputRenderer } from "@/common/inputs/input-type-registry";
+import { getOutputRenderer } from "@/common/outputs/output-type-registry";
 import type { PropertyType, TypeInfo } from "@/types/environment";
 
 function getPropertyTypeName(propType: PropertyType): string | null {
@@ -29,10 +29,7 @@ export function hasDisplayComponent(
   }
 
   // Check if the type has a display component in either input or output registries
-  if (
-    typeName in INPUT_TYPE_COMPONENT_REGISTRY ||
-    typeName in OUTPUT_TYPE_COMPONENT_REGISTRY
-  ) {
+  if (getInputRenderer(typeName) || getOutputRenderer(typeName)) {
     return true;
   }
 

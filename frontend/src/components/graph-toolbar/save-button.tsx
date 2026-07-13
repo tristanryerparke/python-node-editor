@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "t-components/button";
 import useFlowStore from "../../stores/flowStore";
 import useInspectorStore from "../../stores/inspectorStore";
 
@@ -11,7 +11,7 @@ export default function SaveButton() {
       const { entries, showBorders } = useInspectorStore.getState();
       const flowWithEnvironment = {
         ...flow,
-        functionSchemas,
+        functionSchemaCallableIds: Object.keys(functionSchemas),
         types,
         inspector: {
           entries,
@@ -24,7 +24,7 @@ export default function SaveButton() {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `flow-${new Date().toISOString()}.json`;
+      link.download = `flow-${new Date().toISOString()}.pnejson`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -33,7 +33,7 @@ export default function SaveButton() {
   };
 
   return (
-    <Button className="flex-1" onClick={onSave} variant="outline" size="sm">
+    <Button className="flex-1" onClick={onSave} variant="outline" size="xs">
       Save
     </Button>
   );

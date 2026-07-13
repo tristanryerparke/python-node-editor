@@ -61,16 +61,6 @@ export default function TypesBrowser() {
         refreshTitle="Refresh types"
         ariaLabel="Search types"
       />
-      <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground px-1">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-          <span>Display components</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-          <span>No display components</span>
-        </div>
-      </div>
       <div className="overflow-y-scroll flex flex-col justify-start items-start pb-1">
         {sortedKinds.map(([kind, kindTypes]) => (
           <KindGroup key={kind} kind={kind} types={kindTypes} />

@@ -23,3 +23,37 @@ def test_construct_deconstruct_nodes_are_opt_in():
 
     assert "construct-ConstructDeconstruct" in schema_names
     assert "deconstruct-ConstructDeconstruct" in schema_names
+
+
+def test_decorated_user_model_nodes_exist_without_functions(tmp_path):
+    test_file = tmp_path / "class_only_nodes.py"
+    test_file.write_text(
+        """\
+from python_node_editor.display import construct, construct_deconstruct, deconstruct
+from python_node_editor.schema_base import UserModel
+
+@construct
+class ConstructOnly(UserModel):
+    value: float
+
+@deconstruct
+class DeconstructOnly(UserModel):
+    value: float
+
+@construct_deconstruct
+class ConstructDeconstruct(UserModel):
+    value: float
+"""
+    )
+
+    function_schemas, callables, types = analyze_file_structure(str(test_file))
+    schema_names = {schema.name for schema in function_schemas}
+
+    assert schema_names == {
+        "construct-ConstructOnly",
+        "deconstruct-DeconstructOnly",
+        "construct-ConstructDeconstruct",
+        "deconstruct-ConstructDeconstruct",
+    }
+    assert len(callables) == 4
+    assert {"ConstructOnly", "DeconstructOnly", "ConstructDeconstruct"} <= set(types)
